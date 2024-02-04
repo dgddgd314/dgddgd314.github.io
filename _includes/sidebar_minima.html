@@ -1,0 +1,57 @@
+<!--sidebar header : title and description.
+	in future, i will add my icon (and also favicon.ico)-->
+
+<div class="sidebar-item sidebar-header">
+	<div class='sidebar-brand'>
+		<a href="/">{{ site.title }}</a>
+	</div>
+	<p class="lead">{{ site.description }}</p>
+	{%- if social.github -%}
+		<a rel="me" href="https://github.com/{{ social.github | cgi_escape | escape }}" title="{{ social.github | escape }}">
+			<svg class="svg-icon grey">
+				<use xlink:href="{{ '/assets/minima-social-icons.svg#github' | relative_url }}" />
+			</svg></a></li>
+	{%- endif -%}
+</div>
+
+
+<!-- sidebar middle -->
+<div class="sidebar-item sidebar-nav">
+	<ul class="nav">
+	<!-- Pages 부분. -->
+      <li class="nav-title">Pages</li>
+
+	  <li>
+	  	<a class="nav-item" href="/">Home</a>
+	  </li>
+	  
+	  <li>
+		<a class="nav-item" href="/about">About</a>
+	  </li>
+
+	  <li>
+		<a class="nav-item" href="/category">Category</a>
+	  </li>
+	</ul>
+</div>
+
+<!-- Categories 부분 : Change 예정... : 아예 삭제.
+<div class="sidebar-item sidebar-nav">
+  	<ul class="nav">
+			<li class="nav-title">Categories</li>
+	    {% for category in site.categories %}
+	    <li>
+	    	<a class="nav-item" href="{{ root_url }}/{{ site.category_dir }}#{{ category | first }}">
+				<span class="name">{{ category | first }}</span>
+				<span class="badge">{{ category | last | size }}</span>
+	    	</a>
+ 		</li>
+	    {% endfor %}
+	  </nav>
+	</ul>
+</div> -->
+
+<!-- sidebar footer -->
+<div class="sidebar-item sidebar-footer">
+	<p>Powered by <a href="https://github.com/jekyll/jekyll">Jekyll</a></p>
+</div>

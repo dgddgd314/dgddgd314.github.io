@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: "en" }}">
+  <!-- I think I'm going to delete header at computer, and remaining at the handphone.-->
+  
+  {%- include head_minima.html -%}
+
+  <!-- to control about markdown colors, you can change it from here.-->
+  <style>@import url(/public/css/syntax/{{ site.minima-highlighter-theme }}.css);</style>
+
+
+  <!-- its hard af... if you want to control about UI, we have to take care about this style_minim .css. -->
+  <link href="/public/css/style_minima.css" rel="stylesheet"> 
+  <body>
+
+    <!-- I think header is not necessary for the computer form.
+      however, when I design media form, I will recall this file.
+      {%- include header_minima.html -%} -->
+
+    <main class="page-content" aria-label="Content">
+      <div class="container">
+
+        <div class = "sidebar">
+          {%- include sidebar_minima.html -%}
+        </div>
+        
+        <div class = "content">
+          {{ content }}
+        </div>
+
+      </div>
+    </main>
+
+    {%- include footer_minima.html -%}
+
+  </body>
+
+</html>
