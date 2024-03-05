@@ -1,6 +1,9 @@
+<!--sidebar header : title and description.
+	in future, i will add my icon (and also favicon.ico)-->
+
 <div class="sidebar-item sidebar-header">
 	<div class='sidebar-brand'>
-		<a href="/about/">{{ site.title }}</a>
+		<a href="/">{{ site.title }}</a>
 	</div>
 	<p class="lead">{{ site.description }}</p>
 	{%- if social.github -%}
@@ -11,27 +14,28 @@
 	{%- endif -%}
 </div>
 
+
+<!-- sidebar middle -->
 <div class="sidebar-item sidebar-nav">
 	<ul class="nav">
+	<!-- Pages 부분. -->
       <li class="nav-title">Pages</li>
+
 	  <li>
-	  	<a class="nav-item" href="/">Articles</a>
+	  	<a class="nav-item" href="/">Home</a>
 	  </li>
-	  {% assign pages_list = site.pages %}
-	  {% for node in pages_list %}
-	    {% if node.title != null %}
-	      {% if node.layout == "page" %}
-	        <li>
-	        	<a class="nav-item" href="{{ node.url }}">
-	            	{{ node.title }}
-	            </a>
-	        </li>
-	      {% endif %}
-	    {% endif %}
-	  {% endfor %}
+	  
+	  <li>
+		<a class="nav-item" href="/about">About</a>
+	  </li>
+
+	  <li>
+		<a class="nav-item" href="/category">Category</a>
+	  </li>
 	</ul>
 </div>
 
+<!-- Categories 부분 : Change 예정... : 아예 삭제.
 <div class="sidebar-item sidebar-nav">
   	<ul class="nav">
 			<li class="nav-title">Categories</li>
@@ -45,8 +49,9 @@
 	    {% endfor %}
 	  </nav>
 	</ul>
-</div>
+</div> -->
 
+<!-- sidebar footer -->
 <div class="sidebar-item sidebar-footer">
 	<p>Powered by <a href="https://github.com/jekyll/jekyll">Jekyll</a></p>
 </div>
