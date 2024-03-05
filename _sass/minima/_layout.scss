@@ -201,7 +201,6 @@
  * Page content
  */
 .page-content {
-  margin-bottom: 30px;
   flex: 1 0 auto;
 }
 
@@ -237,9 +236,7 @@
 /**
  * Posts
  */
-.post-header {
-  margin-bottom: $spacing-unit;
-}
+ 
 
 .post-title,
 .post-content h1 {
