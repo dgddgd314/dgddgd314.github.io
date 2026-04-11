@@ -1,0 +1,2 @@
+@import "tailwindcss"; /* Tailwind 엔진 불러오기 */
+@import "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"; /* 수식 디자인 */
