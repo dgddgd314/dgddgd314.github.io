@@ -1,0 +1,160 @@
+---
+import type { Block } from "../../lib/blocks";
+import { resolveBlockColor } from "../../lib/blocks";
+import RichText from "./RichText.astro";
+
+interface Props {
+  block: Block;
+  depth?: number;
+}
+
+const { block, depth = 0 } = Astro.props;
+const textColor = resolveBlockColor(block.textColor);
+const backgroundColor = resolveBlockColor(block.backgroundColor);
+const style = [
+  textColor && `--block-local-text: ${textColor}`,
+  backgroundColor && `--block-local-bg: ${backgroundColor}`,
+  block.align && `text-align: ${block.align}`,
+]
+  .filter(Boolean)
+  .join("; ");
+const HeadingTag = block.type === "heading" ? (`h${block.level}` as const) : "div";
+---
+
+<section
+  id={block.id}
+  class:list={["notion-block", `notion-block--${block.type}`, depth > 0 && "notion-block--nested"]}
+  style={style}
+  data-block-id={block.id}
+  data-heading-block={block.type === "heading" ? "true" : undefined}
+>
+
+  <div class="notion-block__content">
+    {
+      block.type === "paragraph" && (
+        <p><RichText value={block.richText} /></p>
+      )
+    }
+
+    {
+      block.type === "heading" && (
+        <HeadingTag class={`notion-heading notion-heading--${block.level}`}>
+          <RichText value={block.richText} />
+        </HeadingTag>
+      )
+    }
+
+    {
+      block.type === "bulleted_list" && (
+        <ul class="notion-list"><li><RichText value={block.richText} /></li></ul>
+      )
+    }
+
+    {
+      block.type === "numbered_list" && (
+        <ol class="notion-list"><li><RichText value={block.richText} /></li></ol>
+      )
+    }
+
+    {
+      block.type === "todo" && (
+        <label class="notion-todo">
+          <input type="checkbox" checked={block.checked} disabled />
+          <span><RichText value={block.richText} /></span>
+        </label>
+      )
+    }
+
+    {
+      block.type === "quote" && (
+        <blockquote><RichText value={block.richText} /></blockquote>
+      )
+    }
+
+    {
+      block.type === "callout" && (
+        <aside class="notion-callout">
+          <span class="notion-callout__icon" aria-hidden="true">{block.icon ?? "i"}</span>
+          <div><RichText value={block.richText} /></div>
+        </aside>
+      )
+    }
+
+    {
+      block.type === "toggle" && (
+        <details class="notion-toggle">
+          <summary><RichText value={block.richText} /></summary>
+          {block.children?.length && (
+            <div class="notion-children">
+              {block.children.map((child) => <Astro.self block={child} depth={depth + 1} />)}
+            </div>
+          )}
+        </details>
+      )
+    }
+
+    {
+      block.type === "code" && (
+        <figure class="notion-code">
+          {block.language && <figcaption>{block.language}</figcaption>}
+          <pre><code>{block.code}</code></pre>
+        </figure>
+      )
+    }
+
+    {block.type === "divider" && <hr class="notion-divider" />}
+
+    {
+      block.type === "image" && (
+        <figure class="notion-image">
+          <img src={block.src} alt={block.alt} loading="lazy" />
+          {block.caption && <figcaption><RichText value={block.caption} /></figcaption>}
+        </figure>
+      )
+    }
+
+    {
+      block.type === "bookmark" && (
+        <a class="notion-bookmark" href={block.url} target="_blank" rel="noreferrer">
+          <span>
+            <strong>{block.title}</strong>
+            {block.description && <small>{block.description}</small>}
+          </span>
+          <em>{new URL(block.url).hostname}</em>
+        </a>
+      )
+    }
+
+    {
+      block.type === "table" && (
+        <div class="notion-table-wrap">
+          <table class="notion-table">
+            <tbody>
+              {block.rows.map((row, rowIndex) => (
+                <tr>
+                  {row.map((cell) => {
+                    const CellTag = block.hasHeaderRow && rowIndex === 0 ? "th" : "td";
+                    return (
+                      <CellTag style={cell.align ? `text-align: ${cell.align}` : undefined}>
+                        <RichText value={cell.richText} />
+                      </CellTag>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    {
+      block.type !== "toggle" && block.children?.length && (
+        <div class="notion-children">
+          {block.children.map((child) => <Astro.self block={child} depth={depth + 1} />)}
+        </div>
+      )
+    }
+  </div>
+</section>
+
