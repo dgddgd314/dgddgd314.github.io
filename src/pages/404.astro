@@ -2,11 +2,21 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title = "404: Not Found" includeSidebar={false}>
-  <div class="text-center">
-    <h1 class="text-9xl font-bold mb-4">🏝</h1>
-    <h1 class="text-9xl font-bold mb-2">404</h1>
-    <h3 class="text-2xl">The page you're looking for couldn't be found.</h3>
-    <a class="btn btn-accent mt-9" href="/">Home</a>
+<BaseLayout title="404 | dgddgd314" mainClass="tistory-main">
+  <div class="blog-archive">
+    <header class="blog-topbar">
+      <a href="/blog/" class="blog-brand"><span>dgddgd</span><strong>314</strong></a>
+    </header>
+    <section class="sidebar-panel">
+      <div class="sidebar-panel__head">
+        <h1>404</h1>
+        <span>not found</span>
+      </div>
+      <p>The page you're looking for couldn't be found.</p>
+      <div class="blog-pagination">
+        <a href="/blog/">Back to blog</a>
+        <span></span>
+      </div>
+    </section>
   </div>
 </BaseLayout>

@@ -1,8 +1,11 @@
 ---
-import { CollectionEntry, getCollection, render } from "astro:content";
+import { CollectionEntry, getCollection } from "astro:content";
 import { BlogSchema } from "../../content.config";
 import PostLayout from "../../layouts/PostLayout.astro";
-import createSlug from "../../lib/createSlug"
+import createSlug from "../../lib/createSlug";
+import type { Block } from "../../lib/blocks";
+import { generateToc } from "../../lib/toc";
+import sampleBlockPost from "../../data/sample-block-post.json";
 
 export async function getStaticPaths() {
   const postEntries = await getCollection("blog");
@@ -18,7 +21,8 @@ interface Props {
 
 const { entry } = Astro.props;
 const post: BlogSchema = entry.data;
-const { Content } = await render(entry);
+const blocks = (sampleBlockPost as { blocks: Block[] }).blocks;
+const tocItems = generateToc(blocks);
 ---
 
 <PostLayout
@@ -29,6 +33,6 @@ const { Content } = await render(entry);
   updatedDate={post.updatedDate}
   badge={post.badge}
   tags={post.tags}
->
-  <Content />
-</PostLayout>
+  blocks={blocks}
+  tocItems={tocItems}
+/>

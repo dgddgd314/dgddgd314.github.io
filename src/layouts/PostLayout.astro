@@ -1,43 +1,145 @@
 ---
-import { type BlogSchema } from "../content/config";
+import { type BlogSchema } from "../content.config";
 import BaseLayout from "./BaseLayout.astro";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import BlockRenderer from "../components/blocks/BlockRenderer.astro";
+import type { Block } from "../lib/blocks";
+import type { TocItem } from "../lib/toc";
+import "../styles/blocks.css";
 
-export interface Props extends BlogSchema {}
+export interface Props extends BlogSchema {
+  blocks?: Block[];
+  tocItems?: TocItem[];
+}
 
-const { title, description, pubDate, updatedDate, heroImage, badge, tags = [] } = Astro.props;
+const { title, description, pubDate, updatedDate, badge, tags = [], blocks = [], tocItems = [] } = Astro.props;
 dayjs.extend(localizedFormat);
-const displayDate = dayjs(pubDate).format("ll")
-import { Image } from "astro:assets";
+const displayDate = dayjs(pubDate).format("ll");
+const majorTocItems = tocItems.filter((item) => item.level === 1);
 ---
 
-<BaseLayout title={title} description={description} image={heroImage}, ogType="article">
-  <main class="md:flex md:justify-center">
-    <article class="prose prose-lg max-w-[750px] prose-img:mx-auto">
-      {heroImage && <Image width={750} height={422} format="webp" src={heroImage} alt={title} class="w-full mb-6" />}
-      <h1 class="title my-2 text-4xl font-bold">{title}</h1>
-      {pubDate && <time>{displayDate}</time>}
-      <br />
-      {badge && <div class="badge badge-secondary my-1">{badge}</div>}
-      {
-        tags &&
-          tags.map((tag) => (
-            <a href={`/blog/tag/${tag}`} class="badge badge-outline ml-2 no-underline">
-              {tag}
-            </a>
-          ))
-      }
-      {
-        updatedDate && (
-          <div>
-            {" "}
-            Last updated on <time>{updatedDate}</time>{" "}
+<BaseLayout
+  title={title}
+  description={description}
+  ogType="article"
+  includeSidebar={false}
+  showHeader={false}
+  showFooter={false}
+  mainClass="notion-main"
+>
+  <div class="block-page">
+    <article class="block-article" data-block-article>
+      <header class="block-hero">
+        <nav class="notion-breadcrumb" aria-label="Breadcrumb">
+          <a href="/blog/">Blog</a>
+          <span>/</span>
+          <span>{title}</span>
+        </nav>
+        <div class="block-page-icon" aria-hidden="true">N</div>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <dl class="block-properties">
+          {pubDate && (
+            <div>
+              <dt>Date</dt>
+              <dd><time datetime={pubDate.toISOString()}>{displayDate}</time></dd>
+            </div>
+          )}
+          {updatedDate && (
+            <div>
+              <dt>Updated</dt>
+              <dd><time datetime={updatedDate.toISOString()}>{dayjs(updatedDate).format("ll")}</time></dd>
+            </div>
+          )}
+          {badge && (
+            <div>
+              <dt>Status</dt>
+              <dd><span class="block-badge">{badge}</span></dd>
+            </div>
+          )}
+          {tags.length > 0 && (
+            <div>
+              <dt>Tags</dt>
+              <dd class="block-property-tags">
+                {tags.map((tag) => (
+                  <a href={`/blog/tag/${tag}`} class="block-tag">
+                    {tag}
+                  </a>
+                ))}
+              </dd>
+            </div>
+          )}
+        </dl>
+      </header>
+
+      <div class="block-workspace">
+        <div class="block-content-column">
+          {majorTocItems.length > 0 && (
+            <section class="block-bento" aria-labelledby="major-sections-title">
+              <div class="block-bento__header">
+                <h2 id="major-sections-title">Contents</h2>
+                <span>{majorTocItems.length} sections</span>
+              </div>
+              <div class="block-bento__grid">
+                {majorTocItems.map((item, index) => (
+                  <a href={`#${item.id}`} class:list={["block-bento__card", index === 0 && "block-bento__card--wide"]}>
+                    <span class="block-bento__index">{String(index + 1).padStart(2, "0")}</span>
+                    <strong>{item.text}</strong>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <div class="block-shell">
+            <div class="block-document">
+              {blocks.length > 0 ? blocks.map((block) => <BlockRenderer block={block} />) : <slot />}
+            </div>
           </div>
-        )
-      }
-      <div class="divider my-2"></div>
-      <slot />
+        </div>
+
+        {tocItems.length > 0 && (
+          <aside class="block-outline block-bento__card" aria-label="Outline">
+            <span class="block-bento__index">Outline</span>
+            <nav>
+              {tocItems.map((item) => (
+                <a href={`#${item.id}`} class={`block-toc__link block-toc__link--${item.level}`} data-toc-link={item.id}>
+                  {item.text}
+                </a>
+              ))}
+            </nav>
+          </aside>
+        )}
+      </div>
     </article>
-  </main>
+  </div>
+
+  <script>
+    const headings = Array.from(document.querySelectorAll("[data-heading-block='true']"));
+    const tocLinks = new Map(
+      Array.from(document.querySelectorAll("[data-toc-link]")).map((link) => [
+        link.getAttribute("data-toc-link"),
+        link,
+      ])
+    );
+
+    if ("IntersectionObserver" in window && headings.length > 0) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+
+          if (!visible) return;
+
+          tocLinks.forEach((link) => link.removeAttribute("aria-current"));
+          tocLinks.get(visible.target.id)?.setAttribute("aria-current", "true");
+        },
+        { rootMargin: "-20% 0px -65% 0px", threshold: 0.01 }
+      );
+
+      headings.forEach((heading) => observer.observe(heading));
+    }
+  </script>
 </BaseLayout>

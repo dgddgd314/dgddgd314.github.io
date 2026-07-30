@@ -1,0 +1,26 @@
+/*
+  Color Hunt source palettes:
+  - https://colorhunt.co/palette/f5f7f8f4ce14495e5745474b
+  - https://colorhunt.co/palette/f2efe79acbd048a6a72973b2
+*/
+
+:root {
+  --color-paper: #fbfcfd;
+  --color-paper-raised: #ffffff;
+  --color-paper-soft: #f5f7f8;
+  --color-paper-blue: #e8f6f8;
+  --color-paper-mint: #edfafa;
+
+  --color-ink: #25272b;
+  --color-ink-soft: #45474b;
+  --color-muted: #697078;
+  --color-faint: #a7afb8;
+  --color-line: #e4e8ec;
+  --color-line-strong: #cbd5dd;
+
+  --color-blue: #2973b2;
+  --color-teal: #48a6a7;
+  --color-mint: #9acbd0;
+  --color-olive: #495e57;
+  --color-signal: #f4ce14;
+}

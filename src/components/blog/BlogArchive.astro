@@ -1,0 +1,528 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { CollectionEntry } from "astro:content";
+import createSlug from "../../lib/createSlug";
+import postNetwork from "../../data/post-network.json";
+import "../../styles/blog-index.css";
+
+type BlogPost = CollectionEntry<"blog">;
+type NetworkLink = {
+  source: string;
+  target: string;
+  type?: string;
+  label?: string;
+  weight?: number;
+  sharedTags?: string[];
+};
+
+type Counts = Record<string, number>;
+
+type Props = {
+  page: {
+    data: BlogPost[];
+    url: {
+      prev?: string;
+      next?: string;
+    };
+  };
+  allPosts: BlogPost[];
+  tagCounts: Counts;
+  categoryCounts: Counts;
+  initialTag?: string;
+  initialView?: "posts" | "tags";
+};
+
+const {
+  page,
+  allPosts,
+  tagCounts = {},
+  categoryCounts = {},
+  initialTag = "",
+  initialView = "posts",
+} = Astro.props as Props;
+
+const initialTagValue = initialTag.toLowerCase();
+const initialShouldShowPosts = initialView === "posts" || Boolean(initialTagValue);
+const recentPosts = allPosts.slice(0, 5);
+const totalPosts = allPosts.length;
+const sortedTags = Object.entries(tagCounts).sort((a, b) => Number(b[1]) - Number(a[1]));
+const sortedCategories = Object.entries(categoryCounts).sort((a, b) => Number(b[1]) - Number(a[1]));
+const getPostCategory = (post: BlogPost) => post.data.category ?? (post.id.includes("/") ? post.id.split("/")[0] : "uncategorized");
+const getCategoryLabel = (category: string) => category === "uncategorized" ? "&#xBBF8;&#xBD84;&#xB958;" : category;
+const formatDate = (date: Date) => new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(date);
+
+const toPostKey = (post: BlogPost) => createSlug(post.data.title, post.id);
+const postsForPage = page.data.map((post: BlogPost, index: number) => {
+  const tags = post.data.tags ?? [];
+  const category = getPostCategory(post);
+  const key = toPostKey(post);
+  return {
+    post,
+    index,
+    tags,
+    tagList: tags.map((tag) => tag.toLowerCase()),
+    category,
+    categoryValue: category.toLowerCase(),
+    key,
+    url: "/blog/" + key,
+  };
+});
+
+const postIndex = new Map(postsForPage.map((item) => [item.key, item]));
+const edgeMap = new Map<string, NetworkLink>();
+const normalizeEdgeKey = (source: string, target: string) => [source, target].sort().join("__");
+const upsertEdge = (link: NetworkLink) => {
+  if (!postIndex.has(link.source) || !postIndex.has(link.target) || link.source === link.target) return;
+  const key = normalizeEdgeKey(link.source, link.target);
+  const current = edgeMap.get(key);
+  if (!current) {
+    edgeMap.set(key, {
+      ...link,
+      type: link.type ?? "related",
+      label: link.label ?? link.type ?? "related",
+      weight: link.weight ?? 1,
+      sharedTags: link.sharedTags ?? [],
+    });
+    return;
+  }
+  current.weight = Math.max(current.weight ?? 1, link.weight ?? 1);
+  current.type = current.type === "reference" || link.type === "reference" ? "reference" : current.type;
+  current.label = current.type === "reference" ? "reference" : current.label;
+  current.sharedTags = Array.from(new Set([...(current.sharedTags ?? []), ...(link.sharedTags ?? [])]));
+};
+
+for (const link of (postNetwork.manualLinks ?? []) as NetworkLink[]) {
+  upsertEdge(link);
+}
+
+const autoLinks = postNetwork.autoLinks ?? {};
+if (autoLinks.sharedTags) {
+  for (let i = 0; i < postsForPage.length; i += 1) {
+    for (let j = i + 1; j < postsForPage.length; j += 1) {
+      const source = postsForPage[i];
+      const target = postsForPage[j];
+      const sharedTags = source.tags.filter((tag) => target.tags.includes(tag));
+      if (sharedTags.length >= (autoLinks.minimumSharedTags ?? 1)) {
+        upsertEdge({
+          source: source.key,
+          target: target.key,
+          type: "shared-tags",
+          label: sharedTags.map((tag) => "#" + tag).join(", "),
+          weight: autoLinks.weight ?? 1,
+          sharedTags,
+        });
+      }
+    }
+  }
+}
+
+const networkLinks = Array.from(edgeMap.values());
+---
+
+<BaseLayout
+  title="Blog | dgddgd314"
+  description="dgddgd314 technical archive"
+  includeSidebar={false}
+  showHeader={false}
+  showFooter={false}
+  mainClass="tistory-main"
+>
+  <div class="blog-archive" data-blog-archive data-initial-view={initialView} data-initial-tag={initialTagValue}>
+    <header class="blog-topbar">
+      <a href="/blog/" class="blog-brand"><span>dgddgd</span><strong>314</strong></a>
+      <label class="blog-search" aria-label="Search posts">
+        <span aria-hidden="true"></span>
+        <input type="search" placeholder="search posts" data-post-search />
+      </label>
+    </header>
+
+    <nav class="blog-tabs" aria-label="Blog navigation">
+      <button class:list={["blog-tab", initialView === "posts" && "blog-tab--active"]} type="button" data-view-button="posts">&#xD648;</button>
+      <button class:list={["blog-tab", initialView === "tags" && "blog-tab--active"]} type="button" data-view-button="tags">&#xD0DC;&#xADF8;</button>
+    </nav>
+
+    <div class="blog-layout">
+      <main class="blog-feed">
+        <section class="tag-view" data-tag-view hidden={initialView !== "tags"} aria-labelledby="tag-view-title">
+          <div class="section-head">
+            <h1 id="tag-view-title">&#xD0DC;&#xADF8;</h1>
+            <p>{sortedTags.length} tags</p>
+          </div>
+          <div class="tag-cloud" data-tag-cloud>
+            <button type="button" class:list={["tag-pill", !initialTagValue && "tag-pill--active"]} data-tag-filter="">All</button>
+            {sortedTags.map(([tag, count]) => {
+              const tagValue = String(tag).toLowerCase();
+              return (
+                <button type="button" class:list={["tag-pill", initialTagValue === tagValue && "tag-pill--active"]} data-tag-filter={tagValue}>
+                  <span>{tag}</span>
+                  <em>{count}</em>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section class="post-view" data-post-view hidden={!initialShouldShowPosts} aria-labelledby="all-posts-title">
+          <div class="section-head section-head--archive">
+            <div>
+              {initialTagValue ? (
+                <h1 id="all-posts-title" data-post-heading>#{initialTagValue} <span>{postsForPage.length}</span></h1>
+              ) : (
+                <h1 id="all-posts-title" data-post-heading>&#xC804;&#xCCB4; &#xAE00; <span>{totalPosts}</span></h1>
+              )}
+              <p data-search-count hidden></p>
+            </div>
+            <div class="view-switcher" aria-label="Archive layout">
+              <button type="button" class="view-switcher__button view-switcher__button--active" data-layout-button="bento" aria-label="Bento grid"><span class="layout-icon layout-icon--bento" aria-hidden="true"></span></button>
+              <button type="button" class="view-switcher__button" data-layout-button="list" aria-label="List view"><span class="layout-icon layout-icon--list" aria-hidden="true"></span></button>
+              <button type="button" class="view-switcher__button" data-layout-button="network" aria-label="Network view" hidden={initialView === "tags"}><span class="layout-icon layout-icon--network" aria-hidden="true"></span></button>
+            </div>
+          </div>
+
+          <div class="post-grid" data-layout-view="bento" data-post-grid>
+            {postsForPage.map(({ post, index, tags, tagList, categoryValue, key, url }) => (
+              <article class:list={["post-card", index === 0 && "post-card--feature"]} data-post-card data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue}>
+                <a href={url} class="post-card__media" aria-label={post.data.title}>
+                  {post.data.heroImage ? (
+                    <img src={post.data.heroImage} alt="" loading="lazy" />
+                  ) : (
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                  )}
+                </a>
+                <div class="post-card__body">
+                  <div class="post-card__meta">
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                  </div>
+                  <a href={url} class="post-card__title">{post.data.title}</a>
+                  <p>{post.data.description}</p>
+                  <div class="post-card__tags">
+                    {tags.length > 0 ? tags.slice(0, 3).map((tag) => <button type="button" data-tag-filter={tag.toLowerCase()}>{tag}</button>) : <span>untagged</span>}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div class="post-list" data-layout-view="list" hidden>
+            {postsForPage.map(({ post, index, tags, tagList, categoryValue, key, url }) => (
+              <article class="list-row" data-post-list-item data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue}>
+                <a href={url} class="list-row__icon" aria-label={post.data.title}>{String(index + 1).padStart(2, "0")}</a>
+                <div class="list-row__body">
+                  <a href={url} class="list-row__title">{post.data.title}</a>
+                  <p>{post.data.description}</p>
+                  <div class="list-row__tags">
+                    {tags.length > 0 ? tags.map((tag) => <button type="button" data-tag-filter={tag.toLowerCase()}>{tag}</button>) : <span>untagged</span>}
+                  </div>
+                </div>
+                <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+              </article>
+            ))}
+          </div>
+
+          <section class="network-view" data-layout-view="network" hidden aria-label="Post network">
+            <div class="network-map" data-network data-network-links={JSON.stringify(networkLinks)}>
+              <svg class="network-lines" data-network-lines aria-hidden="true"></svg>
+              <div class="network-preview" data-network-preview hidden></div>
+              {postsForPage.map(({ post, index, tags, tagList, categoryValue, key, url }) => (
+                <a href={url} class="network-node network-node--post" data-network-post data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue} data-title={post.data.title} data-desc={post.data.description} data-date={formatDate(post.data.pubDate)} data-tags={tags.join(", ")}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                </a>
+              ))}
+            </div>
+            <div class="network-legend">
+              <span>shared tag</span>
+              <span>reference</span>
+            </div>
+          </section>
+
+          <p class="blog-empty" data-search-empty hidden>No matching posts.</p>
+
+          <div class="blog-pagination">
+            {page.url.prev ? <a href={page.url.prev}>Recent posts</a> : <span />}
+            {page.url.next ? <a href={page.url.next}>Older posts</a> : <span />}
+          </div>
+        </section>
+      </main>
+
+      <aside class="blog-sidebar" aria-label="Blog sidebar">
+        <section class="sidebar-panel" id="categories">
+          <div class="sidebar-panel__head">
+            <h2>&#xBD84;&#xB958; &#xC804;&#xCCB4;&#xBCF4;&#xAE30;</h2>
+            <span>{totalPosts}</span>
+          </div>
+          <div class="category-list">
+            {sortedCategories.length > 0 ? (
+              sortedCategories.map(([category, count]) => {
+                const categoryValue = String(category).toLowerCase();
+                return (
+                  <button type="button" data-category-filter={categoryValue}>
+                    <span set:html={getCategoryLabel(String(category))}></span>
+                    <em>{count}</em>
+                  </button>
+                );
+              })
+            ) : (
+              <p>No categories.</p>
+            )}
+          </div>
+        </section>
+
+        <section class="sidebar-panel">
+          <div class="sidebar-panel__head">
+            <h2>&#xACF5;&#xC9C0;&#xC0AC;&#xD56D;</h2>
+            <span>0</span>
+          </div>
+          <p>&#xACF5;&#xC9C0;&#xC0AC;&#xD56D;&#xC774; &#xC5C6;&#xC2B5;&#xB2C8;&#xB2E4;.</p>
+        </section>
+
+        <section class="sidebar-panel">
+          <div class="sidebar-panel__head">
+            <h2>&#xCD5C;&#xADFC;&#xAE00;</h2>
+            <span>{recentPosts.length}</span>
+          </div>
+          <div class="recent-list">
+            {recentPosts.map((post: BlogPost, index: number) => {
+              const url = "/blog/" + toPostKey(post);
+              return (
+                <a href={url} class="recent-post">
+                  <em>{String(index + 1).padStart(2, "0")}</em>
+                  <span>
+                    <strong>{post.data.title}</strong>
+                    <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const root = document.querySelector("[data-blog-archive]");
+    const input = root?.querySelector("[data-post-search]");
+    const cards = Array.from(root?.querySelectorAll("[data-post-card]") ?? []);
+    const listItems = Array.from(root?.querySelectorAll("[data-post-list-item]") ?? []);
+    const networkPostNodes = Array.from(root?.querySelectorAll("[data-network-post]") ?? []);
+    const empty = root?.querySelector("[data-search-empty]");
+    const count = root?.querySelector("[data-search-count]");
+    const postView = root?.querySelector("[data-post-view]");
+    const postHeading = root?.querySelector("[data-post-heading]");
+    const tagView = root?.querySelector("[data-tag-view]");
+    const viewButtons = Array.from(root?.querySelectorAll("[data-view-button]") ?? []);
+    const layoutButtons = Array.from(root?.querySelectorAll("[data-layout-button]") ?? []);
+    const layoutViews = Array.from(root?.querySelectorAll("[data-layout-view]") ?? []);
+    const tagButtons = Array.from(root?.querySelectorAll("[data-tag-filter]") ?? []);
+    const categoryButtons = Array.from(root?.querySelectorAll("[data-category-filter]") ?? []);
+    const network = root?.querySelector("[data-network]");
+    const networkLines = root?.querySelector("[data-network-lines]");
+    const networkPreview = root?.querySelector("[data-network-preview]");
+    const networkLinks = JSON.parse(network?.dataset.networkLinks ?? "[]");
+    let activeTag = root?.dataset.initialTag ?? "";
+    let activeCategory = "";
+    let activeLayout = "bento";
+    let activeView = root?.dataset.initialView ?? "posts";
+
+    function getTagList(node) {
+      return (node.dataset.postTags ?? "").split("|").filter(Boolean);
+    }
+
+    function getCategoryHeading(category) {
+      return category === "uncategorized" ? "&#xBBF8;&#xBD84;&#xB958;" : category;
+    }
+
+    function syncTagModeLayout() {
+      const inTagMode = activeView === "tags";
+      layoutButtons.forEach((button) => {
+        if (button.dataset.layoutButton === "network") button.hidden = inTagMode;
+      });
+      if (inTagMode && activeLayout === "network") setLayout("bento");
+    }
+
+    function setView(view) {
+      activeView = view;
+      if (tagView) tagView.hidden = view !== "tags";
+      viewButtons.forEach((button) => {
+        button.classList.toggle("blog-tab--active", button.dataset.viewButton === view);
+      });
+      syncTagModeLayout();
+    }
+
+    function setLayout(layout) {
+      if (activeView === "tags" && layout === "network") return;
+      activeLayout = layout;
+      layoutViews.forEach((view) => {
+        view.hidden = view.dataset.layoutView !== layout;
+      });
+      layoutButtons.forEach((button) => {
+        button.classList.toggle("view-switcher__button--active", button.dataset.layoutButton === layout);
+      });
+      if (layout === "network") requestAnimationFrame(layoutNetwork);
+    }
+
+    function syncPostReplica(key, matched) {
+      listItems.forEach((item) => {
+        if (item.dataset.postKey === key) item.hidden = !matched;
+      });
+      networkPostNodes.forEach((node) => {
+        if (node.dataset.postKey === key) node.hidden = !matched;
+      });
+    }
+
+    function applyFilters() {
+      const query = input?.value.trim().toLowerCase() ?? "";
+      let visible = 0;
+      const shouldShowPosts = activeView === "posts" || Boolean(activeTag);
+
+      cards.forEach((card) => {
+        const title = card.dataset.postTitle ?? "";
+        const desc = card.dataset.postDesc ?? "";
+        const tags = getTagList(card);
+        const textMatched = !query || `${title} ${desc} ${tags.join(" ")}`.includes(query);
+        const tagMatched = !activeTag || tags.includes(activeTag);
+        const categoryMatched = !activeCategory || (card.dataset.postCategory ?? "") === activeCategory;
+        const matched = shouldShowPosts && textMatched && tagMatched && categoryMatched;
+        card.hidden = !matched;
+        syncPostReplica(card.dataset.postKey ?? "", matched);
+        if (matched) visible += 1;
+      });
+
+      tagButtons.forEach((button) => {
+        button.classList.toggle("tag-pill--active", (button.dataset.tagFilter ?? "") === activeTag);
+      });
+      categoryButtons.forEach((button) => {
+        button.classList.toggle("tag-pill--active", (button.dataset.categoryFilter ?? "") === activeCategory);
+      });
+
+      if (postView) postView.hidden = !shouldShowPosts;
+      if (postHeading) {
+        postHeading.innerHTML = activeTag
+          ? `#${activeTag} <span>${visible}</span>`
+          : activeCategory
+            ? `${getCategoryHeading(activeCategory)} <span>${visible}</span>`
+            : `&#xC804;&#xCCB4; &#xAE00; <span>${cards.length}</span>`;
+      }
+      if (empty) empty.hidden = !shouldShowPosts || visible !== 0;
+      if (count) {
+        count.hidden = !shouldShowPosts || (!query && !activeTag && !activeCategory);
+        count.textContent = `${visible} matched`;
+      }
+      if (activeLayout === "network") requestAnimationFrame(layoutNetwork);
+    }
+
+    function layoutNetwork() {
+      if (!network || !networkLines) return;
+      const nodes = networkPostNodes.filter((node) => !node.hidden);
+      const width = network.clientWidth;
+      const height = network.clientHeight;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radiusX = Math.max(120, width * 0.36);
+      const radiusY = Math.max(112, height * 0.32);
+      const nodeByKey = new Map(nodes.map((node) => [node.dataset.postKey, node]));
+
+      nodes.forEach((node, index) => {
+        const angle = nodes.length === 1 ? -Math.PI / 2 : -Math.PI / 2 + (index * Math.PI * 2) / nodes.length;
+        const left = centerX + Math.cos(angle) * radiusX;
+        const top = centerY + Math.sin(angle) * radiusY;
+        node.style.left = `${left}px`;
+        node.style.top = `${top}px`;
+      });
+
+      const lines = [];
+      networkLinks.forEach((link) => {
+        const source = nodeByKey.get(link.source);
+        const target = nodeByKey.get(link.target);
+        if (!source || !target) return;
+        const sourceX = parseFloat(source.style.left);
+        const sourceY = parseFloat(source.style.top);
+        const targetX = parseFloat(target.style.left);
+        const targetY = parseFloat(target.style.top);
+        const kind = link.type === "reference" ? "reference" : "shared";
+        lines.push(`<line data-source="${link.source}" data-target="${link.target}" data-kind="${kind}" x1="${sourceX}" y1="${sourceY}" x2="${targetX}" y2="${targetY}" />`);
+      });
+      networkLines.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      networkLines.innerHTML = lines.join("");
+    }
+
+    function showPreview(node) {
+      if (!networkPreview || !network) return;
+      const key = node.dataset.postKey;
+      const related = networkLinks.filter((link) => link.source === key || link.target === key).length;
+      networkPreview.innerHTML = `<strong>${node.dataset.title ?? ""}</strong><span>${node.dataset.date ?? ""} - ${related} links</span><p>${node.dataset.desc ?? ""}</p><em>${node.dataset.tags ?? "untagged"}</em>`;
+      networkPreview.hidden = false;
+      networkPreview.style.left = node.style.left;
+      networkPreview.style.top = node.style.top;
+      network.querySelectorAll("[data-network-post]").forEach((item) => item.classList.toggle("network-node--dimmed", item.dataset.postKey !== key));
+      network.querySelectorAll("line").forEach((line) => {
+        const connected = line.dataset.source === key || line.dataset.target === key;
+        line.classList.toggle("network-line--active", connected);
+        if (connected) {
+          network.querySelector(`[data-post-key="${line.dataset.source}"]`)?.classList.remove("network-node--dimmed");
+          network.querySelector(`[data-post-key="${line.dataset.target}"]`)?.classList.remove("network-node--dimmed");
+        }
+      });
+    }
+
+    function hidePreview() {
+      if (networkPreview) networkPreview.hidden = true;
+      network?.querySelectorAll("[data-network-post]").forEach((item) => item.classList.remove("network-node--dimmed"));
+      network?.querySelectorAll("line").forEach((line) => line.classList.remove("network-line--active"));
+    }
+
+    input?.addEventListener("input", applyFilters);
+
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = button.dataset.viewButton ?? "posts";
+        activeTag = "";
+        activeCategory = "";
+        setView(view);
+        applyFilters();
+      });
+    });
+
+    layoutButtons.forEach((button) => {
+      button.addEventListener("click", () => setLayout(button.dataset.layoutButton ?? "bento"));
+    });
+
+    tagButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeTag = button.dataset.tagFilter ?? "";
+        activeCategory = "";
+        setView("tags");
+        applyFilters();
+      });
+    });
+
+    categoryButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeCategory = button.dataset.categoryFilter ?? "";
+        activeTag = "";
+        setView("posts");
+        applyFilters();
+      });
+    });
+
+    networkPostNodes.forEach((node) => {
+      node.addEventListener("pointerenter", () => showPreview(node));
+      node.addEventListener("pointerleave", hidePreview);
+      node.addEventListener("focus", () => showPreview(node));
+      node.addEventListener("blur", hidePreview);
+    });
+
+    window.addEventListener("resize", () => {
+      if (activeLayout === "network") layoutNetwork();
+    });
+
+    setView(activeView);
+    setLayout("bento");
+    applyFilters();
+  </script>
+</BaseLayout>
