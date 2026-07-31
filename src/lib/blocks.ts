@@ -1,3 +1,4 @@
+import { BLOCK_BACKGROUND_COLORS, BLOCK_TEXT_COLORS } from "./color-palette";
 export type TextAlign = "left" | "center" | "right";
 export type HeadingLevel = 1 | 2 | 3;
 
@@ -156,37 +157,13 @@ export function getBlockText(block: Block): string {
 }
 
 export function resolveTextColor(color?: string): string | undefined {
-  const colors: Record<string, string> = {
-    default: "inherit",
-    gray: "#5f6368",
-    brown: "#7a5c4f",
-    red: "#a4473f",
-    orange: "#a85f16",
-    yellow: "#80620b",
-    green: "#2f6f4e",
-    blue: "#27679b",
-    purple: "#72549a",
-    pink: "#9a4d70",
-    teal: "#1f6f68",
-  };
-  return color ? colors[color] ?? color : undefined;
+  return color ? BLOCK_TEXT_COLORS[color as keyof typeof BLOCK_TEXT_COLORS] ?? color : undefined;
 }
 
 export function resolveBackgroundColor(color?: string): string | undefined {
-  const colors: Record<string, string> = {
-    default: "transparent",
-    gray: "#f1f3f4",
-    brown: "#f4eeee",
-    red: "#faeceb",
-    orange: "#fbecdd",
-    yellow: "#fff4cc",
-    green: "#edf3ec",
-    blue: "#eaf4ff",
-    purple: "#f3eefd",
-    pink: "#fbeaf2",
-    teal: "#e7f6f4",
-  };
-  return color ? colors[color] ?? color : undefined;
+  return color
+    ? BLOCK_BACKGROUND_COLORS[color as keyof typeof BLOCK_BACKGROUND_COLORS] ?? color
+    : undefined;
 }
 
 export function resolveBlockColor(color?: string): string | undefined {

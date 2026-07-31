@@ -1,4 +1,5 @@
 import type { RichText, TableCell, TextAnnotation } from "./blocks";
+import { BLOCK_BACKGROUND_COLORS, BLOCK_TEXT_COLORS } from "./color-palette";
 
 export type InlineMark = keyof TextAnnotation;
 
@@ -68,31 +69,8 @@ export type EditorDocument = {
 
 const BOOLEAN_MARKS: InlineMark[] = ["bold", "italic", "underline", "strike", "code"];
 
-const INLINE_TEXT_COLORS: Record<string, string> = {
-  gray: "#5f6368",
-  brown: "#7a5c4f",
-  red: "#a4473f",
-  orange: "#a85f16",
-  yellow: "#80620b",
-  green: "#2f6f4e",
-  blue: "#27679b",
-  purple: "#72549a",
-  pink: "#9a4d70",
-  teal: "#1f6f68",
-};
-
-const INLINE_BACKGROUND_COLORS: Record<string, string> = {
-  gray: "#f1f3f4",
-  brown: "#f4eeee",
-  red: "#faeceb",
-  orange: "#fbecdd",
-  yellow: "#fff4cc",
-  green: "#edf3ec",
-  blue: "#eaf4ff",
-  purple: "#f3eefd",
-  pink: "#fbeaf2",
-  teal: "#e7f6f4",
-};
+const INLINE_TEXT_COLORS: Record<string, string> = BLOCK_TEXT_COLORS;
+const INLINE_BACKGROUND_COLORS: Record<string, string> = BLOCK_BACKGROUND_COLORS;
 
 export function createId(): string {
   return `block-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;

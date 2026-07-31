@@ -220,7 +220,7 @@
   border: 1px solid var(--archive-border);
   border-radius: 999px;
   padding: 4px;
-  background: #f1f4f6;
+  background: var(--archive-panel-soft);
 }
 
 .view-switcher__button {
@@ -238,7 +238,7 @@
 
 .view-switcher__button:hover,
 .view-switcher__button--active {
-  color: #101317;
+  color: var(--archive-ink);
   background: var(--archive-panel);
   box-shadow: 0 3px 12px rgba(41, 115, 178, 0.1);
 }
@@ -346,7 +346,7 @@
   border: 1px solid var(--archive-border);
   border-radius: 999px;
   color: var(--archive-soft-ink);
-  background: #ffffff;
+  background: var(--archive-panel);
   font: inherit;
   cursor: pointer;
 }
@@ -423,7 +423,7 @@
   aspect-ratio: 1.9;
   overflow: hidden;
   color: var(--archive-muted);
-  background: linear-gradient(135deg, #f5f7f8 0%, #e8f6f8 100%);
+  background: linear-gradient(135deg, var(--archive-panel-soft) 0%, var(--archive-hover) 100%);
   text-decoration: none;
 }
 
@@ -551,7 +551,7 @@
 }
 
 .list-row:hover {
-  background: #fbfdff;
+  background: var(--archive-panel-soft);
 }
 
 .list-row__icon {
@@ -604,7 +604,7 @@
     radial-gradient(circle at 22% 18%, rgba(154, 203, 208, 0.2), transparent 28%),
     linear-gradient(rgba(41, 115, 178, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(41, 115, 178, 0.035) 1px, transparent 1px),
-    #ffffff;
+    var(--archive-panel);
   background-size: auto, 28px 28px, 28px 28px, auto;
 }
 
@@ -646,7 +646,7 @@
   border: 1px solid rgba(41, 115, 178, 0.36);
   border-radius: 50%;
   color: var(--archive-ink);
-  background: #ffffff;
+  background: var(--archive-panel);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 0.82rem;
   font-weight: 900;

@@ -1,5 +1,6 @@
 import katex from "katex";
 import type { RichText, TextAnnotation } from "../lib/blocks";
+import { BLOCK_COLOR_PALETTE, type BlockColorOption } from "../lib/color-palette";
 import {
   applyInlineTextColor,
   blockPlainText,
@@ -40,13 +41,6 @@ type SelectionSnapshot = {
   col?: number;
   start: number;
   end: number;
-};
-
-type ColorOption = {
-  value: string;
-  label: string;
-  text: string;
-  background: string;
 };
 
 type EmojiRecord = {
@@ -90,29 +84,11 @@ const COMMANDS: Command[] = [
   { target: "background-menu", title: "색", hint: "현재 블록의 배경색", aliases: ["color", "background", "색", "배경", "배경색"] },
 ];
 
-const COLOR_OPTIONS: ColorOption[] = [
-  { value: "default", label: "기본", text: "#45474b", background: "#ffffff" },
-  { value: "gray", label: "회색", text: "#5f6368", background: "#f1f3f4" },
-  { value: "brown", label: "갈색", text: "#7a5c4f", background: "#f4eeee" },
-  { value: "red", label: "빨간색", text: "#a4473f", background: "#faeceb" },
-  { value: "orange", label: "주황색", text: "#a85f16", background: "#fbecdd" },
-  { value: "yellow", label: "노란색", text: "#80620b", background: "#fff4cc" },
-  { value: "green", label: "초록색", text: "#2f6f4e", background: "#edf3ec" },
-  { value: "blue", label: "파란색", text: "#27679b", background: "#eaf4ff" },
-  { value: "purple", label: "보라색", text: "#72549a", background: "#f3eefd" },
-  { value: "pink", label: "분홍색", text: "#9a4d70", background: "#fbeaf2" },
-  { value: "teal", label: "청록색", text: "#1f6f68", background: "#e7f6f4" },
-];
+const COLOR_OPTIONS: readonly BlockColorOption[] = BLOCK_COLOR_PALETTE;
 
-const COVER_PRESETS = [
-  { value: "#eaf4ff", label: "blue" },
-  { value: "#e7f6f4", label: "teal" },
-  { value: "#edf3ec", label: "green" },
-  { value: "#fff4cc", label: "yellow" },
-  { value: "#faeceb", label: "red" },
-  { value: "#f3eefd", label: "purple" },
-  { value: "#f1f3f4", label: "gray" },
-];
+const COVER_PRESETS = BLOCK_COLOR_PALETTE
+  .filter(({ value }) => value !== "default")
+  .map(({ value, background }) => ({ value: background, label: value }));
 
 const RICH_TYPES: EditorBlockType[] = [
   "paragraph",

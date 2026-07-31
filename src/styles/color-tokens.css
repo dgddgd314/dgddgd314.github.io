@@ -5,6 +5,7 @@
 */
 
 :root {
+  color-scheme: light;
   --color-paper: #fbfcfd;
   --color-paper-raised: #ffffff;
   --color-paper-soft: #f5f7f8;
@@ -23,4 +24,26 @@
   --color-mint: #9acbd0;
   --color-olive: #495e57;
   --color-signal: #f4ce14;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #151a20;
+  --color-paper-raised: #1d252e;
+  --color-paper-soft: #252f3a;
+  --color-paper-blue: #1d3745;
+  --color-paper-mint: #1b3638;
+
+  --color-ink: #edf2f5;
+  --color-ink-soft: #cbd4dc;
+  --color-muted: #98a6b3;
+  --color-faint: #6f7d8a;
+  --color-line: #33404d;
+  --color-line-strong: #4b5a68;
+
+  --color-blue: #79bdf0;
+  --color-teal: #78ccca;
+  --color-mint: #a6d4d2;
+  --color-olive: #b3cebe;
+  --color-signal: #f0c955;
 }

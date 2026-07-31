@@ -1,3 +1,4 @@
+@import "./color-tokens.css";
 @import "katex/dist/katex.min.css";
 
 .notion-main {
@@ -5,19 +6,19 @@
   max-width: none;
   min-height: 100vh;
   padding: 0;
-  background: #ffffff;
+  background: var(--color-paper);
 }
 
 .block-page {
-  --block-surface: #ffffff;
-  --block-surface-muted: #f7f7f5;
-  --block-surface-hover: rgba(55, 53, 47, 0.06);
-  --block-ink: #37352f;
-  --block-ink-soft: rgba(55, 53, 47, 0.72);
-  --block-ink-muted: rgba(55, 53, 47, 0.5);
-  --block-border: rgba(55, 53, 47, 0.13);
-  --block-code-bg: #f7f6f3;
-  --block-code-ink: #37352f;
+  --block-surface: var(--color-paper-raised);
+  --block-surface-muted: var(--color-paper-soft);
+  --block-surface-hover: var(--color-paper-blue);
+  --block-ink: var(--color-ink);
+  --block-ink-soft: var(--color-ink-soft);
+  --block-ink-muted: var(--color-muted);
+  --block-border: var(--color-line);
+  --block-code-bg: var(--color-paper-soft);
+  --block-code-ink: var(--color-ink);
   --block-gray: rgba(55, 53, 47, 0.58);
   --block-brown: #64473a;
   --block-red: #e03e3e;
@@ -147,7 +148,7 @@
 }
 
 .block-badge {
-  background: #edf3ec;
+  background: var(--color-paper-mint);
 }
 
 .block-bento {
@@ -201,7 +202,7 @@
 
 .block-bento__card:hover,
 .block-bento__card:focus-visible {
-  background: #efefed;
+  background: var(--color-paper-soft);
   outline: none;
 }
 
@@ -247,12 +248,12 @@
   overflow: auto;
   gap: 10px;
   justify-content: flex-start;
-  background: #fbfbfa;
+  background: var(--color-paper-soft);
 }
 
 .block-outline:hover,
 .block-outline:focus-within {
-  background: #fbfbfa;
+  background: var(--color-paper-soft);
 }
 .block-toc__link {
   display: block;
@@ -518,7 +519,7 @@
 }
 
 .notion-table th {
-  background: #fbfbfa;
+  background: var(--color-paper-soft);
   font-weight: 600;
 }
 
