@@ -1,4 +1,3 @@
-@import "./color-tokens.css";
 
 .tistory-main {
   width: 100%;
@@ -220,7 +219,7 @@
   border: 1px solid var(--archive-border);
   border-radius: 999px;
   padding: 4px;
-  background: #f1f4f6;
+  background: var(--archive-panel-soft);
 }
 
 .view-switcher__button {
@@ -238,7 +237,7 @@
 
 .view-switcher__button:hover,
 .view-switcher__button--active {
-  color: #101317;
+  color: var(--archive-ink);
   background: var(--archive-panel);
   box-shadow: 0 3px 12px rgba(41, 115, 178, 0.1);
 }
@@ -327,6 +326,34 @@
   margin-bottom: 18px;
 }
 
+.tag-pill--overflow { display: none; }
+.tag-cloud[data-tag-cloud-expanded] .tag-pill--overflow { display: inline-flex; }
+.tag-cloud__more,
+.list-load-more {
+  min-height: 30px;
+  border: 1px solid var(--archive-border);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--archive-muted);
+  background: var(--archive-panel);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 760;
+  cursor: pointer;
+}
+.tag-cloud__more:hover,
+.list-load-more:hover {
+  border-color: var(--archive-accent);
+  color: var(--archive-accent);
+  background: var(--archive-hover);
+}
+.list-load-more {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+}
+.list-load-more[hidden] { display: none; }
+
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
@@ -346,7 +373,7 @@
   border: 1px solid var(--archive-border);
   border-radius: 999px;
   color: var(--archive-soft-ink);
-  background: #ffffff;
+  background: var(--archive-panel);
   font: inherit;
   cursor: pointer;
 }
@@ -423,7 +450,7 @@
   aspect-ratio: 1.9;
   overflow: hidden;
   color: var(--archive-muted);
-  background: linear-gradient(135deg, #f5f7f8 0%, #e8f6f8 100%);
+  background: linear-gradient(135deg, var(--archive-panel-soft) 0%, var(--archive-hover) 100%);
   text-decoration: none;
 }
 
@@ -551,7 +578,7 @@
 }
 
 .list-row:hover {
-  background: #fbfdff;
+  background: var(--archive-panel-soft);
 }
 
 .list-row__icon {
@@ -604,7 +631,7 @@
     radial-gradient(circle at 22% 18%, rgba(154, 203, 208, 0.2), transparent 28%),
     linear-gradient(rgba(41, 115, 178, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(41, 115, 178, 0.035) 1px, transparent 1px),
-    #ffffff;
+    var(--archive-panel);
   background-size: auto, 28px 28px, 28px 28px, auto;
 }
 
@@ -646,7 +673,7 @@
   border: 1px solid rgba(41, 115, 178, 0.36);
   border-radius: 50%;
   color: var(--archive-ink);
-  background: #ffffff;
+  background: var(--archive-panel);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 0.82rem;
   font-weight: 900;
@@ -690,7 +717,7 @@
   border-radius: 8px;
   padding: 11px 12px;
   color: var(--archive-soft-ink);
-  background: rgba(255, 255, 255, 0.97);
+  background: color-mix(in srgb, var(--archive-panel) 97%, transparent);
   box-shadow: 0 14px 34px rgba(41, 115, 178, 0.14);
   transform: translate(18px, -50%);
   pointer-events: none;
@@ -846,3 +873,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Tistory-style category tree */
+.category-tree { gap: 3px; }
+.category-tree__node { display: grid; gap: 3px; }
+.category-tree__children { display: grid; gap: 3px; margin: 1px 0 3px 11px; border-left: 1px solid var(--archive-border); padding-left: 10px; }
+.category-tree .category-tree__node > button { display: flex; align-items: center; justify-content: space-between; min-height: 26px; border: 0; border-radius: 0; padding: 2px 0; color: var(--archive-soft-ink); background: transparent; font-size: 0.82rem; line-height: 1.35; text-align: left; }
+.category-tree .category-tree__node > button span { min-width: 0; overflow-wrap: anywhere; }
+.category-tree .category-tree__node > button em { margin-left: 10px; color: var(--archive-faint); font-style: normal; }
+.category-tree .category-tree__node > button:hover,
+.category-tree .category-tree__node > button.tag-pill--active { border-color: transparent; color: var(--archive-accent); background: transparent; }
+.category-tree .category-tree__children .category-tree__node > button { color: var(--archive-muted); font-size: 0.8rem; }

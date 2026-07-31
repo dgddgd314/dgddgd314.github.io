@@ -1,0 +1,146 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import "../../styles/post-editor.css";
+---
+
+<BaseLayout
+  title="Post Editor | dgddgd314"
+  description="Notion-like local post editor"
+  mainClass="editor-main"
+>
+  <div class="post-editor" data-editor>
+    <header class="editor-topbar">
+      <a class="editor-brand" href="/blog/" aria-label="Back to blog"><span>dgddgd</span><strong>314</strong></a>
+      <div class="editor-actions" aria-label="Editor actions">
+        <button type="button" data-action="copy-json">JSON &#xBCF5;&#xC0AC;</button>
+        <button type="button" data-action="save-json">JSON &#xC800;&#xC7A5;</button>
+      </div>
+    </header>
+
+    <div class="editor-shell">
+      <aside class="editor-side" aria-label="Post metadata">
+        <section class="editor-panel">
+          <div class="editor-panel__head">
+            <h2>&#xC18D;&#xC131;</h2>
+            <span data-save-state>&#xC800;&#xC7A5;&#xB428;</span>
+          </div>
+          <label>
+            <span>&#xC2AC;&#xB7EC;&#xADF8;</span>
+            <input type="text" data-meta="slug" placeholder="my-post-title" />
+          </label>
+          <label>
+            <span>&#xC124;&#xBA85;</span>
+            <textarea data-meta="description" rows="4" placeholder="&#xBAA9;&#xB85D;&#xACFC; RSS&#xC5D0; &#xBCF4;&#xC77C; &#xC9E7;&#xC740; &#xC694;&#xC57D;"></textarea>
+          </label>
+          <label>
+            <span>&#xB0A0;&#xC9DC;</span>
+            <input type="date" data-meta="pubDate" />
+          </label>
+          <label>
+            <span>&#xCE74;&#xD14C;&#xACE0;&#xB9AC;</span>
+            <input type="text" data-meta="category" placeholder="engineering" />
+          </label>
+          <label>
+            <span>&#xD0DC;&#xADF8;</span>
+            <input type="text" data-meta="tags" placeholder="astro, notion, ui" />
+          </label>
+          <label>
+            <span>&#xC0C1;&#xD0DC;</span>
+            <input type="text" data-meta="badge" placeholder="draft" />
+          </label>
+        </section>
+
+        <section class="editor-panel">
+          <div class="editor-panel__head">
+            <h2>&#xBE14;&#xB85D;</h2>
+            <span data-block-count>0</span>
+          </div>
+          <div class="block-palette" aria-label="&#xBE14;&#xB85D; &#xCD94;&#xAC00;">
+            <button type="button" data-add-block="paragraph">&#xD14D;&#xC2A4;&#xD2B8;</button>
+            <button type="button" data-add-block="heading:1">H1</button>
+            <button type="button" data-add-block="heading:2">H2</button>
+            <button type="button" data-add-block="heading:3">H3</button>
+            <button type="button" data-add-block="bulleted_list">&#xAE00;&#xBA38;&#xB9AC;</button>
+            <button type="button" data-add-block="numbered_list">&#xBC88;&#xD638;</button>
+            <button type="button" data-add-block="todo">&#xD560; &#xC77C;</button>
+            <button type="button" data-add-block="quote">&#xC778;&#xC6A9;</button>
+            <button type="button" data-add-block="callout">&#xCF5C;&#xC544;&#xC6C3;</button>
+            <button type="button" data-add-block="code">&#xCF54;&#xB4DC;</button>
+            <button type="button" data-add-block="divider">&#xAD6C;&#xBD84;&#xC120;</button>
+            <button type="button" data-add-block="image">&#xC774;&#xBBF8;&#xC9C0;</button>
+            <button type="button" data-add-block="bookmark">&#xBD81;&#xB9C8;&#xD06C;</button>
+            <button type="button" data-add-block="equation">&#xC218;&#xC2DD;</button>
+            <button type="button" data-add-block="table">&#xD45C;</button>
+            <button type="button" data-add-block="context">&#xB9E5;&#xB77D;</button>
+          </div>
+        </section>
+
+        <section class="editor-panel editor-panel--quiet">
+          <div class="editor-panel__head">
+            <h2>&#xBB38;&#xC11C;</h2>
+          </div>
+          <button type="button" data-action="reset-sample">&#xC0D8;&#xD50C;</button>
+          <button type="button" data-action="clear-document">&#xBE44;&#xC6B0;&#xAE30;</button>
+        </section>
+      </aside>
+
+      <main class="editor-canvas" aria-label="&#xAE00;&#xC4F0;&#xAE30; &#xC601;&#xC5ED;">
+        <section class="editor-page" data-editor-page>
+          <div class="editor-cover" data-page-cover hidden>
+            <div class="editor-cover__media" data-cover-media></div>
+            <div class="editor-cover__actions">
+              <button type="button" data-page-action="change-cover">&#xCEE4;&#xBC84; &#xBCC0;&#xACBD;</button>
+              <button type="button" data-page-action="remove-cover">&#xC81C;&#xAC70;</button>
+            </div>
+          </div>
+          <div class="editor-page__body">
+            <div class="editor-page-tools">
+              <button class="editor-page-tool" type="button" data-page-action="add-icon">&#x1F600; &#xC544;&#xC774;&#xCF58; &#xCD94;&#xAC00;</button>
+              <button class="editor-page-tool" type="button" data-page-action="add-cover">&#x25A7; &#xCEE4;&#xBC84; &#xCD94;&#xAC00;</button>
+            </div>
+            <div class="editor-page-icon-wrap" data-page-icon-wrap hidden>
+              <button class="editor-page-icon" type="button" data-page-icon aria-label="&#xD398;&#xC774;&#xC9C0; &#xC544;&#xC774;&#xCF58; &#xBCC0;&#xACBD;"></button>
+              <button class="editor-page-icon-remove" type="button" data-page-action="remove-icon" title="&#xC544;&#xC774;&#xCF58; &#xC81C;&#xAC70;" aria-label="&#xC544;&#xC774;&#xCF58; &#xC81C;&#xAC70;">&#xD7;</button>
+            </div>
+            <input class="editor-title" data-meta="title" placeholder="&#xC81C;&#xBAA9; &#xC5C6;&#xC74C;" aria-label="Post title" />
+            <div class="editor-submeta">
+              <span data-derived-slug>untitled</span>
+              <span data-derived-date></span>
+            </div>
+            <div class="editor-blocks" data-blocks aria-label="Editable blocks"></div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="editor-export" aria-label="JSON &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30;">
+        <section class="editor-panel editor-panel--preview">
+          <div class="editor-panel__head">
+            <h2>Post JSON</h2>
+            <span data-json-size>0 chars</span>
+          </div>
+          <pre data-json-preview></pre>
+        </section>
+      </aside>
+    </div>
+
+    <div class="slash-menu" data-slash-menu hidden></div>
+    <div class="inline-toolbar" data-inline-toolbar hidden role="toolbar" aria-label="&#xD14D;&#xC2A4;&#xD2B8; &#xC11C;&#xC2DD;">
+      <button type="button" data-inline-mark="bold" title="&#xAD75;&#xAC8C;" aria-label="&#xAD75;&#xAC8C;" aria-pressed="false">B</button>
+      <button type="button" data-inline-mark="italic" title="&#xAE30;&#xC6B8;&#xC784;" aria-label="&#xAE30;&#xC6B8;&#xC784;" aria-pressed="false"><em>I</em></button>
+      <button type="button" data-inline-mark="underline" title="&#xBC11;&#xC904;" aria-label="&#xBC11;&#xC904;" aria-pressed="false"><u>U</u></button>
+      <button type="button" data-inline-mark="strike" title="&#xCDE8;&#xC18C;&#xC120;" aria-label="&#xCDE8;&#xC18C;&#xC120;" aria-pressed="false"><s>S</s></button>
+      <button type="button" data-inline-mark="code" title="&#xC778;&#xB77C;&#xC778; &#xCF54;&#xB4DC;" aria-label="&#xC778;&#xB77C;&#xC778; &#xCF54;&#xB4DC;" aria-pressed="false">code</button>
+      <button type="button" data-inline-action="text-color" title="&#xD14D;&#xC2A4;&#xD2B8; &#xC0C9;" aria-label="&#xD14D;&#xC2A4;&#xD2B8; &#xC0C9;"><span>A</span></button>
+    </div>
+    <div class="color-menu" data-color-menu hidden></div>
+    <div class="emoji-popover" data-emoji-menu hidden></div>
+    <div class="cover-menu" data-cover-menu hidden></div>
+    <div class="editor-toast" data-toast hidden></div>
+  </div>
+
+  <script>
+    import { initPostEditor } from "../../scripts/post-editor";
+
+    initPostEditor();
+  </script>
+</BaseLayout>

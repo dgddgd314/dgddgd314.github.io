@@ -1,6 +1,6 @@
 ---
 import type { RichText } from "../../lib/blocks";
-import { resolveBlockColor } from "../../lib/blocks";
+import { resolveBackgroundColor, resolveTextColor } from "../../lib/blocks";
 
 interface Props {
   value: RichText[];
@@ -19,8 +19,8 @@ const { value } = Astro.props;
       part.annotations?.code && "rt-code",
     ].filter(Boolean);
     const style = [
-      resolveBlockColor(part.textColor) && `color: ${resolveBlockColor(part.textColor)}`,
-      resolveBlockColor(part.backgroundColor) && `background: ${resolveBlockColor(part.backgroundColor)}`,
+      resolveTextColor(part.textColor) && `color: ${resolveTextColor(part.textColor)}`,
+      resolveBackgroundColor(part.backgroundColor) && `background: ${resolveBackgroundColor(part.backgroundColor)}`,
     ]
       .filter(Boolean)
       .join("; ");

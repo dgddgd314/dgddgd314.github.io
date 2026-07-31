@@ -1,3 +1,4 @@
+import { BLOCK_BACKGROUND_COLORS, BLOCK_TEXT_COLORS } from "./color-palette";
 export type TextAlign = "left" | "center" | "right";
 export type HeadingLevel = 1 | 2 | 3;
 
@@ -89,6 +90,17 @@ export type BookmarkBlock = BaseBlock & {
   description?: string;
 };
 
+export type EquationBlock = BaseBlock & {
+  type: "equation";
+  equation: string;
+};
+
+export type ContextBlock = BaseBlock & {
+  type: "context";
+  title: string;
+  richText: RichText[];
+};
+
 export type TableCell = {
   richText: RichText[];
   align?: TextAlign;
@@ -112,6 +124,8 @@ export type Block =
   | DividerBlock
   | ImageBlock
   | BookmarkBlock
+  | EquationBlock
+  | ContextBlock
   | TableBlock;
 
 export function getRichTextPlainText(richText: RichText[] = []): string {
@@ -124,6 +138,8 @@ export function getBlockText(block: Block): string {
       return block.code;
     case "divider":
       return "";
+    case "equation":
+      return block.equation;
     case "image":
       return block.caption ? getRichTextPlainText(block.caption) : block.alt;
     case "bookmark":
@@ -140,19 +156,16 @@ export function getBlockText(block: Block): string {
   }
 }
 
-export function resolveBlockColor(color?: string): string | undefined {
-  const colors: Record<string, string> = {
-    default: "inherit",
-    gray: "var(--block-gray)",
-    brown: "var(--block-brown)",
-    red: "var(--block-red)",
-    orange: "var(--block-orange)",
-    yellow: "var(--block-yellow)",
-    green: "var(--block-green)",
-    blue: "var(--block-blue)",
-    purple: "var(--block-purple)",
-    pink: "var(--block-pink)",
-  };
+export function resolveTextColor(color?: string): string | undefined {
+  return color ? BLOCK_TEXT_COLORS[color as keyof typeof BLOCK_TEXT_COLORS] ?? color : undefined;
+}
 
-  return color ? colors[color] ?? color : undefined;
+export function resolveBackgroundColor(color?: string): string | undefined {
+  return color
+    ? BLOCK_BACKGROUND_COLORS[color as keyof typeof BLOCK_BACKGROUND_COLORS] ?? color
+    : undefined;
+}
+
+export function resolveBlockColor(color?: string): string | undefined {
+  return resolveTextColor(color);
 }

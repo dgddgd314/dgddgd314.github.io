@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import type { CollectionEntry } from "astro:content";
 import createSlug from "../../lib/createSlug";
+import { getBlogCategory } from "../../lib/blog-category";
 import postNetwork from "../../data/post-network.json";
 import "../../styles/blog-index.css";
 
@@ -46,17 +47,65 @@ const initialShouldShowPosts = initialView === "posts" || Boolean(initialTagValu
 const recentPosts = allPosts.slice(0, 5);
 const totalPosts = allPosts.length;
 const sortedTags = Object.entries(tagCounts).sort((a, b) => Number(b[1]) - Number(a[1]));
-const sortedCategories = Object.entries(categoryCounts).sort((a, b) => Number(b[1]) - Number(a[1]));
-const getPostCategory = (post: BlogPost) => post.data.category ?? (post.id.includes("/") ? post.id.split("/")[0] : "uncategorized");
-const getCategoryLabel = (category: string) => category === "uncategorized" ? "&#xBBF8;&#xBD84;&#xB958;" : category;
+type CategoryTreeNode = {
+  label: string;
+  path: string;
+  count: number;
+  children: Map<string, CategoryTreeNode>;
+};
+
+const getPostCategory = getBlogCategory;
+const escapeCategoryHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  "\"": "&quot;",
+  "'": "&#39;",
+}[character] ?? character));
+const categoryRoots = new Map<string, CategoryTreeNode>();
+
+for (const [rawCategory, rawCount] of Object.entries(categoryCounts)) {
+  const category = String(rawCategory);
+  const count = Number(rawCount);
+  const segments = category === "uncategorized" ? [category] : category.split("/").filter(Boolean);
+  let children = categoryRoots;
+  let currentPath = "";
+
+  for (const segment of segments) {
+    currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    let node = children.get(segment);
+    if (!node) {
+      node = { label: segment, path: currentPath, count: 0, children: new Map() };
+      children.set(segment, node);
+    }
+    node.count += count;
+    children = node.children;
+  }
+}
+
+const sortCategoryNodes = (nodes: Iterable<CategoryTreeNode>) => Array.from(nodes).sort((a, b) =>
+  a.label === "uncategorized" ? 1 : b.label === "uncategorized" ? -1 : a.label.localeCompare(b.label, "ko")
+);
+const renderCategoryNodes = (nodes: Iterable<CategoryTreeNode>) => sortCategoryNodes(nodes).map((node) => {
+  const label = node.label === "uncategorized" ? "\uBBF8\uBD84\uB958" : node.label;
+  const children = node.children.size
+    ? `<div class="category-tree__children">${renderCategoryNodes(node.children.values())}</div>`
+    : "";
+  return `<div class="category-tree__node">
+    <button type="button" data-category-filter="${escapeCategoryHtml(node.path.toLowerCase())}">
+      <span>${escapeCategoryHtml(label)}</span><em>${node.count}</em>
+    </button>${children}
+  </div>`;
+}).join("");
+const categoryTreeMarkup = renderCategoryNodes(categoryRoots.values());
 const formatDate = (date: Date) => new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
 }).format(date);
 
-const toPostKey = (post: BlogPost) => createSlug(post.data.title, post.id);
-const postsForPage = page.data.map((post: BlogPost, index: number) => {
+const toPostKey = (post: BlogPost) => post.data.slug || createSlug(post.data.title, post.id);
+const postsForPage = allPosts.map((post: BlogPost, index: number) => {
   const tags = post.data.tags ?? [];
   const category = getPostCategory(post);
   const key = toPostKey(post);
@@ -154,15 +203,18 @@ const networkLinks = Array.from(edgeMap.values());
           </div>
           <div class="tag-cloud" data-tag-cloud>
             <button type="button" class:list={["tag-pill", !initialTagValue && "tag-pill--active"]} data-tag-filter="">All</button>
-            {sortedTags.map(([tag, count]) => {
+            {sortedTags.map(([tag, count], index) => {
               const tagValue = String(tag).toLowerCase();
               return (
-                <button type="button" class:list={["tag-pill", initialTagValue === tagValue && "tag-pill--active"]} data-tag-filter={tagValue}>
+                <button type="button" class:list={["tag-pill", index >= 24 && initialTagValue !== tagValue && "tag-pill--overflow", initialTagValue === tagValue && "tag-pill--active"]} data-tag-filter={tagValue}>
                   <span>{tag}</span>
                   <em>{count}</em>
                 </button>
               );
             })}
+            {sortedTags.length > 24 && (
+              <button type="button" class="tag-cloud__more" data-tag-cloud-more>+ {sortedTags.length - 24} more</button>
+            )}
           </div>
         </section>
 
@@ -185,7 +237,7 @@ const networkLinks = Array.from(edgeMap.values());
 
           <div class="post-grid" data-layout-view="bento" data-post-grid>
             {postsForPage.map(({ post, index, tags, tagList, categoryValue, key, url }) => (
-              <article class:list={["post-card", index === 0 && "post-card--feature"]} data-post-card data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue}>
+              <article class:list={["post-card", index === 0 && !initialTagValue && "post-card--feature"]} data-post-card data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue}>
                 <a href={url} class="post-card__media" aria-label={post.data.title}>
                   {post.data.heroImage ? (
                     <img src={post.data.heroImage} alt="" loading="lazy" />
@@ -223,6 +275,7 @@ const networkLinks = Array.from(edgeMap.values());
               </article>
             ))}
           </div>
+          <button type="button" class="list-load-more" data-list-load-more hidden>Load more posts</button>
 
           <section class="network-view" data-layout-view="network" hidden aria-label="Post network">
             <div class="network-map" data-network data-network-links={JSON.stringify(networkLinks)}>
@@ -242,10 +295,6 @@ const networkLinks = Array.from(edgeMap.values());
 
           <p class="blog-empty" data-search-empty hidden>No matching posts.</p>
 
-          <div class="blog-pagination">
-            {page.url.prev ? <a href={page.url.prev}>Recent posts</a> : <span />}
-            {page.url.next ? <a href={page.url.next}>Older posts</a> : <span />}
-          </div>
         </section>
       </main>
 
@@ -255,21 +304,11 @@ const networkLinks = Array.from(edgeMap.values());
             <h2>&#xBD84;&#xB958; &#xC804;&#xCCB4;&#xBCF4;&#xAE30;</h2>
             <span>{totalPosts}</span>
           </div>
-          <div class="category-list">
-            {sortedCategories.length > 0 ? (
-              sortedCategories.map(([category, count]) => {
-                const categoryValue = String(category).toLowerCase();
-                return (
-                  <button type="button" data-category-filter={categoryValue}>
-                    <span set:html={getCategoryLabel(String(category))}></span>
-                    <em>{count}</em>
-                  </button>
-                );
-              })
-            ) : (
-              <p>No categories.</p>
-            )}
-          </div>
+          {categoryTreeMarkup ? (
+            <div class="category-list category-tree" set:html={categoryTreeMarkup} />
+          ) : (
+            <p>No categories.</p>
+          )}
         </section>
 
         <section class="sidebar-panel">
@@ -298,6 +337,9 @@ const networkLinks = Array.from(edgeMap.values());
                 </a>
               );
             })}
+            {sortedTags.length > 24 && (
+              <button type="button" class="tag-cloud__more" data-tag-cloud-more>+ {sortedTags.length - 24} more</button>
+            )}
           </div>
         </section>
       </aside>
@@ -324,6 +366,12 @@ const networkLinks = Array.from(edgeMap.values());
     const networkLines = root?.querySelector("[data-network-lines]");
     const networkPreview = root?.querySelector("[data-network-preview]");
     const networkLinks = JSON.parse(network?.dataset.networkLinks ?? "[]");
+    const postGrid = root?.querySelector("[data-post-grid]");
+    const tagCloud = root?.querySelector("[data-tag-cloud]");
+    const tagCloudMore = root?.querySelector("[data-tag-cloud-more]");
+    const listLoadMore = root?.querySelector("[data-list-load-more]");
+    const LIST_BATCH_SIZE = 12;
+    let listLimit = LIST_BATCH_SIZE;
     let activeTag = root?.dataset.initialTag ?? "";
     let activeCategory = "";
     let activeLayout = "bento";
@@ -363,6 +411,7 @@ const networkLinks = Array.from(edgeMap.values());
       layoutButtons.forEach((button) => {
         button.classList.toggle("view-switcher__button--active", button.dataset.layoutButton === layout);
       });
+      applyFilters(false);
       if (layout === "network") requestAnimationFrame(layoutNetwork);
     }
 
@@ -375,10 +424,11 @@ const networkLinks = Array.from(edgeMap.values());
       });
     }
 
-    function applyFilters() {
+    function applyFilters(resetList = true) {
+      if (resetList) listLimit = LIST_BATCH_SIZE;
       const query = input?.value.trim().toLowerCase() ?? "";
-      let visible = 0;
-      const shouldShowPosts = activeView === "posts" || Boolean(activeTag);
+      const shouldShowPosts = activeView === "posts" || activeView === "tags";
+      const matchedCards = [];
 
       cards.forEach((card) => {
         const title = card.dataset.postTitle ?? "";
@@ -386,11 +436,34 @@ const networkLinks = Array.from(edgeMap.values());
         const tags = getTagList(card);
         const textMatched = !query || `${title} ${desc} ${tags.join(" ")}`.includes(query);
         const tagMatched = !activeTag || tags.includes(activeTag);
-        const categoryMatched = !activeCategory || (card.dataset.postCategory ?? "") === activeCategory;
-        const matched = shouldShowPosts && textMatched && tagMatched && categoryMatched;
-        card.hidden = !matched;
-        syncPostReplica(card.dataset.postKey ?? "", matched);
-        if (matched) visible += 1;
+        const postCategory = card.dataset.postCategory ?? "";
+        const categoryMatched = !activeCategory || postCategory === activeCategory || postCategory.startsWith(`${activeCategory}/`);
+        if (shouldShowPosts && textMatched && tagMatched && categoryMatched) matchedCards.push(card);
+      });
+
+      const bentoCards = matchedCards.slice(0, 5);
+      const bentoKeys = new Set(bentoCards.map((card) => card.dataset.postKey));
+      const matchedKeys = new Set(matchedCards.map((card) => card.dataset.postKey));
+      const useFeaturedCard = !activeCategory && !query;
+      if (postGrid) postGrid.dataset.bentoCount = String(bentoCards.length);
+
+      cards.forEach((card) => {
+        const slot = bentoCards.indexOf(card);
+        card.hidden = !bentoKeys.has(card.dataset.postKey);
+        card.dataset.bentoSlot = slot >= 0 ? String(slot + 1) : "";
+        card.classList.toggle("post-card--feature", useFeaturedCard && slot === 0);
+      });
+
+      networkPostNodes.forEach((node) => {
+        node.hidden = !matchedKeys.has(node.dataset.postKey);
+      });
+
+      let renderedList = 0;
+      listItems.forEach((item) => {
+        const matched = matchedKeys.has(item.dataset.postKey);
+        const visible = matched && renderedList < listLimit;
+        item.hidden = !visible;
+        if (visible) renderedList += 1;
       });
 
       tagButtons.forEach((button) => {
@@ -403,16 +476,17 @@ const networkLinks = Array.from(edgeMap.values());
       if (postView) postView.hidden = !shouldShowPosts;
       if (postHeading) {
         postHeading.innerHTML = activeTag
-          ? `#${activeTag} <span>${visible}</span>`
+          ? `#${activeTag} <span>${matchedCards.length}</span>`
           : activeCategory
-            ? `${getCategoryHeading(activeCategory)} <span>${visible}</span>`
-            : `&#xC804;&#xCCB4; &#xAE00; <span>${cards.length}</span>`;
+            ? `${getCategoryHeading(activeCategory)} <span>${matchedCards.length}</span>`
+            : `&#xC804;&#xCCB4; &#xAE00; <span>${matchedCards.length}</span>`;
       }
-      if (empty) empty.hidden = !shouldShowPosts || visible !== 0;
+      if (empty) empty.hidden = !shouldShowPosts || matchedCards.length !== 0;
       if (count) {
         count.hidden = !shouldShowPosts || (!query && !activeTag && !activeCategory);
-        count.textContent = `${visible} matched`;
+        count.textContent = `${matchedCards.length} matched`;
       }
+      if (listLoadMore) listLoadMore.hidden = activeLayout !== "list" || renderedList >= matchedCards.length;
       if (activeLayout === "network") requestAnimationFrame(layoutNetwork);
     }
 
@@ -500,6 +574,25 @@ const networkLinks = Array.from(edgeMap.values());
         applyFilters();
       });
     });
+
+    tagCloudMore?.addEventListener("click", () => {
+      const expanded = tagCloud?.toggleAttribute("data-tag-cloud-expanded") ?? false;
+      tagCloudMore.textContent = expanded ? "Show fewer tags" : "+ more tags";
+    });
+
+    listLoadMore?.addEventListener("click", () => {
+      listLimit += LIST_BATCH_SIZE;
+      applyFilters(false);
+    });
+
+    if ("IntersectionObserver" in window && listLoadMore) {
+      new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting) && !listLoadMore.hidden) {
+          listLimit += LIST_BATCH_SIZE;
+          applyFilters(false);
+        }
+      }, { rootMargin: "220px" }).observe(listLoadMore);
+    }
 
     categoryButtons.forEach((button) => {
       button.addEventListener("click", () => {
