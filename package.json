@@ -12,13 +12,11 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.4",
     "@astrojs/rss": "^4.0.18",
     "astro": "^6.1.8",
     "daisyui": "^5.5.4",
     "dayjs": "^1.11.9",
     "katex": "^0.18.1",
-    "sharp": "^0.32.6",
     "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
