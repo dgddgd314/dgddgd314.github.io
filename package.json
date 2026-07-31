@@ -17,6 +17,7 @@
     "astro": "^6.1.8",
     "daisyui": "^5.5.4",
     "dayjs": "^1.11.9",
+    "katex": "^0.18.1",
     "sharp": "^0.32.6",
     "tailwindcss": "^4.1.16"
   },
@@ -24,7 +25,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.16"
   },
-  "overrides": { 
-    "vite": "^7" 
+  "overrides": {
+    "vite": "^7"
   }
 }

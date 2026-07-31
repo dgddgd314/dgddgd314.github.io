@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import type { CollectionEntry } from "astro:content";
 import createSlug from "../../lib/createSlug";
+import { getBlogCategory } from "../../lib/blog-category";
 import postNetwork from "../../data/post-network.json";
 import "../../styles/blog-index.css";
 
@@ -46,16 +47,64 @@ const initialShouldShowPosts = initialView === "posts" || Boolean(initialTagValu
 const recentPosts = allPosts.slice(0, 5);
 const totalPosts = allPosts.length;
 const sortedTags = Object.entries(tagCounts).sort((a, b) => Number(b[1]) - Number(a[1]));
-const sortedCategories = Object.entries(categoryCounts).sort((a, b) => Number(b[1]) - Number(a[1]));
-const getPostCategory = (post: BlogPost) => post.data.category ?? (post.id.includes("/") ? post.id.split("/")[0] : "uncategorized");
-const getCategoryLabel = (category: string) => category === "uncategorized" ? "&#xBBF8;&#xBD84;&#xB958;" : category;
+type CategoryTreeNode = {
+  label: string;
+  path: string;
+  count: number;
+  children: Map<string, CategoryTreeNode>;
+};
+
+const getPostCategory = getBlogCategory;
+const escapeCategoryHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  "\"": "&quot;",
+  "'": "&#39;",
+}[character] ?? character));
+const categoryRoots = new Map<string, CategoryTreeNode>();
+
+for (const [rawCategory, rawCount] of Object.entries(categoryCounts)) {
+  const category = String(rawCategory);
+  const count = Number(rawCount);
+  const segments = category === "uncategorized" ? [category] : category.split("/").filter(Boolean);
+  let children = categoryRoots;
+  let currentPath = "";
+
+  for (const segment of segments) {
+    currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    let node = children.get(segment);
+    if (!node) {
+      node = { label: segment, path: currentPath, count: 0, children: new Map() };
+      children.set(segment, node);
+    }
+    node.count += count;
+    children = node.children;
+  }
+}
+
+const sortCategoryNodes = (nodes: Iterable<CategoryTreeNode>) => Array.from(nodes).sort((a, b) =>
+  a.label === "uncategorized" ? 1 : b.label === "uncategorized" ? -1 : a.label.localeCompare(b.label, "ko")
+);
+const renderCategoryNodes = (nodes: Iterable<CategoryTreeNode>) => sortCategoryNodes(nodes).map((node) => {
+  const label = node.label === "uncategorized" ? "\uBBF8\uBD84\uB958" : node.label;
+  const children = node.children.size
+    ? `<div class="category-tree__children">${renderCategoryNodes(node.children.values())}</div>`
+    : "";
+  return `<div class="category-tree__node">
+    <button type="button" data-category-filter="${escapeCategoryHtml(node.path.toLowerCase())}">
+      <span>${escapeCategoryHtml(label)}</span><em>${node.count}</em>
+    </button>${children}
+  </div>`;
+}).join("");
+const categoryTreeMarkup = renderCategoryNodes(categoryRoots.values());
 const formatDate = (date: Date) => new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
 }).format(date);
 
-const toPostKey = (post: BlogPost) => createSlug(post.data.title, post.id);
+const toPostKey = (post: BlogPost) => post.data.slug || createSlug(post.data.title, post.id);
 const postsForPage = page.data.map((post: BlogPost, index: number) => {
   const tags = post.data.tags ?? [];
   const category = getPostCategory(post);
@@ -255,21 +304,11 @@ const networkLinks = Array.from(edgeMap.values());
             <h2>&#xBD84;&#xB958; &#xC804;&#xCCB4;&#xBCF4;&#xAE30;</h2>
             <span>{totalPosts}</span>
           </div>
-          <div class="category-list">
-            {sortedCategories.length > 0 ? (
-              sortedCategories.map(([category, count]) => {
-                const categoryValue = String(category).toLowerCase();
-                return (
-                  <button type="button" data-category-filter={categoryValue}>
-                    <span set:html={getCategoryLabel(String(category))}></span>
-                    <em>{count}</em>
-                  </button>
-                );
-              })
-            ) : (
-              <p>No categories.</p>
-            )}
-          </div>
+          {categoryTreeMarkup ? (
+            <div class="category-list category-tree" set:html={categoryTreeMarkup} />
+          ) : (
+            <p>No categories.</p>
+          )}
         </section>
 
         <section class="sidebar-panel">
@@ -386,7 +425,8 @@ const networkLinks = Array.from(edgeMap.values());
         const tags = getTagList(card);
         const textMatched = !query || `${title} ${desc} ${tags.join(" ")}`.includes(query);
         const tagMatched = !activeTag || tags.includes(activeTag);
-        const categoryMatched = !activeCategory || (card.dataset.postCategory ?? "") === activeCategory;
+        const postCategory = card.dataset.postCategory ?? "";
+        const categoryMatched = !activeCategory || postCategory === activeCategory || postCategory.startsWith(`${activeCategory}/`);
         const matched = shouldShowPosts && textMatched && tagMatched && categoryMatched;
         card.hidden = !matched;
         syncPostReplica(card.dataset.postKey ?? "", matched);

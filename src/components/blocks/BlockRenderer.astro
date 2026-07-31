@@ -1,6 +1,7 @@
 ---
 import type { Block } from "../../lib/blocks";
-import { resolveBlockColor } from "../../lib/blocks";
+import { resolveBackgroundColor, resolveTextColor } from "../../lib/blocks";
+import katex from "katex";
 import RichText from "./RichText.astro";
 
 interface Props {
@@ -9,8 +10,8 @@ interface Props {
 }
 
 const { block, depth = 0 } = Astro.props;
-const textColor = resolveBlockColor(block.textColor);
-const backgroundColor = resolveBlockColor(block.backgroundColor);
+const textColor = resolveTextColor(block.textColor);
+const backgroundColor = resolveBackgroundColor(block.backgroundColor);
 const style = [
   textColor && `--block-local-text: ${textColor}`,
   backgroundColor && `--block-local-bg: ${backgroundColor}`,
@@ -19,6 +20,15 @@ const style = [
   .filter(Boolean)
   .join("; ");
 const HeadingTag = block.type === "heading" ? (`h${block.level}` as const) : "div";
+const equationHtml = block.type === "equation"
+  ? katex.renderToString(block.equation || "\\square", {
+      displayMode: true,
+      throwOnError: false,
+      errorColor: "#a4473f",
+      output: "htmlAndMathml",
+      strict: "warn",
+    })
+  : "";
 ---
 
 <section
@@ -77,6 +87,23 @@ const HeadingTag = block.type === "heading" ? (`h${block.level}` as const) : "di
           <span class="notion-callout__icon" aria-hidden="true">{block.icon ?? "i"}</span>
           <div><RichText value={block.richText} /></div>
         </aside>
+      )
+    }
+
+    {
+      block.type === "context" && (
+        <aside class="notion-context">
+          <strong>{block.title}</strong>
+          <div><RichText value={block.richText} /></div>
+        </aside>
+      )
+    }
+
+    {
+      block.type === "equation" && (
+        <figure class="notion-equation" aria-label="Equation">
+          <div class="notion-equation__content" set:html={equationHtml} />
+        </figure>
       )
     }
 

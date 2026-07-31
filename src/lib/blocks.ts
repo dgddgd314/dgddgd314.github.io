@@ -89,6 +89,17 @@ export type BookmarkBlock = BaseBlock & {
   description?: string;
 };
 
+export type EquationBlock = BaseBlock & {
+  type: "equation";
+  equation: string;
+};
+
+export type ContextBlock = BaseBlock & {
+  type: "context";
+  title: string;
+  richText: RichText[];
+};
+
 export type TableCell = {
   richText: RichText[];
   align?: TextAlign;
@@ -112,6 +123,8 @@ export type Block =
   | DividerBlock
   | ImageBlock
   | BookmarkBlock
+  | EquationBlock
+  | ContextBlock
   | TableBlock;
 
 export function getRichTextPlainText(richText: RichText[] = []): string {
@@ -124,6 +137,8 @@ export function getBlockText(block: Block): string {
       return block.code;
     case "divider":
       return "";
+    case "equation":
+      return block.equation;
     case "image":
       return block.caption ? getRichTextPlainText(block.caption) : block.alt;
     case "bookmark":
@@ -140,19 +155,40 @@ export function getBlockText(block: Block): string {
   }
 }
 
-export function resolveBlockColor(color?: string): string | undefined {
+export function resolveTextColor(color?: string): string | undefined {
   const colors: Record<string, string> = {
     default: "inherit",
-    gray: "var(--block-gray)",
-    brown: "var(--block-brown)",
-    red: "var(--block-red)",
-    orange: "var(--block-orange)",
-    yellow: "var(--block-yellow)",
-    green: "var(--block-green)",
-    blue: "var(--block-blue)",
-    purple: "var(--block-purple)",
-    pink: "var(--block-pink)",
+    gray: "#5f6368",
+    brown: "#7a5c4f",
+    red: "#a4473f",
+    orange: "#a85f16",
+    yellow: "#80620b",
+    green: "#2f6f4e",
+    blue: "#27679b",
+    purple: "#72549a",
+    pink: "#9a4d70",
+    teal: "#1f6f68",
   };
-
   return color ? colors[color] ?? color : undefined;
+}
+
+export function resolveBackgroundColor(color?: string): string | undefined {
+  const colors: Record<string, string> = {
+    default: "transparent",
+    gray: "#f1f3f4",
+    brown: "#f4eeee",
+    red: "#faeceb",
+    orange: "#fbecdd",
+    yellow: "#fff4cc",
+    green: "#edf3ec",
+    blue: "#eaf4ff",
+    purple: "#f3eefd",
+    pink: "#fbeaf2",
+    teal: "#e7f6f4",
+  };
+  return color ? colors[color] ?? color : undefined;
+}
+
+export function resolveBlockColor(color?: string): string | undefined {
+  return resolveTextColor(color);
 }

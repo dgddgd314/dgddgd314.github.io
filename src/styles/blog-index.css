@@ -846,3 +846,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Tistory-style category tree */
+.category-tree { gap: 3px; }
+.category-tree__node { display: grid; gap: 3px; }
+.category-tree__children { display: grid; gap: 3px; margin: 1px 0 3px 11px; border-left: 1px solid var(--archive-border); padding-left: 10px; }
+.category-tree .category-tree__node > button { display: flex; align-items: center; justify-content: space-between; min-height: 26px; border: 0; border-radius: 0; padding: 2px 0; color: var(--archive-soft-ink); background: transparent; font-size: 0.82rem; line-height: 1.35; text-align: left; }
+.category-tree .category-tree__node > button span { min-width: 0; overflow-wrap: anywhere; }
+.category-tree .category-tree__node > button em { margin-left: 10px; color: var(--archive-faint); font-style: normal; }
+.category-tree .category-tree__node > button:hover,
+.category-tree .category-tree__node > button.tag-pill--active { border-color: transparent; color: var(--archive-accent); background: transparent; }
+.category-tree .category-tree__children .category-tree__node > button { color: var(--archive-muted); font-size: 0.8rem; }

@@ -5,12 +5,11 @@ import PostLayout from "../../layouts/PostLayout.astro";
 import createSlug from "../../lib/createSlug";
 import type { Block } from "../../lib/blocks";
 import { generateToc } from "../../lib/toc";
-import sampleBlockPost from "../../data/sample-block-post.json";
 
 export async function getStaticPaths() {
   const postEntries = await getCollection("blog");
   return postEntries.map((entry) => ({
-    params: { slug: createSlug(entry.data.title, entry.id) },
+    params: { slug: entry.data.slug || createSlug(entry.data.title, entry.id) },
     props: { entry },
   }));
 }
@@ -21,7 +20,7 @@ interface Props {
 
 const { entry } = Astro.props;
 const post: BlogSchema = entry.data;
-const blocks = (sampleBlockPost as { blocks: Block[] }).blocks;
+const blocks = post.blocks as Block[];
 const tocItems = generateToc(blocks);
 ---
 

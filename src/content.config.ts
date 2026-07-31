@@ -2,8 +2,9 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
-const blogSchema = z.object({
+const blogMetaSchema = z.object({
   title: z.string(),
+  slug: z.string().optional(),
   description: z.string(),
   pubDate: z.coerce.date(),
   updatedDate: z.coerce.date().optional(),
@@ -18,10 +19,21 @@ const blogSchema = z.object({
     .optional(),
 });
 
+const blogSchema = z.object({
+  version: z.literal(2),
+  meta: blogMetaSchema,
+  page: z.unknown().optional(),
+  blocks: z.array(z.unknown()),
+}).transform(({ meta, page, blocks }) => ({
+  ...meta,
+  page,
+  blocks,
+}));
+
 export type BlogSchema = z.infer<typeof blogSchema>;
 
 const blogCollection = defineCollection({
-  loader: glob({ base: "./src/content/blog", pattern: "**/*.{md,mdx}" }),
+  loader: glob({ base: "./src/content/blog", pattern: "**/*.json" }),
   schema: blogSchema,
 });
 
