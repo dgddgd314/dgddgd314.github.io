@@ -26,7 +26,7 @@ export async function getStaticPaths({ paginate }) {
     const filteredPosts = posts.filter((post) => post.data.tags?.some((postTag) => postTag.toLowerCase() === tag.toLowerCase()));
     return paginate(filteredPosts, {
       params: { tag },
-      pageSize: 12,
+      pageSize: Math.max(filteredPosts.length, 1),
       props: {
         allPosts: posts,
         tagCounts,

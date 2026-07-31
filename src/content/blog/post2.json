@@ -1,64 +1,39 @@
 {
-    "version":  2,
-    "meta":  {
-                 "title":  "Demo Post 2",
-                 "slug":  "demo-post-2",
-                 "description":  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                 "pubDate":  "Sep 11 2022",
-                 "category":  "",
-                 "tags":  [
-
-                          ],
-                 "badge":  ""
-             },
-    "page":  {
-
-             },
-    "blocks":  [
-                   {
-                       "id":  "p-1",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-2",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc. Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra massa massa ultricies mi."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-3",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-4",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id cursus metus aliquam eleifend mi."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-5",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar proin gravida. Egestas integer eget aliquet nibh praesent tristique magna."
-                                        }
-                                    ]
-                   }
-               ]
+  "version": 2,
+  "meta": {
+    "title": "Demo Post 2",
+    "slug": "demo-post-2",
+    "description": "슬래시 명령, 텍스트 선택, JSON 저장 형식 안내.",
+    "pubDate": "2026-07-30",
+    "category": "",
+    "tags": ["editor", "commands", "json"],
+    "badge": "guide"
+  },
+  "page": {},
+  "blocks": [
+    { "id": "slash-commands", "type": "heading", "level": 1, "richText": [{ "text": "/ 명령과 블록" }] },
+    { "id": "slash-intro", "type": "paragraph", "richText": [{ "text": "에디터의 빈 문단에서 / 를 입력하면 블록 명령 메뉴가 열린다. 명령을 선택하면 현재 문단이 해당 블록으로 즉시 변환된다." }] },
+    { "id": "slash-list-1", "type": "bulleted_list", "richText": [{ "text": "/제목 1, /제목 2, /제목 3으로 문서의 계층을 만든다." }] },
+    { "id": "slash-list-2", "type": "bulleted_list", "richText": [{ "text": "/글머리, /번호, /할 일로 목록의 의미를 분리한다." }] },
+    { "id": "slash-list-3", "type": "bulleted_list", "richText": [{ "text": "/인용, /콜아웃, /코드, /이미지, /북마크, /맥락을 사용할 수 있다." }] },
+    { "id": "command-note", "type": "callout", "icon": "i", "backgroundColor": "blue", "richText": [{ "text": "/색을 선택하면 명령 텍스트는 사라지고 현재 블록의 배경색만 남는다." }] },
+    { "id": "inline-formatting", "type": "heading", "level": 1, "richText": [{ "text": "텍스트 선택과 인라인 서식" }] },
+    {
+      "id": "format-copy",
+      "type": "paragraph",
+      "richText": [
+        { "text": "텍스트를 선택하면 " },
+        { "text": "굵게", "annotations": { "bold": true } },
+        { "text": ", " },
+        { "text": "기울이기", "annotations": { "italic": true } },
+        { "text": ", 밑줄, 취소선, " },
+        { "text": "코드", "annotations": { "code": true } },
+        { "text": ", 텍스트 색상을 설정하는 작은 도구막대가 나타난다." }
+      ]
+    },
+    { "id": "format-quote", "type": "quote", "richText": [{ "text": "블록 배경색은 /색으로, 글자 자체의 강조는 텍스트를 선택한 뒤 인라인 도구막대에서 설정한다." }] },
+    { "id": "document-json", "type": "heading", "level": 1, "richText": [{ "text": "저장 형식" }] },
+    { "id": "json-copy", "type": "paragraph", "richText": [{ "text": "에디터는 version 2 JSON 문서를 내보낸다. 파일을 src/content/blog 아래에 두면 Astro가 빌드 시 자동으로 읽어 포스트와 태그 목록에 반영한다." }] },
+    { "id": "json-code", "type": "code", "language": "json", "code": "{\\n  \\\"version\\\": 2,\\n  \\\"meta\\\": { \\\"title\\\": \\\"...\\\", \\\"tags\\\": [\\\"editor\\\"] },\\n  \\\"blocks\\\": []\\n}" }
+  ]
 }

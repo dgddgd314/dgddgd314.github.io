@@ -21,7 +21,7 @@ export async function getStaticPaths({ paginate }) {
   }, {});
 
   return paginate(posts, {
-    pageSize: 12,
+    pageSize: Math.max(posts.length, 1),
     props: {
       allPosts: posts,
       tagCounts,

@@ -1,64 +1,99 @@
 {
-    "version":  2,
-    "meta":  {
-                 "title":  "Demo Post 1",
-                 "slug":  "demo-post-1",
-                 "description":  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                 "pubDate":  "Sep 10 2022",
-                 "category":  "",
-                 "tags":  [
-                              "tokio"
-                          ],
-                 "badge":  ""
-             },
-    "page":  {
-
-             },
-    "blocks":  [
-                   {
-                       "id":  "p-1",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-2",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc. Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra massa massa ultricies mi."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-3",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-4",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id cursus metus aliquam eleifend mi."
-                                        }
-                                    ]
-                   },
-                   {
-                       "id":  "p-5",
-                       "type":  "paragraph",
-                       "richText":  [
-                                        {
-                                            "text":  "Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar proin gravida. Egestas integer eget aliquet nibh praesent tristique magna."
-                                        }
-                                    ]
-                   }
-               ]
+  "version": 2,
+  "meta": {
+    "title": "Demo Post 1",
+    "slug": "demo-post-1",
+    "description": "Notion 스타일 블록과 인라인 서식 예시.",
+    "pubDate": "2026-07-31",
+    "category": "",
+    "tags": ["notion", "blocks", "editor"],
+    "badge": "guide"
+  },
+  "page": {},
+  "blocks": [
+    {
+      "id": "overview",
+      "type": "heading",
+      "level": 1,
+      "richText": [{ "text": "Overview" }]
+    },
+    {
+      "id": "overview-copy",
+      "type": "paragraph",
+      "richText": [{ "text": "이 문서는 Notion 스타일 블록 렌더링 예시다. 각 행은 독립 블록이며 제목은 고정 앵커와 우측 Outline으로 연결된다." }]
+    },
+    {
+      "id": "reader-note",
+      "type": "callout",
+      "icon": "i",
+      "backgroundColor": "gray",
+      "richText": [{ "text": "본문은 문서처럼 읽히고, 상단 Contents만 bento 형태로 주요 대목차를 빠르게 이동하도록 돕는다." }]
+    },
+    {
+      "id": "block-model",
+      "type": "heading",
+      "level": 1,
+      "richText": [{ "text": "Block model" }]
+    },
+    {
+      "id": "inline-style",
+      "type": "paragraph",
+      "richText": [
+        { "text": "리치 텍스트는 " },
+        { "text": "굵게", "annotations": { "bold": true } },
+        { "text": ", " },
+        { "text": "기울이기", "annotations": { "italic": true } },
+        { "text": ", " },
+        { "text": "밑줄", "annotations": { "underline": true } },
+        { "text": ", " },
+        { "text": "inline code", "annotations": { "code": true } },
+        { "text": ", 링크와 텍스트 색상을 함께 저장한다." }
+      ]
+    },
+    {
+      "id": "renderer-list-1",
+      "type": "bulleted_list",
+      "richText": [{ "text": "블록 타입에 따라 중앙 렌더러가 표시 방식을 선택한다." }]
+    },
+    {
+      "id": "renderer-list-2",
+      "type": "bulleted_list",
+      "richText": [{ "text": "중첩 블록은 전체 문서를 hydrate하지 않고 재귀적으로 렌더링한다." }]
+    },
+    {
+      "id": "todo-access",
+      "type": "todo",
+      "checked": true,
+      "richText": [{ "text": "할 일 블록은 체크 상태를 JSON에 그대로 저장한다." }]
+    },
+    {
+      "id": "toggle-architecture",
+      "type": "toggle",
+      "richText": [{ "text": "왜 콘텐츠 저장과 렌더링을 분리하는가?" }],
+      "children": [
+        {
+          "id": "toggle-architecture-copy",
+          "type": "paragraph",
+          "richText": [{ "text": "같은 블록 구조를 로컬 JSON, Git 기반 콘텐츠, 나중의 원격 API에 모두 사용할 수 있다. 페이지 UI는 저장 위치를 알 필요가 없다." }]
+        },
+        {
+          "id": "toggle-architecture-code",
+          "type": "code",
+          "language": "ts",
+          "code": "type BaseBlock = {\\n  id: string;\\n  type: string;\\n  children?: Block[];\\n};"
+        }
+      ]
+    },
+    {
+      "id": "reader-actions",
+      "type": "heading",
+      "level": 1,
+      "richText": [{ "text": "Reader actions" }]
+    },
+    {
+      "id": "reader-actions-copy",
+      "type": "quote",
+      "richText": [{ "text": "읽는 화면은 휴지 상태에서는 조용해야 한다. 편집 기능은 에디터에 두고, 포스트는 문서 읽기와 탐색에 집중한다." }]
+    }
+  ]
 }
