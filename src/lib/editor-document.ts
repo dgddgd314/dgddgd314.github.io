@@ -317,36 +317,6 @@ export function richTextToHtml(value: RichText[] = []): string {
     .join("");
 }
 
-export function richTextToMarkdown(value: RichText[] = []): string {
-  return value
-    .map((part) => {
-      let text = part.text;
-      if (part.annotations?.code) {
-        text = `\`${text.replace(/`/g, "\\`")}\``;
-      } else {
-        const styles = [
-          part.textColor && `color:${INLINE_TEXT_COLORS[part.textColor] ?? part.textColor}`,
-          part.backgroundColor && `background:${INLINE_BACKGROUND_COLORS[part.backgroundColor] ?? part.backgroundColor}`,
-        ].filter(Boolean);
-        const needsInlineHtml = styles.length > 0 || part.annotations?.underline;
-        if (needsInlineHtml) {
-          text = escapeHtml(text);
-          if (styles.length) text = `<span style="${styles.join(";")}">${text}</span>`;
-          if (part.annotations?.underline) text = `<u>${text}</u>`;
-          if (part.annotations?.bold) text = `<strong>${text}</strong>`;
-          if (part.annotations?.italic) text = `<em>${text}</em>`;
-          if (part.annotations?.strike) text = `<s>${text}</s>`;
-        } else {
-          if (part.annotations?.bold) text = `**${text}**`;
-          if (part.annotations?.italic) text = `*${text}*`;
-          if (part.annotations?.strike) text = `~~${text}~~`;
-        }
-      }
-      if (part.href) text = `[${text}](${part.href})`;
-      return text;
-    })
-    .join("");
-}
 export function normalizeTableRows(value: unknown): TableCell[][] {
   const source = Array.isArray(value) && value.length
     ? value

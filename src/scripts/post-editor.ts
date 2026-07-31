@@ -25,7 +25,6 @@ import {
 } from "../lib/editor-document";
 
 const STORAGE_KEY = "dgddgd314.post-editor.v2";
-const LEGACY_STORAGE_KEY = "dgddgd314.post-editor.v1";
 
 type Command = {
   target: string;
@@ -484,14 +483,8 @@ export function initPostEditor(): void {
     return mergeRichText(parts);
   }
 
-  function richTextFromLegacyHtml(html: unknown, fallback: string): RichText[] {
-    if (typeof html !== "string" || !html.trim()) return createRichText(fallback);
-    const container = document.createElement("div");
-    container.innerHTML = html;
-    return parseEditable(container);
-  }
 
-  function migrateBlock(rawValue: unknown): EditorBlock | null {
+  function normalizeStoredBlock(rawValue: unknown): EditorBlock | null {
     if (!rawValue || typeof rawValue !== "object") return null;
     const raw = rawValue as Record<string, unknown>;
     const rawType = String(raw.type ?? "paragraph") as EditorBlockType;
@@ -505,15 +498,12 @@ export function initPostEditor(): void {
     ].includes(rawType)
       ? rawType
       : "paragraph";
-    const legacyText = String(raw.text ?? "");
     const richText = Array.isArray(raw.richText)
       ? normalizeRichText(raw.richText)
-      : richTextFromLegacyHtml(raw.html, legacyText);
+      : [];
     const backgroundColor = typeof raw.backgroundColor === "string"
       ? raw.backgroundColor
-      : typeof raw.tone === "string"
-        ? raw.tone
-        : undefined;
+      : undefined;
     const options: Partial<EditorBlock> = {
       backgroundColor,
       textColor: typeof raw.textColor === "string" ? raw.textColor : undefined,
@@ -524,10 +514,10 @@ export function initPostEditor(): void {
     if (type === "todo") options.checked = Boolean(raw.checked);
     if (type === "callout") options.icon = String(raw.icon ?? "i");
     if (type === "code") {
-      options.code = String(raw.code ?? legacyText);
+      options.code = String(raw.code ?? "");
       options.language = String(raw.language ?? "text");
     }
-    if (type === "equation") options.equation = String(raw.equation ?? legacyText ?? "E = mc^2");
+    if (type === "equation") options.equation = String(raw.equation ?? "E = mc^2");
     if (type === "image") {
       options.src = String(raw.src ?? "");
       options.alt = String(raw.alt ?? "");
@@ -571,15 +561,15 @@ export function initPostEditor(): void {
     return appearance;
   }
 
-  function migrateDocument(rawValue: unknown): EditorDocument {
+  function normalizeStoredDocument(rawValue: unknown): EditorDocument {
     const fallback = sampleDocument();
     if (!rawValue || typeof rawValue !== "object") return fallback;
     const raw = rawValue as Record<string, unknown>;
     const rawMeta = raw.meta && typeof raw.meta === "object"
       ? raw.meta as Record<string, unknown>
       : {};
-    const migratedBlocks = Array.isArray(raw.blocks)
-      ? raw.blocks.map(migrateBlock).filter((block): block is EditorBlock => Boolean(block))
+    const storedBlocks = Array.isArray(raw.blocks)
+      ? raw.blocks.map(normalizeStoredBlock).filter((block): block is EditorBlock => Boolean(block))
       : [];
     return {
       version: 2,
@@ -593,21 +583,18 @@ export function initPostEditor(): void {
         badge: String(rawMeta.badge ?? ""),
       },
       page: normalizePageAppearance(raw.page),
-      blocks: migratedBlocks.length ? migratedBlocks : fallback.blocks,
+      blocks: storedBlocks.length ? storedBlocks : fallback.blocks,
     };
   }
 
   function loadDocument(): EditorDocument {
-    for (const key of [STORAGE_KEY, LEGACY_STORAGE_KEY]) {
-      const stored = localStorage.getItem(key);
-      if (!stored) continue;
-      try {
-        return migrateDocument(JSON.parse(stored));
-      } catch {
-        continue;
-      }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return sampleDocument();
+    try {
+      return normalizeStoredDocument(JSON.parse(stored));
+    } catch {
+      return sampleDocument();
     }
-    return sampleDocument();
   }
 
   function getBlock(id: string): EditorBlock | undefined {
