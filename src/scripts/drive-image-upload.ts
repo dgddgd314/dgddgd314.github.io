@@ -1,6 +1,7 @@
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const SETTINGS_KEY = "dgddgd314.post-editor.drive-image-settings.v1";
 const GSI_SCRIPT_URL = "https://accounts.google.com/gsi/client";
+const POST_FOLDER_KEY = "dgddgd314.post-editor.drive-post-folders.v1";
 
 type DriveSettings = {
   clientId: string;
@@ -97,12 +98,48 @@ async function driveRequest(path: string, token: string, init: RequestInit): Pro
   return response;
 }
 
+function currentPostFolderName(): string {
+  const title = document.querySelector<HTMLInputElement>("[data-meta=\"title\"]")?.value.trim() ?? "";
+  const slug = document.querySelector<HTMLInputElement>("[data-meta=\"slug\"]")?.value.trim() ?? "";
+  return (title || slug || "untitled").replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
+}
+
+function getPostFolderMap(): Record<string, string> {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(POST_FOLDER_KEY) ?? "{}");
+    return stored && typeof stored === "object" ? stored as Record<string, string> : {};
+  } catch {
+    return {};
+  }
+}
+
+async function getPostFolderId(settings: DriveSettings, token: string): Promise<string> {
+  const name = currentPostFolderName();
+  const key = `${settings.folderId}:${name}`;
+  const folders = getPostFolderMap();
+  if (folders[key]) return folders[key];
+  const response = await driveRequest("/files?fields=id", token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [settings.folderId],
+    }),
+  });
+  const { id } = await response.json() as { id?: string };
+  if (!id) throw new Error("Drive did not return a post folder ID.");
+  folders[key] = id;
+  localStorage.setItem(POST_FOLDER_KEY, JSON.stringify(folders));
+  return id;
+}
 async function uploadToDrive(file: File, settings: DriveSettings): Promise<string> {
   const token = await getAccessToken(settings);
+  const postFolderId = await getPostFolderId(settings, token);
   const metadataResponse = await driveRequest("/files?fields=id", token, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: file.name, mimeType: file.type || "application/octet-stream", parents: [settings.folderId] }),
+    body: JSON.stringify({ name: file.name, mimeType: file.type || "application/octet-stream", parents: [postFolderId] }),
   });
   const { id } = await metadataResponse.json() as { id?: string };
   if (!id) throw new Error("Drive did not return an uploaded file ID.");
