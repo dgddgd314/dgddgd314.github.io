@@ -12,7 +12,10 @@ const blogMetaSchema = z.object({
   badge: z.string().optional(),
   category: z.string().optional(),
   tags: z
-    .array(z.string())
+    .union([z.array(z.string()), z.string()])
+    .transform((value) => Array.isArray(value)
+      ? value
+      : value.split(",").map((tag) => tag.trim()).filter(Boolean))
     .refine((items) => new Set(items).size === items.length, {
       message: "tags must be unique",
     })
