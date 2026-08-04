@@ -3,13 +3,16 @@ import type { Block } from "../../lib/blocks";
 import { resolveBackgroundColor, resolveTextColor } from "../../lib/blocks";
 import katex from "katex";
 import RichText from "./RichText.astro";
+import type { TocItem } from "../../lib/toc";
 
 interface Props {
   block: Block;
   depth?: number;
+  tocItems?: TocItem[];
 }
 
-const { block, depth = 0 } = Astro.props;
+const { block, depth = 0, tocItems = [] } = Astro.props;
+const bentoTocItems = tocItems.filter((item) => item.level === 1);
 const textColor = resolveTextColor(block.textColor);
 const backgroundColor = resolveBackgroundColor(block.backgroundColor);
 const style = [
@@ -91,6 +94,27 @@ const equationHtml = block.type === "equation"
     }
 
     {
+      block.type === "table_of_contents" && (
+        <section class="block-bento notion-table-of-contents" aria-label="Contents">
+          <div class="block-bento__header">
+            <h2>Contents</h2>
+            <span>{bentoTocItems.length} sections</span>
+          </div>
+          {bentoTocItems.length > 0 ? (
+            <div class="block-bento__grid">
+              {bentoTocItems.map((item, index) => (
+                <a href={`#${item.id}`} class:list={["block-bento__card", index === 0 && "block-bento__card--wide"]}>
+                  <span class="block-bento__index">{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{item.text}</strong>
+                </a>
+              ))}
+            </div>
+          ) : <p class="notion-table-of-contents__empty">제목 1 블록을 추가하면 목차에 표시됩니다.</p>}
+        </section>
+      )
+    }
+
+    {
       block.type === "context" && (
         <aside class="notion-context">
           <strong>{block.title}</strong>
@@ -113,7 +137,7 @@ const equationHtml = block.type === "equation"
           <summary><RichText value={block.richText} /></summary>
           {block.children?.length && (
             <div class="notion-children">
-              {block.children.map((child) => <Astro.self block={child} depth={depth + 1} />)}
+              {block.children.map((child) => <Astro.self block={child} depth={depth + 1} tocItems={tocItems} />)}
             </div>
           )}
         </details>
@@ -178,7 +202,7 @@ const equationHtml = block.type === "equation"
     {
       block.type !== "toggle" && block.children?.length && (
         <div class="notion-children">
-          {block.children.map((child) => <Astro.self block={child} depth={depth + 1} />)}
+          {block.children.map((child) => <Astro.self block={child} depth={depth + 1} tocItems={tocItems} />)}
         </div>
       )
     }

@@ -95,6 +95,10 @@ export type EquationBlock = BaseBlock & {
   equation: string;
 };
 
+export type TableOfContentsBlock = BaseBlock & {
+  type: "table_of_contents";
+};
+
 export type ContextBlock = BaseBlock & {
   type: "context";
   title: string;
@@ -125,6 +129,7 @@ export type Block =
   | ImageBlock
   | BookmarkBlock
   | EquationBlock
+  | TableOfContentsBlock
   | ContextBlock
   | TableBlock;
 

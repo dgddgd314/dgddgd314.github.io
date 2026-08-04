@@ -2,6 +2,7 @@ import katex from "katex";
 import type { RichText, TextAnnotation } from "../lib/blocks";
 import { BLOCK_COLOR_PALETTE, type BlockColorOption } from "../lib/color-palette";
 import {
+  applyInlineHref,
   applyInlineTextColor,
   blockPlainText,
   createEditorBlock,
@@ -43,6 +44,36 @@ type SelectionSnapshot = {
   end: number;
 };
 
+type BlockLocation = {
+  block: EditorBlock;
+  siblings: EditorBlock[];
+  index: number;
+  parent?: EditorBlock;
+};
+
+type BlockDragState = {
+  sourceId: string;
+  blockIds: string[];
+  mode: "move" | "select";
+  targetId: string;
+  placement: "before" | "after";
+  moved: boolean;
+};
+
+type SlashState = {
+  blockId: string;
+  index: number;
+  items: Command[];
+  start: number;
+  end: number;
+};
+
+type EmojiTarget = {
+  mode: "page" | "block" | "inline" | "";
+  blockId: string;
+  insertionOffset?: number;
+};
+
 type EmojiRecord = {
   annotation: string;
   emoji: string;
@@ -68,13 +99,13 @@ const COMMANDS: Command[] = [
   { target: "heading:1", title: "제목 1", hint: "큰 대목차", aliases: ["h1", "제목1"] },
   { target: "heading:2", title: "제목 2", hint: "중간 제목", aliases: ["h2", "제목2"] },
   { target: "heading:3", title: "제목 3", hint: "작은 제목", aliases: ["h3", "제목3"] },
-  { target: "bulleted_list", title: "글머리 기호", hint: "점 목록", aliases: ["bullet", "ul", "글머리", "목록"] },
-  { target: "numbered_list", title: "번호 목록", hint: "순서가 있는 목록", aliases: ["number", "ol", "번호"] },
   { target: "todo", title: "할 일", hint: "체크박스", aliases: ["todo", "check", "할일", "체크"] },
+  { target: "toggle", title: "토글", hint: "접고 펼치는 목록", aliases: ["toggle", "토글", "접기"] },
   { target: "quote", title: "인용", hint: "인용문", aliases: ["quote", "인용"] },
   { target: "callout", title: "콜아웃", hint: "강조 메모", aliases: ["callout", "note", "콜아웃", "메모"] },
   { target: "code", title: "코드", hint: "코드 블록", aliases: ["code", "코드"] },
   { target: "divider", title: "구분선", hint: "수평선", aliases: ["divider", "hr", "구분선"] },
+  { target: "table_of_contents", title: "목차", hint: "이 위치에 제목 목차 표시", aliases: ["toc", "contents", "목차"] },
   { target: "image", title: "이미지", hint: "이미지 URL", aliases: ["image", "img", "이미지"] },
   { target: "bookmark", title: "북마크", hint: "링크 미리보기", aliases: ["bookmark", "link", "북마크", "링크"] },
   { target: "equation", title: "수식", hint: "LaTeX 수식 블록", aliases: ["math", "equation", "latex", "수식"] },
@@ -96,6 +127,7 @@ const RICH_TYPES: EditorBlockType[] = [
   "bulleted_list",
   "numbered_list",
   "todo",
+  "toggle",
   "quote",
   "callout",
   "context",
@@ -155,24 +187,29 @@ export function initPostEditor(): void {
   const jsonPreview = root.querySelector<HTMLElement>("[data-json-preview]");
   const jsonSize = root.querySelector<HTMLElement>("[data-json-size]");
   const toast = root.querySelector<HTMLElement>("[data-toast]");
+  const jsonImport = root.querySelector<HTMLInputElement>("[data-json-import]");
 
   const today = new Date().toISOString().slice(0, 10);
   let blocks: EditorBlock[] = [];
   let pageAppearance: EditorPageAppearance = {};
   let emojiData: EmojiRecord[] | null = null;
   let emojiGroup = 0;
-  let emojiTarget: { mode: "page" | "block" | ""; blockId: string } = { mode: "", blockId: "" };
+  let emojiTarget: EmojiTarget = { mode: "", blockId: "" };
   let selectedId = "";
+  const selectedBlockIds = new Set<string>();
+  let blockDragState: BlockDragState | null = null;
   let saveTimer = 0;
-  let slashState: { blockId: string; index: number; items: Command[] } = {
+  let slashState: SlashState = {
     blockId: "",
     index: 0,
     items: [],
+    start: 0,
+    end: 0,
   };
   let savedSelection: SelectionSnapshot | null = null;
-  let colorTarget: { mode: "block" | "text" | ""; blockId: string } = {
+  let colorTarget: { mode: "block" | "text" | ""; blockIds: string[] } = {
     mode: "",
-    blockId: "",
+    blockIds: [],
   };
 
   function sampleDocument(): EditorDocument {
@@ -264,7 +301,20 @@ export function initPostEditor(): void {
   }
 
   function selectedClass(block: EditorBlock): string {
-    return selectedId === block.id ? " editor-block--selected" : "";
+    return selectedBlockIds.has(block.id) || selectedId === block.id ? " editor-block--selected" : "";
+  }
+
+  function syncBlockSelectionUI(): void {
+    blocksRoot.querySelectorAll<HTMLElement>("[data-id]").forEach((element) => {
+      const blockId = element.dataset.id ?? "";
+      element.classList.toggle("editor-block--selected", selectedBlockIds.has(blockId) || selectedId === blockId);
+    });
+  }
+
+  function setSelectedBlockIds(blockIds: string[]): void {
+    selectedBlockIds.clear();
+    blockIds.forEach((blockId) => selectedBlockIds.add(blockId));
+    syncBlockSelectionUI();
   }
 
   function richRootMarkup(block: EditorBlock, placeholder: string): string {
@@ -279,12 +329,14 @@ export function initPostEditor(): void {
   }
 
   function renderControls(): string {
-    return `<div class="editor-block__controls" aria-label="블록 작업">
-      <button type="button" data-block-action="add-after" title="아래에 블록 추가" aria-label="아래에 블록 추가">+</button>
-      <button type="button" data-block-action="remove" title="블록 삭제" aria-label="블록 삭제">×</button>
+    return `<div class="editor-block__controls" aria-label="Block controls">
+      <button type="button" data-block-action="add-after" title="Add block below" aria-label="Add block below">+</button>
+      <button type="button" class="editor-block__drag-handle" data-block-action="drag" title="Drag to move. Shift-drag to select multiple blocks." aria-label="Drag to move. Shift-drag to select multiple blocks.">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+        <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
     </div>`;
   }
-
   function renderTable(block: EditorBlock): string {
     const rows = normalizeTableRows(block.rows);
     return `<div class="editor-table-wrap">
@@ -322,16 +374,16 @@ export function initPostEditor(): void {
     });
   }
 
-  function renderBlock(block: EditorBlock): string {
+  function renderBlock(block: EditorBlock, depth: number, childrenMarkup = ""): string {
     const shellClass = `${blockBackgroundClass(block)}${selectedClass(block)}`;
     if (block.type === "divider") {
-      return `<section class="editor-block editor-block--divider${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--divider${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}<hr />
       </section>`;
     }
 
     if (block.type === "image") {
-      return `<section class="editor-block editor-block--image${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--image${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
         <label><span>이미지 URL</span><input data-field="src" value="${escapeHtml(block.src ?? "")}" placeholder="/image.webp" /></label>
         <label><span>대체 텍스트</span><input data-field="alt" value="${escapeHtml(block.alt ?? "")}" placeholder="이미지 설명" /></label>
@@ -340,7 +392,7 @@ export function initPostEditor(): void {
     }
 
     if (block.type === "bookmark") {
-      return `<section class="editor-block editor-block--bookmark${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--bookmark${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
         <label><span>URL</span><input data-field="url" value="${escapeHtml(block.url ?? "")}" /></label>
         <label><span>제목</span><input data-field="title" value="${escapeHtml(block.title ?? "Bookmark")}" /></label>
@@ -350,7 +402,7 @@ export function initPostEditor(): void {
 
     if (block.type === "equation") {
       const equation = block.equation ?? "";
-      return `<section class="editor-block editor-block--equation${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--equation${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
         <textarea class="editor-equation-input" data-field="equation" rows="3" spellcheck="false" placeholder="E = mc^2">${escapeHtml(equation)}</textarea>
         <div class="editor-equation-preview" data-equation-preview aria-label="수식 미리보기">${renderEquationHtml(equation)}</div>
@@ -358,13 +410,33 @@ export function initPostEditor(): void {
     }
 
     if (block.type === "table") {
-      return `<section class="editor-block editor-block--table${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--table${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}${renderTable(block)}
       </section>`;
     }
 
+    if (block.type === "toggle") {
+      return `<section class="editor-block editor-block--toggle${shellClass}" data-id="${block.id}" data-depth="${depth}">
+        ${renderControls()}
+        <details class="editor-toggle" open>
+          <summary>${richRootMarkup(block, "토글 제목")}</summary>
+          ${childrenMarkup}
+        </details>
+      </section>`;
+    }
+
+    if (block.type === "table_of_contents") {
+      return `<section class="editor-block editor-block--table-of-contents${shellClass}" data-id="${block.id}" data-depth="${depth}">
+        ${renderControls()}
+        <div class="editor-toc-preview">
+          <strong>목차</strong>
+          <span>게시 시 이 위치에서 문서의 제목을 Bento 카드로 표시합니다.</span>
+        </div>
+      </section>`;
+    }
+
     if (block.type === "context") {
-      return `<section class="editor-block editor-block--context${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--context${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
         <input class="editor-context-title" data-field="title" value="${escapeHtml(block.title ?? "맥락")}" aria-label="맥락 제목" />
         ${richRootMarkup(block, "배경, 전제, 참고 맥락을 적습니다.")}
@@ -372,7 +444,7 @@ export function initPostEditor(): void {
     }
 
     if (block.type === "code") {
-      return `<section class="editor-block editor-block--code${shellClass}" data-id="${block.id}">
+      return `<section class="editor-block editor-block--code${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
         <input class="editor-code-lang" data-field="language" value="${escapeHtml(block.language ?? "text")}" aria-label="코드 언어" />
         <textarea data-field="code" rows="5" spellcheck="false">${escapeHtml(block.code ?? "")}</textarea>
@@ -383,7 +455,7 @@ export function initPostEditor(): void {
     const checkbox = block.type === "todo"
       ? `<input type="checkbox" data-field="checked" ${block.checked ? "checked" : ""} aria-label="완료" />`
       : "";
-    return `<section class="editor-block editor-block--${block.type}${shellClass}" data-id="${block.id}">
+    return `<section class="editor-block editor-block--${block.type}${shellClass}" data-id="${block.id}" data-depth="${depth}">
       ${renderControls()}
       <div class="editor-line">
         ${checkbox}
@@ -399,9 +471,18 @@ export function initPostEditor(): void {
     </section>`;
   }
 
+  function renderBlockTree(block: EditorBlock, depth = 0): string {
+    const children = block.children?.length
+      ? `<div class="editor-block-children">${block.children.map((child) => renderBlockTree(child, depth + 1)).join("")}</div>`
+      : "";
+    return block.type === "toggle"
+      ? renderBlock(block, depth, children)
+      : `${renderBlock(block, depth)}${children}`;
+  }
+
   function render(): void {
     renderPageAppearance();
-    blocksRoot.innerHTML = blocks.map(renderBlock).join("");
+    blocksRoot.innerHTML = blocks.map((block) => renderBlockTree(block)).join("");
     bindBlocks();
     syncOutput();
   }
@@ -471,6 +552,7 @@ export function initPostEditor(): void {
       "bookmark",
       "equation",
       "table",
+      "table_of_contents",
     ].includes(rawType)
       ? rawType
       : "paragraph";
@@ -514,6 +596,10 @@ export function initPostEditor(): void {
     block.id = typeof raw.id === "string" && raw.id ? raw.id : block.id;
     if (isRichTextBlock(type)) block.richText = richText;
     if (backgroundColor) block.backgroundColor = backgroundColor;
+    const children = Array.isArray(raw.children)
+      ? raw.children.map(normalizeStoredBlock).filter((child): child is EditorBlock => Boolean(child))
+      : [];
+    if (children.length) block.children = children;
     return block;
   }
 
@@ -573,8 +659,22 @@ export function initPostEditor(): void {
     }
   }
 
+  function findBlockLocation(
+    id: string,
+    siblings: EditorBlock[] = blocks,
+    parent?: EditorBlock,
+  ): BlockLocation | undefined {
+    for (let index = 0; index < siblings.length; index += 1) {
+      const block = siblings[index];
+      if (block.id === id) return { block, siblings, index, parent };
+      const child = findBlockLocation(id, block.children ?? [], block);
+      if (child) return child;
+    }
+    return undefined;
+  }
+
   function getBlock(id: string): EditorBlock | undefined {
-    return blocks.find((block) => block.id === id);
+    return findBlockLocation(id)?.block;
   }
 
   function getSnapshotRichText(snapshot: SelectionSnapshot): RichText[] {
@@ -720,7 +820,7 @@ export function initPostEditor(): void {
 
   function hideColorMenu(): void {
     colorMenu.hidden = true;
-    colorTarget = { mode: "", blockId: "" };
+    colorTarget = { mode: "", blockIds: [] };
   }
 
   function hideEmojiMenu(): void {
@@ -813,10 +913,10 @@ export function initPostEditor(): void {
     renderEmojiPicker();
   }
 
-  async function openEmojiMenu(mode: "page" | "block", blockId: string, anchor: HTMLElement): Promise<void> {
+  async function openEmojiMenu(mode: "page" | "block" | "inline", blockId: string, anchor: HTMLElement, insertionOffset?: number): Promise<void> {
     hideColorMenu();
     hideCoverMenu();
-    emojiTarget = { mode, blockId };
+    emojiTarget = { mode, blockId, insertionOffset };
     emojiMenu.hidden = false;
     positionFloating(emojiMenu, anchor.getBoundingClientRect(), "below");
     try {
@@ -846,6 +946,23 @@ export function initPostEditor(): void {
         selectedId = block.id;
         render();
         window.requestAnimationFrame(() => focusBlock(block.id, true));
+        scheduleSave();
+      }
+    }
+    if (emojiTarget.mode === "inline") {
+      const block = getBlock(emojiTarget.blockId);
+      if (block && isRichTextBlock(block.type)) {
+        const offset = emojiTarget.insertionOffset ?? getRichTextPlainText(block.richText).length;
+        block.richText = mergeRichText([
+          ...sliceRichText(block.richText, 0, offset),
+          ...createRichText(unicode),
+          ...sliceRichText(block.richText, offset),
+        ]);
+        selectedId = block.id;
+        render();
+        window.requestAnimationFrame(() => {
+          restoreSelection({ blockId: block.id, field: "richText", start: offset + unicode.length, end: offset + unicode.length });
+        });
         scheduleSave();
       }
     }
@@ -999,7 +1116,10 @@ export function initPostEditor(): void {
     const block = getBlock(blockId);
     const element = blocksRoot.querySelector<HTMLElement>(`[data-id="${blockId}"]`);
     if (!block || !element) return;
-    colorTarget = { mode: "block", blockId };
+    colorTarget = {
+      mode: "block",
+      blockIds: selectedBlockIds.has(blockId) ? [...selectedBlockIds] : [blockId],
+    };
     colorMenu.innerHTML = renderColorMenu("block", block.backgroundColor ?? "default");
     bindColorMenu();
     positionFloating(colorMenu, element.getBoundingClientRect(), "below");
@@ -1012,7 +1132,7 @@ export function initPostEditor(): void {
       savedSelection.start,
       savedSelection.end,
     );
-    colorTarget = { mode: "text", blockId: savedSelection.blockId };
+    colorTarget = { mode: "text", blockIds: [savedSelection.blockId] };
     colorMenu.innerHTML = renderColorMenu("text", activeColor || "default");
     bindColorMenu();
     positionFloating(colorMenu, inlineToolbar.getBoundingClientRect(), "below");
@@ -1025,10 +1145,12 @@ export function initPostEditor(): void {
 
   function applyColor(value: string): void {
     if (colorTarget.mode === "block") {
-      const block = getBlock(colorTarget.blockId);
-      if (!block) return;
-      if (value === "default") delete block.backgroundColor;
-      else block.backgroundColor = value;
+      colorTarget.blockIds.forEach((blockId) => {
+        const block = getBlock(blockId);
+        if (!block) return;
+        if (value === "default") delete block.backgroundColor;
+        else block.backgroundColor = value;
+      });
       hideColorMenu();
       render();
       scheduleSave();
@@ -1069,7 +1191,39 @@ export function initPostEditor(): void {
     hideColorMenu();
     window.setTimeout(() => showInlineToolbar(), 0);
   }
+  function normalizeLinkUrl(value: string): string | null {
+    const url = value.trim();
+    if (!url) return "";
+    if (url.startsWith("/") || url.startsWith("#") || url.startsWith("./") || url.startsWith("../")) return url;
+    try {
+      const parsed = new URL(/^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`);
+      return ["http:", "https:", "mailto:"].includes(parsed.protocol) ? parsed.href : null;
+    } catch {
+      return null;
+    }
+  }
 
+  function editInlineLink(): void {
+    if (!savedSelection || savedSelection.start === savedSelection.end) return;
+    const entered = window.prompt("Enter a link URL. Leave it blank to remove the link.", "");
+    if (entered === null) return;
+    const href = normalizeLinkUrl(entered);
+    if (href === null) {
+      showToast("Use an http, https, mailto, or relative link.");
+      return;
+    }
+    const snapshot = { ...savedSelection };
+    setSnapshotRichText(
+      snapshot,
+      applyInlineHref(getSnapshotRichText(snapshot), snapshot.start, snapshot.end, href || undefined),
+    );
+    renderSnapshotRoot(snapshot);
+    restoreSelection(snapshot);
+    syncOutput();
+
+    scheduleSave();
+    window.setTimeout(() => showInlineToolbar(), 0);
+  }
   function updateRichTextFromEditable(blockId: string, editable: HTMLElement): void {
     const block = getBlock(blockId);
     if (!block) return;
@@ -1116,18 +1270,18 @@ export function initPostEditor(): void {
     if (isRichTextBlock(type)) options.richText = createRichText(text);
     const replacement = createEditorBlock(type, text, options);
     replacement.id = block.id;
+    if (block.children?.length) replacement.children = block.children;
     return replacement;
   }
 
   function applyCommandTarget(blockId: string, target: string): "block" | "color-menu" | "emoji-menu" {
-    const index = blocks.findIndex((block) => block.id === blockId);
-    if (index < 0) return "block";
-    const block = blocks[index];
+    const location = findBlockLocation(blockId);
+    if (!location) return "block";
+    const { block, siblings, index } = location;
     if (target === "background-menu" || target === "emoji-menu") {
-      if (isRichTextBlock(block.type)) block.richText = [];
       return target === "emoji-menu" ? "emoji-menu" : "color-menu";
     }
-    blocks[index] = replaceBlockType(block, target, "");
+    siblings[index] = replaceBlockType(block, target, "");
     return "block";
   }
 
@@ -1164,35 +1318,100 @@ export function initPostEditor(): void {
     });
   }
 
+  function activeSlashContext(blockId: string): { start: number; end: number; query: string } | null {
+    const block = getBlock(blockId);
+    if (!block) return null;
+    const snapshot = captureSelection(true);
+    const cursor = snapshot?.blockId === blockId && snapshot.field === "richText"
+      ? snapshot.end
+      : blockPlainText(block).length;
+    const beforeCursor = blockPlainText(block).slice(0, cursor);
+    const start = beforeCursor.lastIndexOf("/");
+    if (start < 0) return null;
+    const query = beforeCursor.slice(start + 1);
+    if (/\s/.test(query)) return null;
+    return { start, end: cursor, query };
+  }
+
+  function removeSlashToken(block: EditorBlock, start: number, end: number): void {
+    block.richText = mergeRichText([
+      ...sliceRichText(block.richText, 0, start),
+      ...sliceRichText(block.richText, end),
+    ]);
+  }
+
+  function createCommandBlock(target: string): EditorBlock {
+    const [rawType, rawLevel] = target.split(":");
+    return createEditorBlock(rawType as EditorBlockType, "", {
+      level: rawType === "heading" ? clampHeadingLevel(rawLevel) : undefined,
+    });
+  }
+
   function updateSlashMenu(blockId: string, editable: HTMLElement): void {
     if (editable.dataset.field !== "richText") {
       hideSlashMenu();
       return;
     }
-    const block = getBlock(blockId);
-    const text = block ? blockPlainText(block) : "";
-    if (!text.startsWith("/")) {
+    const context = activeSlashContext(blockId);
+    if (!context) {
       hideSlashMenu();
       return;
     }
-    slashState = { blockId, index: 0, items: getSlashItems(text.slice(1)) };
+    slashState = {
+      blockId,
+      index: 0,
+      items: getSlashItems(context.query),
+      start: context.start,
+      end: context.end,
+    };
     renderSlashMenu(editable);
   }
 
   function chooseSlashCommand(command: Command | undefined): void {
     if (!command) return;
-    const blockId = slashState.blockId;
+    const { blockId, start, end } = slashState;
+    const location = findBlockLocation(blockId);
+    if (!location) return;
+    const { block, siblings, index } = location;
+    const wholeBlockCommand = start === 0 && end === blockPlainText(block).length;
     hideSlashMenu();
-    const action = applyCommandTarget(blockId, command.target);
+
+    if (command.target === "emoji-menu") {
+      removeSlashToken(block, start, end);
+      selectedId = blockId;
+      render();
+      window.requestAnimationFrame(() => {
+        const anchor = blocksRoot.querySelector<HTMLElement>(`[data-id="${blockId}"] [data-rich-root]`);
+        if (anchor) void openEmojiMenu("inline", blockId, anchor, start);
+      });
+      scheduleSave();
+      return;
+    }
+
+    if (command.target === "background-menu") {
+      if (!wholeBlockCommand) removeSlashToken(block, start, end);
+      selectedId = blockId;
+      render();
+      window.requestAnimationFrame(() => openBlockColorMenu(blockId));
+      scheduleSave();
+      return;
+    }
+
+    if (!wholeBlockCommand) {
+      removeSlashToken(block, start, end);
+      const next = createCommandBlock(command.target);
+      siblings.splice(index + 1, 0, next);
+      selectedId = next.id;
+      render();
+      window.requestAnimationFrame(() => focusBlock(next.id));
+      scheduleSave();
+      return;
+    }
+
+    applyCommandTarget(blockId, command.target);
     selectedId = blockId;
     render();
-    window.requestAnimationFrame(() => {
-      if (action === "color-menu") openBlockColorMenu(blockId);
-      else if (action === "emoji-menu") {
-        const anchor = blocksRoot.querySelector<HTMLElement>(`[data-id="${blockId}"]`);
-        if (anchor) void openEmojiMenu("block", blockId, anchor);
-      } else focusBlock(blockId);
-    });
+    window.requestAnimationFrame(() => focusBlock(blockId));
     scheduleSave();
   }
 
@@ -1204,17 +1423,185 @@ export function initPostEditor(): void {
     );
   }
 
+  function indentBlock(blockId: string): boolean {
+    const location = findBlockLocation(blockId);
+    if (!location || location.index === 0) return false;
+    const parent = location.siblings[location.index - 1];
+    location.siblings.splice(location.index, 1);
+    parent.children ??= [];
+    parent.children.push(location.block);
+    return true;
+  }
+
+  function outdentBlock(blockId: string): boolean {
+    const location = findBlockLocation(blockId);
+    if (!location?.parent) return false;
+    const parentLocation = findBlockLocation(location.parent.id);
+    if (!parentLocation) return false;
+    location.siblings.splice(location.index, 1);
+    parentLocation.siblings.splice(parentLocation.index + 1, 0, location.block);
+    return true;
+  }
+
+  function documentOrder(): string[] {
+    const ids: string[] = [];
+    const visit = (siblings: EditorBlock[]): void => {
+      siblings.forEach((block) => {
+        ids.push(block.id);
+        visit(block.children ?? []);
+      });
+    };
+    visit(blocks);
+    return ids;
+  }
+
+  function selectionRootIds(blockIds: string[]): string[] {
+    const selected = new Set(blockIds);
+    const roots = blockIds.filter((blockId) => {
+      let parent = findBlockLocation(blockId)?.parent;
+      while (parent) {
+        if (selected.has(parent.id)) return false;
+        parent = findBlockLocation(parent.id)?.parent;
+      }
+      return Boolean(findBlockLocation(blockId));
+    });
+    const order = documentOrder();
+    return [...new Set(roots)].sort((left, right) => order.indexOf(left) - order.indexOf(right));
+  }
+
+  function moveBlocksToTarget(blockIds: string[], targetId: string, placement: "before" | "after"): boolean {
+    const roots = selectionRootIds(blockIds);
+    if (!roots.length || roots.includes(targetId)) return false;
+    const targetLocation = findBlockLocation(targetId);
+    if (!targetLocation) return false;
+    let ancestor = targetLocation.parent;
+    while (ancestor) {
+      if (roots.includes(ancestor.id)) return false;
+      ancestor = findBlockLocation(ancestor.id)?.parent;
+    }
+
+    const movingBlocks = roots.map((id) => findBlockLocation(id)?.block).filter(Boolean) as EditorBlock[];
+    [...roots].reverse().forEach((id) => {
+      const location = findBlockLocation(id);
+      if (location) location.siblings.splice(location.index, 1);
+    });
+    const destination = findBlockLocation(targetId);
+    if (!destination) return false;
+    destination.siblings.splice(destination.index + (placement === "after" ? 1 : 0), 0, ...movingBlocks);
+    return true;
+  }
+
+  function clearDragTarget(): void {
+    blocksRoot.querySelectorAll<HTMLElement>(".editor-block--drag-before, .editor-block--drag-after").forEach((element) => {
+      element.classList.remove("editor-block--drag-before", "editor-block--drag-after");
+    });
+  }
+
+  function blockIdAtPoint(clientX: number, clientY: number): string {
+    const target = document.elementFromPoint(clientX, clientY);
+    return target?.closest<HTMLElement>("[data-id]")?.dataset.id ?? "";
+  }
+
+  function selectionRange(firstId: string, lastId: string): string[] {
+    const order = documentOrder();
+    const firstIndex = order.indexOf(firstId);
+    const lastIndex = order.indexOf(lastId);
+    if (firstIndex < 0 || lastIndex < 0) return [firstId];
+    return order.slice(Math.min(firstIndex, lastIndex), Math.max(firstIndex, lastIndex) + 1);
+  }
+
+  function beginBlockDrag(event: PointerEvent, blockId: string): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const selected = selectedBlockIds.has(blockId) && selectedBlockIds.size > 0;
+    blockDragState = {
+      sourceId: blockId,
+      blockIds: selected ? selectionRootIds([...selectedBlockIds]) : [blockId],
+      mode: event.shiftKey ? "select" : "move",
+      targetId: "",
+      placement: "after",
+      moved: false,
+    };
+
+    const onMove = (moveEvent: PointerEvent): void => {
+      const state = blockDragState;
+      if (!state) return;
+      const targetId = blockIdAtPoint(moveEvent.clientX, moveEvent.clientY);
+      if (!targetId) return;
+      if (state.mode === "select") {
+        setSelectedBlockIds(selectionRange(state.sourceId, targetId));
+        selectedId = state.sourceId;
+        return;
+      }
+      const target = blocksRoot.querySelector<HTMLElement>(`[data-id="${targetId}"]`);
+      if (!target || state.blockIds.includes(targetId)) return;
+      const targetLocation = findBlockLocation(targetId);
+      let ancestor = targetLocation?.parent;
+      while (ancestor) {
+        if (state.blockIds.includes(ancestor.id)) return;
+        ancestor = findBlockLocation(ancestor.id)?.parent;
+      }
+      clearDragTarget();
+      state.targetId = targetId;
+      state.placement = moveEvent.clientY < target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2 ? "before" : "after";
+      state.moved = true;
+      target.classList.add(state.placement === "before" ? "editor-block--drag-before" : "editor-block--drag-after");
+    };
+
+    const finish = (): void => {
+      const state = blockDragState;
+      blockDragState = null;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      clearDragTarget();
+      if (!state) return;
+      if (state.mode === "select") {
+        selectedId = state.sourceId;
+        syncBlockSelectionUI();
+        return;
+      }
+      if (!state.moved || !state.targetId || !moveBlocksToTarget(state.blockIds, state.targetId, state.placement)) return;
+      selectedId = state.sourceId;
+      setSelectedBlockIds(state.blockIds);
+      render();
+      scheduleSave();
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+  }
+
+  function moveBlockWithTab(blockId: string, outdent: boolean, blockIds = [blockId]): void {
+    const roots = selectionRootIds(blockIds);
+    const ordered = outdent ? [...roots].reverse() : roots;
+    let moved = false;
+    ordered.forEach((id) => {
+      moved = (outdent ? outdentBlock(id) : indentBlock(id)) || moved;
+    });
+    if (!moved) return;
+    selectedId = blockId;
+    render();
+    window.requestAnimationFrame(() => focusBlock(blockId));
+    scheduleSave();
+  }
+
   function splitBlockAtSelection(blockId: string): void {
-    const block = getBlock(blockId);
-    const index = blocks.findIndex((item) => item.id === blockId);
+    const location = findBlockLocation(blockId);
     const snapshot = captureSelection(true);
-    if (!block || index < 0 || !snapshot || snapshot.field !== "richText") return;
+    if (!location || !snapshot || snapshot.field !== "richText") return;
+    const { block, siblings, index, parent } = location;
     const value = block.richText ?? [];
     const before = sliceRichText(value, 0, snapshot.start);
     const after = sliceRichText(value, snapshot.end);
 
     if (!getRichTextPlainText(value) && block.type !== "paragraph") {
-      blocks[index] = replaceBlockType(block, "paragraph", "");
+      if (parent && ["bulleted_list", "numbered_list", "todo"].includes(block.type)) {
+        moveBlockWithTab(blockId, true);
+        return;
+      }
+      siblings[index] = replaceBlockType(block, "paragraph", "");
       render();
       window.requestAnimationFrame(() => focusBlock(blockId));
       scheduleSave();
@@ -1229,7 +1616,7 @@ export function initPostEditor(): void {
       richText: after,
       checked: nextType === "todo" ? false : undefined,
     });
-    blocks.splice(index + 1, 0, next);
+    siblings.splice(index + 1, 0, next);
     selectedId = next.id;
     render();
     window.requestAnimationFrame(() => focusBlock(next.id, false));
@@ -1237,23 +1624,24 @@ export function initPostEditor(): void {
   }
 
   function removeOrMergeAtStart(blockId: string): boolean {
-    const block = getBlock(blockId);
-    const index = blocks.findIndex((item) => item.id === blockId);
+    const location = findBlockLocation(blockId);
     const snapshot = captureSelection(true);
-    if (!block || index < 0 || !snapshot || snapshot.start !== 0 || snapshot.end !== 0) return false;
+    if (!location || !snapshot || snapshot.start !== 0 || snapshot.end !== 0) return false;
+    const { block, siblings, index, parent } = location;
     const text = blockPlainText(block);
 
     if (!text && block.type !== "paragraph") {
-      blocks[index] = replaceBlockType(block, "paragraph", "");
+      siblings[index] = replaceBlockType(block, "paragraph", "");
       render();
       window.requestAnimationFrame(() => focusBlock(blockId, false));
       scheduleSave();
       return true;
     }
 
-    if (!text && blocks.length > 1) {
-      blocks.splice(index, 1);
-      const previous = blocks[Math.max(0, index - 1)];
+    if (!text && siblings.length > 1) {
+      siblings.splice(index, 1);
+      const previous = siblings[Math.max(0, index - 1)] ?? parent;
+      if (!previous) return false;
       selectedId = previous.id;
       render();
       window.requestAnimationFrame(() => focusBlock(previous.id, true));
@@ -1261,11 +1649,11 @@ export function initPostEditor(): void {
       return true;
     }
 
-    const previous = blocks[index - 1];
+    const previous = siblings[index - 1];
     if (index > 0 && previous && isRichTextBlock(previous.type) && isRichTextBlock(block.type)) {
       const previousLength = getRichTextPlainText(previous.richText).length;
       previous.richText = mergeRichText([...(previous.richText ?? []), ...(block.richText ?? [])]);
-      blocks.splice(index, 1);
+      siblings.splice(index, 1);
       selectedId = previous.id;
       render();
       window.requestAnimationFrame(() => {
@@ -1336,10 +1724,44 @@ export function initPostEditor(): void {
 
     const block = getBlock(blockId);
     if (!block) return;
-    if (event.key === " " && blockPlainText(block).startsWith("/")) {
-      const command = exactSlashCommand(blockPlainText(block));
+    if (event.key === "Tab") {
+      event.preventDefault();
+      moveBlockWithTab(blockId, event.shiftKey);
+      return;
+    }
+    if (
+      event.key === " " &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      block.type === "paragraph"
+    ) {
+      const shortcut = blockPlainText(block);
+      const target = shortcut === "-"
+        ? "bulleted_list"
+        : /^\d+\.$/.test(shortcut)
+          ? "numbered_list"
+          : shortcut === ">"
+            ? "toggle"
+            : shortcut === "\""
+              ? "quote"
+              : "";
+      if (target) {
+        event.preventDefault();
+        const location = findBlockLocation(blockId);
+        if (!location) return;
+        location.siblings[location.index] = replaceBlockType(block, target, "");
+        selectedId = blockId;
+        render();
+        window.requestAnimationFrame(() => focusBlock(blockId));
+        scheduleSave();
+        return;
+      }
+      const context = activeSlashContext(blockId);
+      const command = context ? exactSlashCommand(`/${context.query}`) : undefined;
       if (command) {
         event.preventDefault();
+        slashState = { blockId, index: 0, items: [command], start: context!.start, end: context!.end };
         chooseSlashCommand(command);
         return;
       }
@@ -1354,17 +1776,21 @@ export function initPostEditor(): void {
   }
 
   function handleBlockAction(blockId: string, action: string): void {
-    const index = blocks.findIndex((block) => block.id === blockId);
-    if (index < 0) return;
+    if (action === "drag") return;
+    const location = findBlockLocation(blockId);
+    if (!location) return;
+    const { siblings, index, parent } = location;
     if (action === "add-after") {
       const next = createEditorBlock("paragraph");
-      blocks.splice(index + 1, 0, next);
+      siblings.splice(index + 1, 0, next);
       selectedId = next.id;
     }
     if (action === "remove") {
-      blocks.splice(index, 1);
+      siblings.splice(index, 1);
+      selectedBlockIds.delete(blockId);
       if (!blocks.length) blocks.push(createEditorBlock("paragraph"));
-      selectedId = blocks[Math.min(index, blocks.length - 1)].id;
+      const fallback = siblings[Math.min(index, siblings.length - 1)] ?? parent ?? blocks.at(-1);
+      selectedId = fallback?.id ?? blocks[0].id;
     }
     render();
     window.requestAnimationFrame(() => focusBlock(selectedId));
@@ -1389,8 +1815,16 @@ export function initPostEditor(): void {
     blocksRoot.querySelectorAll<HTMLElement>("[data-id]").forEach((element) => {
       const blockId = element.dataset.id;
       if (!blockId) return;
-      element.addEventListener("pointerdown", () => {
+      element.addEventListener("pointerdown", (event) => {
+        const target = event.target;
+        const action = target instanceof Element ? target.closest<HTMLElement>("[data-block-action]")?.dataset.blockAction : "";
+        if (action === "drag") return;
+        selectedBlockIds.clear();
         selectedId = blockId;
+        syncBlockSelectionUI();
+      });
+      element.querySelector<HTMLButtonElement>("[data-block-action=\"drag\"]")?.addEventListener("pointerdown", (event) => {
+        beginBlockDrag(event, blockId);
       });
       element.querySelectorAll<HTMLButtonElement>("[data-block-action]").forEach((button) => {
         button.addEventListener("click", () => handleBlockAction(blockId, button.dataset.blockAction ?? ""));
@@ -1440,8 +1874,10 @@ export function initPostEditor(): void {
     const block = createEditorBlock(type, "", {
       level: type === "heading" ? clampHeadingLevel(rawLevel) : undefined,
     });
-    const currentIndex = selectedId ? blocks.findIndex((item) => item.id === selectedId) : blocks.length - 1;
-    blocks.splice(Math.max(0, currentIndex) + 1, 0, block);
+    const location = selectedId ? findBlockLocation(selectedId) : undefined;
+    const siblings = location?.siblings ?? blocks;
+    const index = location?.index ?? siblings.length - 1;
+    siblings.splice(Math.max(0, index) + 1, 0, block);
     selectedId = block.id;
     render();
     window.requestAnimationFrame(() => focusBlock(block.id));
@@ -1476,6 +1912,7 @@ export function initPostEditor(): void {
       base.hasHeaderRow = block.hasHeaderRow !== false;
       base.rows = normalizeTableRows(block.rows);
     }
+    if (block.children?.length) base.children = block.children.map(serializedBlock);
     return base;
   }
 
@@ -1517,6 +1954,28 @@ export function initPostEditor(): void {
   async function copyText(value: string, label: string): Promise<void> {
     await navigator.clipboard.writeText(value);
     showToast(`${label} 복사됨`);
+  }
+
+  async function importJsonFile(file: File): Promise<void> {
+    try {
+      const raw: unknown = JSON.parse(await file.text());
+      if (!raw || typeof raw !== "object" || (raw as Record<string, unknown>).version !== 2 || !Array.isArray((raw as Record<string, unknown>).blocks)) {
+        throw new Error("Unsupported document format");
+      }
+      const document = normalizeStoredDocument(raw);
+      setMeta(document.meta);
+      pageAppearance = structuredClone(document.page);
+      blocks = structuredClone(document.blocks);
+      selectedBlockIds.clear();
+      selectedId = blocks[0]?.id ?? "";
+      render();
+      scheduleSave();
+      showToast(`${file.name} 불러옴`);
+    } catch {
+      showToast("Post JSON v2 파일만 불러올 수 있습니다.");
+    } finally {
+      if (jsonImport) jsonImport.value = "";
+    }
   }
 
   function downloadFallback(value: string, filename: string): void {
@@ -1601,11 +2060,20 @@ export function initPostEditor(): void {
     button.addEventListener("click", () => addBlockFromPalette(button.dataset.addBlock ?? "paragraph"));
   });
 
+  jsonImport?.addEventListener("change", () => {
+    const file = jsonImport.files?.[0];
+    if (file) void importJsonFile(file);
+  });
+
   root.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
     button.addEventListener("click", async () => {
       const meta = getMeta();
       const slug = meta.slug || slugify(meta.title || "untitled");
       const json = getJson();
+      if (button.dataset.action === "load-json") {
+        jsonImport?.click();
+        return;
+      }
       if (button.dataset.action === "copy-json") await copyText(json, "JSON");
       if (button.dataset.action === "save-json") await saveJson(json, `${slug}.post.json`);
       if (button.dataset.action === "reset-sample") {
@@ -1629,6 +2097,7 @@ export function initPostEditor(): void {
         });
         pageAppearance = {};
         blocks = [createEditorBlock("paragraph")];
+
         selectedId = blocks[0].id;
         render();
         scheduleSave();
@@ -1646,6 +2115,11 @@ export function initPostEditor(): void {
     event.preventDefault();
     openInlineColorMenu();
   });
+  inlineToolbar.querySelector<HTMLButtonElement>("[data-inline-action='link']")?.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    editInlineLink();
+  });
+
 
   root.addEventListener("mouseup", () => window.setTimeout(() => showInlineToolbar(), 0));
   root.addEventListener("keyup", () => {
