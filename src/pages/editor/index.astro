@@ -64,14 +64,14 @@ import "../../styles/post-editor.css";
             <button type="button" data-add-block="heading:1">&#xC81C;&#xBAA9; 1</button>
             <button type="button" data-add-block="heading:2">&#xC81C;&#xBAA9; 2</button>
             <button type="button" data-add-block="heading:3">&#xC81C;&#xBAA9; 3</button>
-            <p class="block-palette__group">&#xAD6C;&#xC870; &#xB7B7; &#xAC15;&#xC870;</p>
+            <p class="block-palette__group">&#xAD6C;&#xC870; &middot; &#xAC15;&#xC870;</p>
             <button type="button" data-add-block="todo">&#xD560; &#xC77C;</button>
             <button type="button" data-add-block="toggle">&#xD1A0;&#xAE00;</button>
             <button type="button" data-add-block="quote">&#xC778;&#xC6A9;</button>
             <button type="button" data-add-block="callout">&#xCF5C;&#xC544;&#xC6C3;</button>
             <button type="button" data-add-block="divider">&#xAD6C;&#xBD84;&#xC120;</button>
             <button type="button" data-add-block="table_of_contents">&#xBAA9;&#xCC28;</button>
-            <button type="button" data-add-block="context">&#xBC30;&#xACBD; &#xB7B7; &#xC804;&#xC81C; &#xB178;&#xD2B8;</button>
+            <button type="button" data-add-block="context">&#xBC30;&#xACBD; &middot; &#xC804;&#xC81C; &#xB178;&#xD2B8;</button>
             <p class="block-palette__group">&#xCF58;&#xD150;&#xCE20;</p>
             <button type="button" data-add-block="image">&#xC774;&#xBBF8;&#xC9C0;</button>
             <button type="button" data-add-block="bookmark">&#xB9C1;&#xD06C; &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30;</button>
@@ -123,7 +123,7 @@ import "../../styles/post-editor.css";
             <h2>Post JSON</h2>
             <span data-json-size>0 chars</span>
           </div>
-          <pre data-json-preview></pre>
+          <textarea class="editor-json-input" data-json-editor spellcheck="false" aria-label="Post JSON editor"></textarea>
         </section>
       </aside>
     </div>
@@ -141,6 +141,7 @@ import "../../styles/post-editor.css";
     <div class="color-menu" data-color-menu hidden></div>
     <div class="emoji-popover" data-emoji-menu hidden></div>
     <div class="cover-menu" data-cover-menu hidden></div>
+    <div class="block-context-menu" data-block-context-menu hidden></div>
     <div class="editor-toast" data-toast hidden></div>
   </div>
 

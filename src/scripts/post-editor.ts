@@ -184,7 +184,8 @@ export function initPostEditor(): void {
   const blockCount = root.querySelector<HTMLElement>("[data-block-count]");
   const slugPreview = root.querySelector<HTMLElement>("[data-derived-slug]");
   const datePreview = root.querySelector<HTMLElement>("[data-derived-date]");
-  const jsonPreview = root.querySelector<HTMLElement>("[data-json-preview]");
+  const jsonEditor = root.querySelector<HTMLTextAreaElement>("[data-json-editor]");
+  const blockContextMenu = root.querySelector<HTMLElement>("[data-block-context-menu]");
   const jsonSize = root.querySelector<HTMLElement>("[data-json-size]");
   const toast = root.querySelector<HTMLElement>("[data-toast]");
   const jsonImport = root.querySelector<HTMLInputElement>("[data-json-import]");
@@ -199,6 +200,7 @@ export function initPostEditor(): void {
   const selectedBlockIds = new Set<string>();
   let blockDragState: BlockDragState | null = null;
   let saveTimer = 0;
+  let jsonInputTimer = 0;
   let slashState: SlashState = {
     blockId: "",
     index: 0,
@@ -257,7 +259,7 @@ export function initPostEditor(): void {
   }
 
   function setMeta(meta: Partial<EditorMeta>): void {
-    metaInputs.forEach((input) => {
+  metaInputs.forEach((input) => {
       input.value = meta[input.dataset.meta as keyof EditorMeta] ?? "";
     });
   }
@@ -480,7 +482,15 @@ export function initPostEditor(): void {
       : `${renderBlock(block, depth)}${children}`;
   }
 
+  function ensureToggleChildren(items: EditorBlock[]): void {
+    items.forEach((block) => {
+      if (block.type === "toggle" && !block.children?.length) block.children = [createEditorBlock("paragraph")];
+      if (block.children?.length) ensureToggleChildren(block.children);
+    });
+  }
+
   function render(): void {
+    ensureToggleChildren(blocks);
     renderPageAppearance();
     blocksRoot.innerHTML = blocks.map((block) => renderBlockTree(block)).join("");
     bindBlocks();
@@ -1775,6 +1785,18 @@ export function initPostEditor(): void {
     if (event.key === "Backspace" && removeOrMergeAtStart(blockId)) event.preventDefault();
   }
 
+  function hideBlockContextMenu(): void {
+    if (blockContextMenu) blockContextMenu.hidden = true;
+  }
+
+  function showBlockContextMenu(blockId: string, clientX: number, clientY: number): void {
+    if (!blockContextMenu) return;
+    blockContextMenu.innerHTML = `<button type="button" data-context-action="delete">\uBE14\uB85D \uC0AD\uC81C</button>`;
+    blockContextMenu.style.left = `${Math.max(10, Math.min(clientX, window.innerWidth - 180))}px`;
+    blockContextMenu.style.top = `${Math.max(10, Math.min(clientY, window.innerHeight - 60))}px`;
+    blockContextMenu.dataset.blockId = blockId;
+    blockContextMenu.hidden = false;
+  }
   function handleBlockAction(blockId: string, action: string): void {
     if (action === "drag") return;
     const location = findBlockLocation(blockId);
@@ -1937,8 +1959,28 @@ export function initPostEditor(): void {
     if (slugPreview) slugPreview.textContent = slug;
     if (datePreview) datePreview.textContent = meta.pubDate || today;
     if (blockCount) blockCount.textContent = String(blocks.length);
-    if (jsonPreview) jsonPreview.textContent = json;
+    if (jsonEditor && document.activeElement !== jsonEditor) jsonEditor.value = json;
     if (jsonSize) jsonSize.textContent = `${json.length} chars`;
+  }
+  function applyJsonEditor(): void {
+    if (!jsonEditor) return;
+    try {
+      const raw: unknown = JSON.parse(jsonEditor.value);
+      if (!raw || typeof raw !== "object" || (raw as Record<string, unknown>).version !== 2 || !Array.isArray((raw as Record<string, unknown>).blocks)) {
+        throw new Error("Invalid Post JSON v2 document.");
+      }
+      const document = normalizeStoredDocument(raw);
+      setMeta(document.meta);
+      pageAppearance = structuredClone(document.page);
+      blocks = structuredClone(document.blocks);
+      selectedBlockIds.clear();
+      selectedId = blocks[0]?.id ?? "";
+      jsonEditor.classList.remove("is-invalid");
+      render();
+      scheduleSave();
+    } catch {
+      jsonEditor.classList.add("is-invalid");
+    }
   }
   function persist(): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(getDocument()));
@@ -2024,6 +2066,10 @@ export function initPostEditor(): void {
     }, 1800);
   }
 
+  jsonEditor?.addEventListener("input", () => {
+    window.clearTimeout(jsonInputTimer);
+    jsonInputTimer = window.setTimeout(applyJsonEditor, 350);
+  });
   metaInputs.forEach((input) => {
     input.addEventListener("input", () => {
       syncOutput();
@@ -2121,11 +2167,28 @@ export function initPostEditor(): void {
   });
 
 
+  blockContextMenu?.addEventListener("click", (event) => {
+    const action = (event.target as Element | null)?.closest<HTMLElement>("[data-context-action]")?.dataset.contextAction;
+    const blockId = blockContextMenu.dataset.blockId;
+    if (action === "delete" && blockId) handleBlockAction(blockId, "remove");
+    hideBlockContextMenu();
+  });
   root.addEventListener("mouseup", () => window.setTimeout(() => showInlineToolbar(), 0));
   root.addEventListener("keyup", () => {
     window.setTimeout(() => showInlineToolbar(), 0);
   });
   root.addEventListener("contextmenu", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const blockElement = target?.closest<HTMLElement>("[data-id]");
+    if (blockElement?.dataset.id) {
+      event.preventDefault();
+      selectedBlockIds.clear();
+      selectedId = blockElement.dataset.id;
+      syncBlockSelectionUI();
+      hideInlineToolbar();
+      showBlockContextMenu(blockElement.dataset.id, event.clientX, event.clientY);
+      return;
+    }
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !captureSelection()) return;
     event.preventDefault();
