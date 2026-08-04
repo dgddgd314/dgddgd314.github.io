@@ -16,7 +16,6 @@ export interface Props extends BlogSchema {
 const { title, description, pubDate, updatedDate, badge, tags = [], blocks = [], tocItems = [] } = Astro.props;
 dayjs.extend(localizedFormat);
 const displayDate = dayjs(pubDate).format("ll");
-const majorTocItems = tocItems.filter((item) => item.level === 1);
 ---
 
 <BaseLayout
@@ -75,26 +74,9 @@ const majorTocItems = tocItems.filter((item) => item.level === 1);
 
       <div class="block-workspace">
         <div class="block-content-column">
-          {majorTocItems.length > 0 && (
-            <section class="block-bento" aria-labelledby="major-sections-title">
-              <div class="block-bento__header">
-                <h2 id="major-sections-title">Contents</h2>
-                <span>{majorTocItems.length} sections</span>
-              </div>
-              <div class="block-bento__grid">
-                {majorTocItems.map((item, index) => (
-                  <a href={`#${item.id}`} class:list={["block-bento__card", index === 0 && "block-bento__card--wide"]}>
-                    <span class="block-bento__index">{String(index + 1).padStart(2, "0")}</span>
-                    <strong>{item.text}</strong>
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
-
           <div class="block-shell">
             <div class="block-document">
-              {blocks.length > 0 ? blocks.map((block) => <BlockRenderer block={block} />) : <slot />}
+              {blocks.length > 0 ? blocks.map((block) => <BlockRenderer block={block} tocItems={tocItems} />) : <slot />}
             </div>
           </div>
         </div>

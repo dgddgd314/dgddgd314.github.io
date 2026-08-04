@@ -9,6 +9,7 @@ export type EditorBlockType =
   | "bulleted_list"
   | "numbered_list"
   | "todo"
+  | "toggle"
   | "quote"
   | "callout"
   | "code"
@@ -17,6 +18,7 @@ export type EditorBlockType =
   | "bookmark"
   | "equation"
   | "table"
+  | "table_of_contents"
   | "context";
 
 export type EditorBlock = {
@@ -39,6 +41,7 @@ export type EditorBlock = {
   hasHeaderRow?: boolean;
   backgroundColor?: string;
   textColor?: string;
+  children?: EditorBlock[];
 };
 
 export type EditorMeta = {
@@ -230,6 +233,20 @@ export function applyInlineTextColor(
   });
 }
 
+export function applyInlineHref(
+  value: RichText[],
+  start: number,
+  end: number,
+  href?: string,
+): RichText[] {
+  return mutateRange(value, start, end, (part) => {
+    const next = { ...part };
+    if (href) next.href = href;
+    else delete next.href;
+    return next;
+  });
+}
+
 export function sliceRichText(value: RichText[], start: number, end?: number): RichText[] {
   const total = getRichTextPlainText(value).length;
   const safeStart = Math.max(0, Math.min(start, total));
@@ -290,7 +307,8 @@ export function richTextToHtml(value: RichText[] = []): string {
         ? ` data-background-color="${escapeHtml(part.backgroundColor)}"`
         : "";
       const href = part.href ? ` data-href="${escapeHtml(part.href)}"` : "";
-      return `<span class="${classes}" data-rich-segment="${index}"${style}${textColor}${backgroundColor}${href}>${escapeHtml(part.text)}</span>`;
+      const linkClass = part.href ? " is-link" : "";
+      return `<span class="${classes}${linkClass}" data-rich-segment="${index}"${style}${textColor}${backgroundColor}${href}>${escapeHtml(part.text)}</span>`;
     })
     .join("");
 }
@@ -369,6 +387,7 @@ export function isRichTextBlock(type: EditorBlockType): boolean {
     "bulleted_list",
     "numbered_list",
     "todo",
+    "toggle",
     "quote",
     "callout",
     "context",
