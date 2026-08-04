@@ -101,6 +101,7 @@
 }
 
 .editor-actions button,
+.editor-guide-download,
 .block-palette button,
 .editor-panel--quiet button,
 .editor-block__controls button,
@@ -118,6 +119,7 @@
 }
 
 .editor-actions button:hover,
+.editor-guide-download:hover,
 .block-palette button:hover,
 .editor-panel--quiet button:hover,
 .editor-block__controls button:hover,
@@ -545,19 +547,11 @@
   padding-left: 10px;
 }
 
-.editor-block--bulleted_list .editor-text::before {
-  content: "•";
-  margin-right: 8px;
-  color: var(--editor-teal);
-}
+.editor-block--bulleted_list .editor-text::before { content: "\2022"; margin-right: 8px; color: var(--editor-teal); }
 
-.editor-block[data-depth="1"] .editor-text::before {
-  content: "◦";
-}
+.editor-block[data-depth="1"] .editor-text::before { content: "\25e6"; }
 
-.editor-block[data-depth="2"] .editor-text::before {
-  content: "▪";
-}
+.editor-block[data-depth="2"] .editor-text::before { content: "\25aa"; }
 
 .editor-block--numbered_list .editor-text::before {
   content: "1.";
