@@ -978,3 +978,61 @@
 .emoji-picker__emoji:hover,
 .emoji-picker__emoji:focus-visible { background: var(--color-paper-mint); outline: none; }
 .emoji-picker__empty { grid-column: 1 / -1; margin: 28px 0; color: var(--editor-muted); font-size: 0.82rem; text-align: center; }
+.editor-guide-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* Shared top-bar action UI for buttons and download links. */
+.editor-actions > :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.drive-image-upload {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.drive-image-upload button {
+  min-height: 30px;
+  border: 1px solid var(--editor-line);
+  border-radius: 6px;
+  padding: 0 9px;
+  color: var(--editor-soft);
+  background: var(--editor-panel);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 740;
+  cursor: pointer;
+}
+
+.drive-image-upload button:hover {
+  border-color: rgba(72, 166, 167, 0.5);
+  color: var(--editor-blue);
+  background: var(--color-paper-blue);
+}
+
+.drive-settings-dialog {
+  width: min(440px, calc(100vw - 32px));
+  border: 1px solid var(--editor-line-strong);
+  border-radius: 14px;
+  padding: 0;
+  color: var(--editor-ink);
+  background: var(--editor-panel);
+}
+
+.drive-settings-dialog::backdrop { background: rgba(24, 31, 39, 0.4); }
+.drive-settings-dialog__form { display: grid; gap: 14px; padding: 22px; }
+.drive-settings-dialog__form h2,
+.drive-settings-dialog__form p { margin: 0; }
+.drive-settings-dialog__form p { color: var(--editor-muted); font-size: 0.82rem; line-height: 1.5; }
+.drive-settings-dialog__form label { display: grid; gap: 6px; font-size: 0.8rem; font-weight: 740; }
+.drive-settings-dialog__form input { min-height: 38px; border: 1px solid var(--editor-line); border-radius: 7px; padding: 0 10px; color: var(--editor-ink); background: var(--color-paper); font: inherit; }
+.drive-settings-dialog__form menu { display: flex; justify-content: flex-end; gap: 7px; margin: 2px 0 0; padding: 0; }
+.drive-settings-dialog__form button { min-height: 32px; border: 1px solid var(--editor-line); border-radius: 6px; padding: 0 10px; color: var(--editor-soft); background: var(--editor-soft-panel); font: inherit; font-weight: 740; cursor: pointer; }
