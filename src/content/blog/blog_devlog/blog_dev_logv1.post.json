@@ -464,7 +464,7 @@
       "children": [
         {
           "id": "block-mseyu3pw-8ygp7n",
-          "type": "numbered_list",
+          "type": "paragraph",
           "richText": [
             {
               "text": " 지금 이게 내가 제대로 프로젝트 런칭한게 3번째? 4번째? 인거 같은데, 사실 요청사항 정도만 잘 적어주면 AI가 너무 모든 것을 잘 해준다. 특히 Agentic AI가 나온 뒤부터는 구현은 전혀 병목이 아니다. "
@@ -484,7 +484,7 @@
       "children": [
         {
           "id": "block-mseyvtpc-mbsj5r",
-          "type": "numbered_list",
+          "type": "paragraph",
           "richText": [
             {
               "text": "확실히 유일한 병목은 데이터=고객이라는 말이 너무 잘 느껴지는 것 같다."
@@ -493,7 +493,7 @@
         },
         {
           "id": "block-mseyw839-cx5hj3",
-          "type": "numbered_list",
+          "type": "paragraph",
           "richText": [
             {
               "text": "그런 의미에서 UI/UX는 너무나도 중요하다."

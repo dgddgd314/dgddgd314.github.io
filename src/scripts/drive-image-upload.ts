@@ -158,7 +158,7 @@ async function uploadToDrive(file: File, settings: DriveSettings): Promise<strin
     body: JSON.stringify({ type: "anyone", role: "reader" }),
   });
 
-  return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(id)}`;
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(id)}=w2000`;
 }
 
 function showToast(message: string): void {
