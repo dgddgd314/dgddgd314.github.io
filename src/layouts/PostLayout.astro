@@ -16,6 +16,12 @@ export interface Props extends BlogSchema {
 const { title, description, pubDate, updatedDate, badge, tags = [], blocks = [], tocItems = [] } = Astro.props;
 dayjs.extend(localizedFormat);
 const displayDate = dayjs(pubDate).format("ll");
+const numberedListStart = (items: Block[], index: number) => {
+  if (items[index]?.type !== "numbered_list") return 1;
+  let start = 1;
+  for (let cursor = index - 1; cursor >= 0 && items[cursor]?.type === "numbered_list"; cursor -= 1) start += 1;
+  return start;
+};
 ---
 
 <BaseLayout
@@ -62,7 +68,7 @@ const displayDate = dayjs(pubDate).format("ll");
               <dt>Tags</dt>
               <dd class="block-property-tags">
                 {tags.map((tag) => (
-                  <a href={`/blog/tag/${tag}`} class="block-tag">
+                  <a href={`/blog/tag/${tag}`} class="block-tag" data-astro-reload>
                     {tag}
                   </a>
                 ))}
@@ -76,7 +82,7 @@ const displayDate = dayjs(pubDate).format("ll");
         <div class="block-content-column">
           <div class="block-shell">
             <div class="block-document">
-              {blocks.length > 0 ? blocks.map((block) => <BlockRenderer block={block} tocItems={tocItems} />) : <slot />}
+              {blocks.length > 0 ? blocks.map((block, index) => <BlockRenderer block={block} tocItems={tocItems} numberedListStart={numberedListStart(blocks, index)} />) : <slot />}
             </div>
           </div>
         </div>

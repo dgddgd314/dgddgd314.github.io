@@ -105,7 +105,8 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat("ko-KR", {
 }).format(date);
 
 const toPostKey = (post: BlogPost) => post.data.slug || createSlug(post.data.title, post.id);
-const postsForPage = allPosts.map((post: BlogPost, index: number) => {
+// The route's page data is already tag-filtered, so it remains correct before client initialization.
+const postsForPage = page.data.map((post: BlogPost, index: number) => {
   const tags = post.data.tags ?? [];
   const category = getPostCategory(post);
   const key = toPostKey(post);

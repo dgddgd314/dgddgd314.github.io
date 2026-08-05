@@ -4,14 +4,16 @@ import { resolveBackgroundColor, resolveTextColor } from "../../lib/blocks";
 import katex from "katex";
 import RichText from "./RichText.astro";
 import type { TocItem } from "../../lib/toc";
+import { toEmbeddableImageUrl } from "../../lib/image-url";
 
 interface Props {
   block: Block;
   depth?: number;
   tocItems?: TocItem[];
+  numberedListStart?: number;
 }
 
-const { block, depth = 0, tocItems = [] } = Astro.props;
+const { block, depth = 0, tocItems = [], numberedListStart = 1 } = Astro.props;
 const bentoTocItems = tocItems.filter((item) => item.level === 1);
 const textColor = resolveTextColor(block.textColor);
 const backgroundColor = resolveBackgroundColor(block.backgroundColor);
@@ -65,7 +67,7 @@ const equationHtml = block.type === "equation"
 
     {
       block.type === "numbered_list" && (
-        <ol class="notion-list"><li><RichText value={block.richText} /></li></ol>
+        <ol class="notion-list" start={numberedListStart}><li><RichText value={block.richText} /></li></ol>
       )
     }
 
@@ -158,7 +160,7 @@ const equationHtml = block.type === "equation"
     {
       block.type === "image" && (
         <figure class="notion-image">
-          <img src={block.src} alt={block.alt} loading="lazy" />
+          <img src={toEmbeddableImageUrl(block.src)} alt={block.alt} loading="lazy" />
           {block.caption && <figcaption><RichText value={block.caption} /></figcaption>}
         </figure>
       )

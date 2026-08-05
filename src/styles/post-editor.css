@@ -545,7 +545,10 @@
   margin-left: 24px;
   border-left: 1px solid rgba(55, 53, 47, 0.12);
   padding-left: 10px;
+  counter-reset: numbered-list;
 }
+
+.editor-blocks { counter-reset: numbered-list; }
 
 .editor-block--bulleted_list .editor-text::before { content: "\2022"; margin-right: 8px; color: var(--editor-teal); }
 
@@ -554,10 +557,12 @@
 .editor-block[data-depth="2"] .editor-text::before { content: "\25aa"; }
 
 .editor-block--numbered_list .editor-text::before {
-  content: "1.";
+  content: counter(numbered-list) ".";
   margin-right: 8px;
   color: var(--editor-teal);
 }
+
+.editor-block--numbered_list { counter-increment: numbered-list; }
 
 .editor-block--quote {
   border-left: 3px solid var(--editor-line-strong);
