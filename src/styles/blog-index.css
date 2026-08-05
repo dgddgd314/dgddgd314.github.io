@@ -367,8 +367,10 @@
 .tag-pill,
 .category-list button,
 .post-card__tags button,
+.post-card__tags a,
 .post-card__tags span,
 .list-row__tags button,
+.list-row__tags a,
 .list-row__tags span {
   border: 1px solid var(--archive-border);
   border-radius: 999px;
@@ -398,9 +400,13 @@
 .category-list button:hover,
 .category-list button.tag-pill--active,
 .post-card__tags button:hover,
+.post-card__tags a:hover,
 .post-card__tags button.tag-pill--active,
+.post-card__tags a.tag-pill--active,
 .list-row__tags button:hover,
-.list-row__tags button.tag-pill--active {
+.list-row__tags a:hover,
+.list-row__tags button.tag-pill--active,
+.list-row__tags a.tag-pill--active {
   border-color: rgba(72, 166, 167, 0.58);
   color: var(--archive-accent);
   background: var(--archive-hover);
@@ -542,8 +548,10 @@
 }
 
 .post-card__tags button,
+.post-card__tags a,
 .post-card__tags span,
 .list-row__tags button,
+.list-row__tags a,
 .list-row__tags span {
   padding: 3px 7px;
   font-size: 0.72rem;
@@ -551,7 +559,9 @@
 }
 
 .post-card__tags button::before,
-.list-row__tags button::before {
+.post-card__tags a::before,
+.list-row__tags button::before,
+.list-row__tags a::before {
   content: "#";
 }
 

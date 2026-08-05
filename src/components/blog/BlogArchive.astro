@@ -191,8 +191,8 @@ const networkLinks = Array.from(edgeMap.values());
     </header>
 
     <nav class="blog-tabs" aria-label="Blog navigation">
-      <button class:list={["blog-tab", initialView === "posts" && "blog-tab--active"]} type="button" data-view-button="posts">&#xD648;</button>
-      <button class:list={["blog-tab", initialView === "tags" && "blog-tab--active"]} type="button" data-view-button="tags">&#xD0DC;&#xADF8;</button>
+      <a class:list={["blog-tab", initialView === "posts" && "blog-tab--active"]} href="/blog/">&#xD648;</a>
+      <a class:list={["blog-tab", initialView === "tags" && "blog-tab--active"]} href="/blog/tags/">&#xD0DC;&#xADF8;</a>
     </nav>
 
     <div class="blog-layout">
@@ -203,14 +203,14 @@ const networkLinks = Array.from(edgeMap.values());
             <p>{sortedTags.length} tags</p>
           </div>
           <div class="tag-cloud" data-tag-cloud>
-            <button type="button" class:list={["tag-pill", !initialTagValue && "tag-pill--active"]} data-tag-filter="">All</button>
+            <a href="/blog/tags/" class:list={["tag-pill", !initialTagValue && "tag-pill--active"]} data-tag-filter="">All</a>
             {sortedTags.map(([tag, count], index) => {
               const tagValue = String(tag).toLowerCase();
               return (
-                <button type="button" class:list={["tag-pill", index >= 24 && initialTagValue !== tagValue && "tag-pill--overflow", initialTagValue === tagValue && "tag-pill--active"]} data-tag-filter={tagValue}>
+                <a href={`/blog/tag/${encodeURIComponent(tag)}/`} class:list={["tag-pill", index >= 24 && initialTagValue !== tagValue && "tag-pill--overflow", initialTagValue === tagValue && "tag-pill--active"]} data-tag-filter={tagValue}>
                   <span>{tag}</span>
                   <em>{count}</em>
-                </button>
+                </a>
               );
             })}
             {sortedTags.length > 24 && (
@@ -254,7 +254,7 @@ const networkLinks = Array.from(edgeMap.values());
                   <a href={url} class="post-card__title">{post.data.title}</a>
                   <p>{post.data.description}</p>
                   <div class="post-card__tags">
-                    {tags.length > 0 ? tags.slice(0, 3).map((tag) => <button type="button" data-tag-filter={tag.toLowerCase()}>{tag}</button>) : <span>untagged</span>}
+                    {tags.length > 0 ? tags.slice(0, 3).map((tag) => <a href={`/blog/tag/${encodeURIComponent(tag)}/`} data-tag-filter={tag.toLowerCase()}>{tag}</a>) : <span>untagged</span>}
                   </div>
                 </div>
               </article>
@@ -269,7 +269,7 @@ const networkLinks = Array.from(edgeMap.values());
                   <a href={url} class="list-row__title">{post.data.title}</a>
                   <p>{post.data.description}</p>
                   <div class="list-row__tags">
-                    {tags.length > 0 ? tags.map((tag) => <button type="button" data-tag-filter={tag.toLowerCase()}>{tag}</button>) : <span>untagged</span>}
+                    {tags.length > 0 ? tags.map((tag) => <a href={`/blog/tag/${encodeURIComponent(tag)}/`} data-tag-filter={tag.toLowerCase()}>{tag}</a>) : <span>untagged</span>}
                   </div>
                 </div>
                 <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
@@ -553,27 +553,8 @@ const networkLinks = Array.from(edgeMap.values());
 
     input?.addEventListener("input", applyFilters);
 
-    viewButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        const view = button.dataset.viewButton ?? "posts";
-        activeTag = "";
-        activeCategory = "";
-        setView(view);
-        applyFilters();
-      });
-    });
-
     layoutButtons.forEach((button) => {
       button.addEventListener("click", () => setLayout(button.dataset.layoutButton ?? "bento"));
-    });
-
-    tagButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        activeTag = button.dataset.tagFilter ?? "";
-        activeCategory = "";
-        setView("tags");
-        applyFilters();
-      });
     });
 
     tagCloudMore?.addEventListener("click", () => {
