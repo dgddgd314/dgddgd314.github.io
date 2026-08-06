@@ -112,7 +112,6 @@ const COMMANDS: Command[] = [
   { target: "table", title: "표", hint: "3 x 3 편집 표", aliases: ["table", "표", "테이블"] },
   { target: "context", title: "맥락", hint: "배경과 전제 정리", aliases: ["context", "맥락", "컨텍스트"] },
   { target: "emoji-menu", title: "이모지", hint: "이모지 검색 및 삽입", aliases: ["emoji", "icon", "이모지", "아이콘"] },
-  { target: "background-menu", title: "색", hint: "현재 블록의 배경색", aliases: ["color", "background", "색", "배경", "배경색"] },
 ];
 
 const COLOR_OPTIONS: readonly BlockColorOption[] = BLOCK_COLOR_PALETTE;
@@ -199,6 +198,7 @@ export function initPostEditor(): void {
   let selectedId = "";
   const selectedBlockIds = new Set<string>();
   let blockDragState: BlockDragState | null = null;
+  let suppressNextHandleMenu = false;
   let saveTimer = 0;
   let jsonInputTimer = 0;
   let slashState: SlashState = {
@@ -390,6 +390,12 @@ export function initPostEditor(): void {
         <label><span>이미지 URL</span><input data-field="src" value="${escapeHtml(block.src ?? "")}" placeholder="/image.webp" /></label>
         <label><span>대체 텍스트</span><input data-field="alt" value="${escapeHtml(block.alt ?? "")}" placeholder="이미지 설명" /></label>
         <label><span>캡션</span><input data-field="caption" value="${escapeHtml(getRichTextPlainText(block.caption))}" placeholder="선택 사항" /></label>
+        <div class="drive-image-upload" data-drive-image-actions>
+          <label class="hero-image-toggle">
+            <input type="checkbox" data-field="isHeroImage" ${block.isHeroImage ? "checked" : ""} />
+            <span>\uB300\uD45C \uC774\uBBF8\uC9C0 \uC124\uC815</span>
+          </label>
+        </div>
       </section>`;
     }
 
@@ -590,6 +596,7 @@ export function initPostEditor(): void {
       options.src = String(raw.src ?? "");
       options.alt = String(raw.alt ?? "");
       options.caption = normalizeRichText(raw.caption, typeof raw.caption === "string" ? raw.caption : "");
+      options.isHeroImage = raw.isHeroImage === true;
     }
     if (type === "bookmark") {
       options.url = String(raw.url ?? "https://example.com");
@@ -643,6 +650,15 @@ export function initPostEditor(): void {
     const storedBlocks = Array.isArray(raw.blocks)
       ? raw.blocks.map(normalizeStoredBlock).filter((block): block is EditorBlock => Boolean(block))
       : [];
+    const heroImages: EditorBlock[] = [];
+    const collectHeroImages = (items: EditorBlock[]): void => {
+      items.forEach((block) => {
+        if (block.type === "image" && block.isHeroImage) heroImages.push(block);
+        if (block.children?.length) collectHeroImages(block.children);
+      });
+    };
+    collectHeroImages(storedBlocks);
+    if (heroImages.length > 1) heroImages.forEach((block) => { delete block.isHeroImage; });
     return {
       version: 2,
       meta: {
@@ -926,6 +942,7 @@ export function initPostEditor(): void {
   async function openEmojiMenu(mode: "page" | "block" | "inline", blockId: string, anchor: HTMLElement, insertionOffset?: number): Promise<void> {
     hideColorMenu();
     hideCoverMenu();
+    hideBlockContextMenu();
     emojiTarget = { mode, blockId, insertionOffset };
     emojiMenu.hidden = false;
     positionFloating(emojiMenu, anchor.getBoundingClientRect(), "below");
@@ -1256,10 +1273,32 @@ export function initPostEditor(): void {
     if (!block || !key) return;
     if (key === "checked" && field instanceof HTMLInputElement) {
       block.checked = field.checked;
+    } else if (key === "isHeroImage" && field instanceof HTMLInputElement) {
+      if (field.checked && !block.src?.trim()) {
+        field.checked = false;
+        showToast("\uC774\uBBF8\uC9C0 URL\uC744 \uBA3C\uC800 \uC785\uB825\uD558\uAC70\uB098 \uC5C5\uB85C\uB4DC\uD574 \uC8FC\uC138\uC694.");
+        return;
+      }
+      const clearHeroImage = (items: EditorBlock[]): void => {
+        items.forEach((item) => {
+          if (item.type === "image") delete item.isHeroImage;
+          if (item.children?.length) clearHeroImage(item.children);
+        });
+      };
+      clearHeroImage(blocks);
+      if (field.checked) block.isHeroImage = true;
+      render();
+      scheduleSave();
+      return;
     } else if (key === "caption") {
       block.caption = createRichText(field.value);
     } else {
       (block as Record<string, unknown>)[key] = field.value;
+    }
+    if (key === "src" && block.type === "image" && !block.src?.trim()) {
+      delete block.isHeroImage;
+      const toggle = field.closest<HTMLElement>("[data-id]")?.querySelector<HTMLInputElement>('[data-field="isHeroImage"]');
+      if (toggle) toggle.checked = false;
     }
     if (key === "equation") {
       const preview = field.closest<HTMLElement>("[data-id]")?.querySelector<HTMLElement>("[data-equation-preview]");
@@ -1288,8 +1327,8 @@ export function initPostEditor(): void {
     const location = findBlockLocation(blockId);
     if (!location) return "block";
     const { block, siblings, index } = location;
-    if (target === "background-menu" || target === "emoji-menu") {
-      return target === "emoji-menu" ? "emoji-menu" : "color-menu";
+    if (target === "emoji-menu") {
+      return "emoji-menu";
     }
     siblings[index] = replaceBlockType(block, target, "");
     return "block";
@@ -1394,15 +1433,6 @@ export function initPostEditor(): void {
         const anchor = blocksRoot.querySelector<HTMLElement>(`[data-id="${blockId}"] [data-rich-root]`);
         if (anchor) void openEmojiMenu("inline", blockId, anchor, start);
       });
-      scheduleSave();
-      return;
-    }
-
-    if (command.target === "background-menu") {
-      if (!wholeBlockCommand) removeSlashToken(block, start, end);
-      selectedId = blockId;
-      render();
-      window.requestAnimationFrame(() => openBlockColorMenu(blockId));
       scheduleSave();
       return;
     }
@@ -1572,6 +1602,8 @@ export function initPostEditor(): void {
         return;
       }
       if (!state.moved || !state.targetId || !moveBlocksToTarget(state.blockIds, state.targetId, state.placement)) return;
+      suppressNextHandleMenu = true;
+      window.setTimeout(() => { suppressNextHandleMenu = false; }, 0);
       selectedId = state.sourceId;
       setSelectedBlockIds(state.blockIds);
       render();
@@ -1789,13 +1821,14 @@ export function initPostEditor(): void {
     if (blockContextMenu) blockContextMenu.hidden = true;
   }
 
-  function showBlockContextMenu(blockId: string, clientX: number, clientY: number): void {
+  function showBlockActionMenu(blockId: string, anchor: HTMLElement): void {
     if (!blockContextMenu) return;
-    blockContextMenu.innerHTML = `<button type="button" data-context-action="delete">\uBE14\uB85D \uC0AD\uC81C</button>`;
-    blockContextMenu.style.left = `${Math.max(10, Math.min(clientX, window.innerWidth - 180))}px`;
-    blockContextMenu.style.top = `${Math.max(10, Math.min(clientY, window.innerHeight - 60))}px`;
+    blockContextMenu.innerHTML = `
+      <button type="button" data-context-action="color">\uC0C9 \uC124\uC815</button>
+      <button type="button" class="block-action-menu__delete" data-context-action="delete">\uBE14\uB85D \uC0AD\uC81C</button>
+    `;
     blockContextMenu.dataset.blockId = blockId;
-    blockContextMenu.hidden = false;
+    positionFloating(blockContextMenu, anchor.getBoundingClientRect(), "below");
   }
   function handleBlockAction(blockId: string, action: string): void {
     if (action === "drag") return;
@@ -1849,7 +1882,21 @@ export function initPostEditor(): void {
         beginBlockDrag(event, blockId);
       });
       element.querySelectorAll<HTMLButtonElement>("[data-block-action]").forEach((button) => {
-        button.addEventListener("click", () => handleBlockAction(blockId, button.dataset.blockAction ?? ""));
+        button.addEventListener("click", () => {
+          const action = button.dataset.blockAction ?? "";
+          if (action === "drag") {
+            if (suppressNextHandleMenu) {
+              suppressNextHandleMenu = false;
+              return;
+            }
+            selectedBlockIds.clear();
+            selectedId = blockId;
+            syncBlockSelectionUI();
+            showBlockActionMenu(blockId, button);
+            return;
+          }
+          handleBlockAction(blockId, action);
+        });
       });
       element.querySelectorAll<HTMLButtonElement>("[data-table-action]").forEach((button) => {
         button.addEventListener("click", () => handleTableAction(blockId, button.dataset.tableAction ?? ""));
@@ -1924,6 +1971,7 @@ export function initPostEditor(): void {
       base.src = block.src ?? "";
       base.alt = block.alt ?? "";
       if (block.caption?.length) base.caption = normalizeRichText(block.caption);
+      if (block.isHeroImage) base.isHeroImage = true;
     }
     if (block.type === "bookmark") {
       base.url = block.url ?? "";
@@ -2170,6 +2218,7 @@ export function initPostEditor(): void {
   blockContextMenu?.addEventListener("click", (event) => {
     const action = (event.target as Element | null)?.closest<HTMLElement>("[data-context-action]")?.dataset.contextAction;
     const blockId = blockContextMenu.dataset.blockId;
+    if (action === "color" && blockId) openBlockColorMenu(blockId);
     if (action === "delete" && blockId) handleBlockAction(blockId, "remove");
     hideBlockContextMenu();
   });
@@ -2177,33 +2226,15 @@ export function initPostEditor(): void {
   root.addEventListener("keyup", () => {
     window.setTimeout(() => showInlineToolbar(), 0);
   });
-  root.addEventListener("contextmenu", (event) => {
-    const target = event.target instanceof Element ? event.target : null;
-    const blockElement = target?.closest<HTMLElement>("[data-id]");
-    if (blockElement?.dataset.id) {
-      event.preventDefault();
-      selectedBlockIds.clear();
-      selectedId = blockElement.dataset.id;
-      syncBlockSelectionUI();
-      hideInlineToolbar();
-      showBlockContextMenu(blockElement.dataset.id, event.clientX, event.clientY);
-      return;
-    }
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed || !captureSelection()) return;
-    event.preventDefault();
-    const rect = new DOMRect(event.clientX, event.clientY, 1, 1);
-    showInlineToolbar(rect);
-  });
-
   document.addEventListener("pointerdown", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (inlineToolbar.contains(target) || colorMenu.contains(target) || slashMenu.contains(target) || emojiMenu.contains(target) || coverMenu.contains(target)) return;
+    if (inlineToolbar.contains(target) || colorMenu.contains(target) || slashMenu.contains(target) || emojiMenu.contains(target) || coverMenu.contains(target) || blockContextMenu?.contains(target)) return;
     if (!target.closest("[data-rich-root]")) hideInlineToolbar();
     hideColorMenu();
     hideEmojiMenu();
     hideCoverMenu();
+    hideBlockContextMenu();
   });
   window.addEventListener("beforeunload", persist);
 
