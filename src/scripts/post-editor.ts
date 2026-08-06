@@ -390,6 +390,12 @@ export function initPostEditor(): void {
         <label><span>이미지 URL</span><input data-field="src" value="${escapeHtml(block.src ?? "")}" placeholder="/image.webp" /></label>
         <label><span>대체 텍스트</span><input data-field="alt" value="${escapeHtml(block.alt ?? "")}" placeholder="이미지 설명" /></label>
         <label><span>캡션</span><input data-field="caption" value="${escapeHtml(getRichTextPlainText(block.caption))}" placeholder="선택 사항" /></label>
+        <div class="drive-image-upload" data-drive-image-actions>
+          <label class="hero-image-toggle">
+            <input type="checkbox" data-field="isHeroImage" ${block.isHeroImage ? "checked" : ""} />
+            <span>\uB300\uD45C \uC774\uBBF8\uC9C0 \uC124\uC815</span>
+          </label>
+        </div>
       </section>`;
     }
 
@@ -590,6 +596,7 @@ export function initPostEditor(): void {
       options.src = String(raw.src ?? "");
       options.alt = String(raw.alt ?? "");
       options.caption = normalizeRichText(raw.caption, typeof raw.caption === "string" ? raw.caption : "");
+      options.isHeroImage = raw.isHeroImage === true;
     }
     if (type === "bookmark") {
       options.url = String(raw.url ?? "https://example.com");
@@ -643,6 +650,15 @@ export function initPostEditor(): void {
     const storedBlocks = Array.isArray(raw.blocks)
       ? raw.blocks.map(normalizeStoredBlock).filter((block): block is EditorBlock => Boolean(block))
       : [];
+    const heroImages: EditorBlock[] = [];
+    const collectHeroImages = (items: EditorBlock[]): void => {
+      items.forEach((block) => {
+        if (block.type === "image" && block.isHeroImage) heroImages.push(block);
+        if (block.children?.length) collectHeroImages(block.children);
+      });
+    };
+    collectHeroImages(storedBlocks);
+    if (heroImages.length > 1) heroImages.forEach((block) => { delete block.isHeroImage; });
     return {
       version: 2,
       meta: {
@@ -1257,10 +1273,32 @@ export function initPostEditor(): void {
     if (!block || !key) return;
     if (key === "checked" && field instanceof HTMLInputElement) {
       block.checked = field.checked;
+    } else if (key === "isHeroImage" && field instanceof HTMLInputElement) {
+      if (field.checked && !block.src?.trim()) {
+        field.checked = false;
+        showToast("\uC774\uBBF8\uC9C0 URL\uC744 \uBA3C\uC800 \uC785\uB825\uD558\uAC70\uB098 \uC5C5\uB85C\uB4DC\uD574 \uC8FC\uC138\uC694.");
+        return;
+      }
+      const clearHeroImage = (items: EditorBlock[]): void => {
+        items.forEach((item) => {
+          if (item.type === "image") delete item.isHeroImage;
+          if (item.children?.length) clearHeroImage(item.children);
+        });
+      };
+      clearHeroImage(blocks);
+      if (field.checked) block.isHeroImage = true;
+      render();
+      scheduleSave();
+      return;
     } else if (key === "caption") {
       block.caption = createRichText(field.value);
     } else {
       (block as Record<string, unknown>)[key] = field.value;
+    }
+    if (key === "src" && block.type === "image" && !block.src?.trim()) {
+      delete block.isHeroImage;
+      const toggle = field.closest<HTMLElement>("[data-id]")?.querySelector<HTMLInputElement>('[data-field="isHeroImage"]');
+      if (toggle) toggle.checked = false;
     }
     if (key === "equation") {
       const preview = field.closest<HTMLElement>("[data-id]")?.querySelector<HTMLElement>("[data-equation-preview]");
@@ -1933,6 +1971,7 @@ export function initPostEditor(): void {
       base.src = block.src ?? "";
       base.alt = block.alt ?? "";
       if (block.caption?.length) base.caption = normalizeRichText(block.caption);
+      if (block.isHeroImage) base.isHeroImage = true;
     }
     if (block.type === "bookmark") {
       base.url = block.url ?? "";

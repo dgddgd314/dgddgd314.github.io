@@ -22,16 +22,51 @@ const blogMetaSchema = z.object({
     .optional(),
 });
 
+type HeroImageCandidate = { src: string };
+
+const collectHeroImages = (blocks: unknown[]): HeroImageCandidate[] => {
+  const candidates: HeroImageCandidate[] = [];
+  for (const value of blocks) {
+    if (!value || typeof value !== "object") continue;
+    const block = value as Record<string, unknown>;
+    if (block.type === "image" && block.isHeroImage === true) {
+      candidates.push({ src: typeof block.src === "string" ? block.src : "" });
+    }
+    if (Array.isArray(block.children)) candidates.push(...collectHeroImages(block.children));
+  }
+  return candidates;
+};
+
 const blogSchema = z.object({
   version: z.literal(2),
   meta: blogMetaSchema,
   page: z.unknown().optional(),
   blocks: z.array(z.unknown()),
-}).transform(({ meta, page, blocks }) => ({
-  ...meta,
-  page,
-  blocks,
-}));
+}).superRefine(({ blocks }, context) => {
+  const heroImages = collectHeroImages(blocks);
+  if (heroImages.length > 1) {
+    context.addIssue({
+      code: "custom",
+      path: ["blocks"],
+      message: "\uB300\uD45C \uC774\uBBF8\uC9C0\uB294 \uAE00 \uD558\uB098\uB2F9 \uD558\uB098\uB9CC \uC124\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
+    });
+  }
+  if (heroImages.length === 1 && !heroImages[0].src.trim()) {
+    context.addIssue({
+      code: "custom",
+      path: ["blocks"],
+      message: "\uB300\uD45C \uC774\uBBF8\uC9C0 \uBE14\uB85D\uC5D0\uB294 src\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.",
+    });
+  }
+}).transform(({ meta, page, blocks }) => {
+  const blockHeroImage = collectHeroImages(blocks)[0]?.src.trim();
+  return {
+    ...meta,
+    heroImage: blockHeroImage || meta.heroImage,
+    page,
+    blocks,
+  };
+});
 
 export type BlogSchema = z.infer<typeof blogSchema>;
 

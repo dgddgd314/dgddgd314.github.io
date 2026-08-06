@@ -211,13 +211,17 @@ function openSettings(): void {
 function installImageControls(): void {
   document.querySelectorAll<HTMLElement>(".editor-block--image").forEach((block) => {
     if (block.querySelector("[data-drive-image-upload]")) return;
-    const controls = document.createElement("div");
-    controls.className = "drive-image-upload";
-    controls.innerHTML = `
+    let controls = block.querySelector<HTMLElement>("[data-drive-image-actions]");
+    if (!controls) {
+      controls = document.createElement("div");
+      controls.className = "drive-image-upload";
+      controls.dataset.driveImageActions = "";
+      block.append(controls);
+    }
+    controls.insertAdjacentHTML("afterbegin", `
       <button type="button" data-drive-image-upload>Upload to Drive</button>
       <button type="button" data-drive-image-settings>Drive settings</button>
-      <input type="file" data-drive-image-file accept="image/*" hidden />`;
-    block.append(controls);
+      <input type="file" data-drive-image-file accept="image/*" hidden />`);
 
     const picker = controls.querySelector<HTMLInputElement>("[data-drive-image-file]");
     controls.querySelector<HTMLButtonElement>("[data-drive-image-settings]")?.addEventListener("click", openSettings);

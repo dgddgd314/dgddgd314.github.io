@@ -1002,6 +1002,26 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
+}
+
+.hero-image-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 4px;
+  color: var(--editor-soft);
+  font-size: 0.76rem;
+  font-weight: 740;
+  cursor: pointer;
+}
+
+.hero-image-toggle input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--editor-teal);
 }
 
 .drive-image-upload button {
