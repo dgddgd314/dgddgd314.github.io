@@ -1094,7 +1094,8 @@
   cursor: pointer;
 }
 
-.block-context-menu button:hover { background: #fff0ef; }
+.block-context-menu button:hover { background: #f1f3f4; }
+.block-context-menu .block-action-menu__delete:hover { background: #fff0ef; }
 
 .editor-toggle[open] > .editor-block-children > .editor-block--paragraph .editor-text:empty::before {
   content: "\B0B4\C6A9\C744 \C785\B825\D558\C138\C694";
