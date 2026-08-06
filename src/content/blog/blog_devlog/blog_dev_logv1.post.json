@@ -4,7 +4,7 @@
     "slug": "blog_dev_log",
     "description": "정적 블로그의 구조를 잡고, 블록 에디터와 Google Drive 이미지 업로드를 붙이기까지의 첫 기록.",
     "pubDate": "2026-08-05",
-    "category": "blog",
+    "category": "blog_dev",
     "tags": "astro,blog,editor,google-drive",
     "badge": "done",
     "title": "[개발일지] 블로그를 새로 만들었습니다 (v1)"

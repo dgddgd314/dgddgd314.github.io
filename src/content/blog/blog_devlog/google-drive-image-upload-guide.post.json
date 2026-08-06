@@ -1,0 +1,914 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "google-drive-image-upload-guide",
+    "description": "Google Drive를 이미지 저장소로 사용하는 방법 및 업로드·공개 링크 변환 흐름을 정리한 초안.",
+    "pubDate": "2026-08-06",
+    "category": "blog_dev",
+    "tags": "google-drive,image-upload,astro,storage",
+    "badge": "done",
+    "title": "Google Drive 연동으로 이미지 업로드하기 (v1)"
+  },
+  "page": {
+    "icon": "☁️",
+    "cover": {
+      "type": "color",
+      "value": "#eef7f3",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "블로그 본문은 Git으로 관리하지만, 이미지는 별도의 hosting을 끼고 하고 싶었다."
+        }
+      ]
+    },
+    {
+      "id": "block-mshmflgq-p26yx6",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "분리하게 된 이유"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "block-mshmfsr0-fwg7im",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "내가 알기로는 git에서 repo 별 사이즈 제한이 있지는 않은 것으로 알고 있다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mshmgh2d-ny5lvb",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "하지만 repo에 이미지를 같이 저장하면 사이즈가 너무 커져서 관리하기가 빡세고"
+        }
+      ]
+    },
+    {
+      "id": "block-mshmhfh6-3e2z1o",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "(아직 구현은 못했지만) 온라인 저장소에서 "
+        },
+        {
+          "text": "/editor",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "를 사용할 때 이미지 미리보기를 지원할 수 없고"
+        }
+      ]
+    },
+    {
+      "id": "block-mshmhwkd-ovrozj",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "무엇보다 github가 지금 상황이 굉장히 좋지 않아서.... 추후 블로그가 성장한다면 결국 이전을 AWS s3 등으로 하게 될거 같은데 이미 자리가 잡은 뒤에는 다른 CDN 서비스로의 이전이 너무 어려운 점"
+        }
+      ]
+    },
+    {
+      "id": "block-mshnb6en-rc56wd",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "그럼에도 불구하고 개인 블로그이기 때문에 전문적인 CDN 서비스가 필요하지는 않다는 점"
+        }
+      ]
+    },
+    {
+      "id": "block-mshmj808-kmf3dy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "등등을 고려하여 별도의 CDN을 쓰고자 하였다."
+        }
+      ]
+    },
+    {
+      "id": "what-is-storage",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "이미지 저장소는 무엇을 하는가"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "what-is-storage-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이미지 업로드 기능은 파일을 받아 보관하고, 브라우저가 읽을 수 있는 URL을 돌려주는 일로 나뉜다. 정적 사이트에서는 빌드 결과가 파일을 직접 처리하지 않으므로, 업로드된 이미지가 계속 접근 가능한 별도 저장소와 공개 URL이 필요하다."
+        }
+      ]
+    },
+    {
+      "id": "storage-flow",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "작성자가 에디터에서 이미지를 선택한다."
+        }
+      ]
+    },
+    {
+      "id": "storage-flow-2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "업로드 처리 코드가 파일을 Google Drive의 지정 폴더에 저장한다."
+        }
+      ]
+    },
+    {
+      "id": "storage-flow-3",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Drive 파일 ID를 이용해 브라우저용 이미지 URL을 만든다."
+        }
+      ]
+    },
+    {
+      "id": "storage-flow-4",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "그 URL을 본문 이미지 블록의 src로 저장하고, 빌드된 글은 그 URL을 그대로 렌더링한다."
+        }
+      ]
+    },
+    {
+      "id": "block-mshmkejo-yyf83g",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "다음과 같은 4단계로 구성된다. (자세하게 써놨지만 그냥 S3가 Drive로 변한거 말고는 없다)"
+        }
+      ]
+    },
+    {
+      "id": "why-drive",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "왜 Google Drive인가"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "why-drive-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "아무래도 대규모 서비스에서는 적합한 정답이 아닐 수 있다. 다만 개인 블로그 특성 상 S3나 오라클을 쓰기에는 너무 무겁고 취미 생활인데 돈까지 쓰기에는 아깝다라는 생각이 많이 들었다. 즉 Drive는 개인 블로그의 운영 비용과 편의성을 우선한 결정이다. 이미 사용하는 Google 계정과 저장 공간을 활용할 수 있어 별도 버킷, 결제 설정, CDN 구성 없이 시작할 수 있고 사실 구글 드라이브 무료 15GB가 좀 아까운 것도 있었다. 브라우저에서 폴더와 파일을 눈으로 확인하고 필요하면 교체·정리하기도 쉽다."
+        }
+      ]
+    },
+    {
+      "id": "comparison",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "선택지"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "장점"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "비교"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "Git 저장소"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "글과 이미지의 버전이 함께 남는다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이미지가 늘면 저장소와 배포 산출물이 무거워진다"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "Google Drive"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "낮은 진입 장벽, 익숙한 파일 관리, 기존 저장 공간 활용"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "개인용 이미지 업로드에 적합하다"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "S3·R2·Blob Storage"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "권한·도메인·캐시·확장성을 세밀하게 제어할 수 있다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "트래픽·운영 요구가 커질 때 고려한다"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "block-mshmnltw-9tgn22",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "별개로, 창업에 생각이 많은데 이 경험으로 서버비를 아끼기 위한 방법을 하나 더 알아가는 거 같다. 만약 이런 기능을 자신의 서비스에도 넣고 싶다면 테크니컬한 부분은 코드를 참고하도록 하자. "
+        }
+      ]
+    },
+    {
+      "id": "block-mshmq6kn-m4cuf2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "repo: ",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "https://github.com/dgddgd314/dgddgd314.github.io",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://github.com/dgddgd314/dgddgd314.github.io"
+        },
+        {
+          "text": " (⭐️도 부탁드립니다)",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-mshmpcum-v4ri5h",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 글에서는 UI/UX 적인 부분만 자세히 다루도록 하겠다."
+        }
+      ]
+    },
+    {
+      "id": "block-mshmn3p6-wdc8ta",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "연동 준비"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "setup-overview",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "본격적으로 어떻게 연동하는지를 설명해보면, 이미지를 글 안에 렌더링한다는게 그냥 Drive 링크를 붙인다고 되는 일은 아니다. 편집하는 사람 정적 사이트의 브라우저가 사용자의 Google 계정 권한을 잠깐 받아, 정해 둔 공유 폴더에 파일을 올리고, 방문자가 읽을 수 있는 URL을 본문 JSON에 기록하는 흐름이다. "
+        }
+      ]
+    },
+    {
+      "id": "setup-root-folder",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "1. 공유 루트 폴더 만들기"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "setup-root-folder-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "먼저 Drive에 블로그 이미지 전용 루트 폴더를 하나 만든다. "
+        }
+      ]
+    },
+    {
+      "id": "setup-root-folder-sharing",
+      "type": "callout",
+      "backgroundColor": "yellow",
+      "richText": [
+        {
+          "text": "꼭 공유 범위를 "
+        },
+        {
+          "text": "\"링크가 있는 모든 사용자\"",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "를 "
+        },
+        {
+          "text": "\"뷰어\"",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "로 설정해야 한다. 그래야 임의의 블로그 사용자들이 이미지를 볼 수 있다. 공유 범위는 폴더 오른쪽 클릭 후 아래 그림을 참고하자."
+        }
+      ],
+      "icon": "⚠️"
+    },
+    {
+      "id": "block-mshnfgcw-3s0s15",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1dFhOv2gZdjC-kssHi3_ggAwGyTTAJQFu=w2000",
+      "alt": "구글 드라이브로 이미지 호스팅 - 구글 폴더 권한 설정"
+    },
+    {
+      "id": "block-mshnmjrc-ovha19",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 폴더에서는:"
+        }
+      ]
+    },
+    {
+      "id": "block-mshnfim7-ktd171",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "에디터에서 이미지를 올릴 때 기본적으로 해당 폴더에 저장이 되며"
+        }
+      ]
+    },
+    {
+      "id": "block-mshnfvpv-04pdz4",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "저장은 각 글의 \"제목\"을 폴더명으로 한 각 하위 폴더에 분리되어 저장된다. "
+        }
+      ]
+    },
+    {
+      "id": "setup-folder-id",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이후 해당 폴더의 ID를 저장해둔다. 해당 폴더 내부로 들어간 이후 URL에서 /folders/ 뒤부터 ? 앞까지의 문자열이 ID다. 예시로"
+        }
+      ]
+    },
+    {
+      "id": "setup-folder-id-code",
+      "type": "code",
+      "language": "text",
+      "code": "https://drive.google.com/drive/folders/1AbCdEFghIJkLmNop?hl=ko"
+    },
+    {
+      "id": "setup-folder-id-failure",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "에서 "
+        },
+        {
+          "text": "1AbCdEFghIJkLmNop",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 가 ID이다."
+        }
+      ]
+    },
+    {
+      "id": "block-mshnj2zk-7cvim2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "꼭 쿼리 문자열을 제거하기 바란다. (?usp=sharing, ?resourcekey 같은 쿼리) 폴더를 잘 인식하지 못해서 404가 뜨더라..."
+        }
+      ]
+    },
+    {
+      "id": "setup-oauth",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "2. Google Cloud와 OAuth 클라이언트 만들기"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "setup-oauth-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "자세히 설명하기 이전에... 가벼운 마음으로 블로그를 만들려고 하셨던 분들에게는 죄송하다는 말씀을 드리고 싶습니다...",
+          "annotations": {
+            "strike": true
+          },
+          "textColor": "gray"
+        }
+      ]
+    },
+    {
+      "id": "block-mshnv5fw-on0zja",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이...게 좀 어려웠는데 정적 사이트에는 비밀 키를 숨길 서버가 없다. 그래서 서비스 계정이나 서버용 client secret 대신 Google Identity Services의 브라우저 토큰 흐름을 사용했다. 사용자가 Upload to Drive를 눌렀을 때만 Google 로그인·동의 팝업을 열고, 짧게 살아 있는 access token으로 Drive API를 호출한다. (쉽게 생각하면 로그인 버튼을 누른다고 생각하면 된다.)\n"
+        }
+      ]
+    },
+    {
+      "id": "setup-oauth-steps",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Google Cloud Console ("
+        },
+        {
+          "text": "https://console.cloud.google.com/",
+          "href": "https://console.cloud.google.com/"
+        },
+        {
+          "text": ") 에서 새 프로젝트를 만들고 Google Drive API를 사용 설정한다."
+        }
+      ]
+    },
+    {
+      "id": "block-msho2xvv-qkqgjf",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/16reDkoMWSYDr-ocnlnRGizJZgTBcuq6P=w2000",
+      "alt": "구글 드라이브로 이미지 호스팅 - 구글 Drive API 사용 설정"
+    },
+    {
+      "id": "setup-oauth-steps-2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Google Auth platform에서 Branding을 설정한다. dgddgd314는 내 블로그 이름이고, 각자 블로그 URL을 넣으면 된다."
+        }
+      ]
+    },
+    {
+      "id": "block-mshohtv3-4jhw6n",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1gVRRRu4ekMGluWUpFh988m2u7RNqxO6G=w2000",
+      "alt": "구글 드라이브로 이미지 호스팅 - Auth platform 브랜딩 설정"
+    },
+    {
+      "id": "block-mshofmdr-yxcwi2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Audience를 설정한다. 개인 Gmail 계정으로 쓰는 경우 Audience는 External을 선택한다. "
+        },
+        {
+          "text": "Testing 상태라면 Audience의 Test users에 실제로 업로드할 Gmail 주소를 추가한다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " "
+        },
+        {
+          "text": "만약 폴더를 뷰어가 아니라 게시자 권한까지 줬다면 Testing 상태로 하는 것을 권장한다.",
+          "annotations": {
+            "bold": true
+          },
+          "textColor": "red"
+        },
+        {
+          "text": " ",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "(불특정 다수가 자신의 drive에 사진을 올릴 수 있다.)"
+        }
+      ]
+    },
+    {
+      "id": "block-mshool9u-ae9qbl",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/10EmNbFEAQ2RCRWTku2xbE-Ou_6CEFSIx=w2000",
+      "alt": "구글 드라이브로 이미지 호스팅 - Auth platform 대중 설정"
+    },
+    {
+      "id": "setup-oauth-steps-4",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Clients에서 Web application OAuth client를 만들고, Authorized JavaScript origins에 로컬과 배포 주소를 정확히 등록한다."
+        }
+      ]
+    },
+    {
+      "id": "setup-origins",
+      "type": "code",
+      "language": "text",
+      "code": "http://127.0.0.1:4321\nhttp://localhost:4321\nhttps://dgddgd314.github.io << 이건 각자 변경 필요"
+    },
+    {
+      "id": "setup-oauth-scope",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1wZ3g40Ly59BS_2P2650v864sQ--mOL28=w2000",
+      "alt": "구글 드라이브로 이미지 호스팅 - Auth platform 클라이언트 설정"
+    },
+    {
+      "id": "block-mshouqzm-0lemc4",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "권한 범위는 전체 Drive 접근 권한 대신 "
+        },
+        {
+          "text": "https://www.googleapis.com/auth/drive.file",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 하나만 요청했다. 앱이 새로 만들거나 사용자가 앱에 허용한 파일 중심으로 접근하게 하는 가장 작은 범위다."
+        }
+      ]
+    },
+    {
+      "id": "setup-oauth-failure",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "가장 먼저 만난 403: ‘Google 인증 절차를 완료하지 않았습니다’\n"
+        }
+      ],
+      "children": [
+        {
+          "id": "setup-oauth-failure-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "코드가 잘못된 것이 아니라 OAuth 앱이 Testing 상태였기 때문이다. External 앱은 개발자가 Test users에 넣은 계정만 동의 화면을 통과할 수 있다. Audience에서 업로드에 쓸 Gmail 주소를 추가한 뒤 다시 로그인하자 해결됐다."
+            }
+          ]
+        },
+        {
+          "id": "setup-origin-failure",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "비슷하게 origin_mismatch가 나오면 접속한 주소가 Authorized JavaScript origins와 한 글자까지 일치하는지 확인한다. localhost와 127.0.0.1은 서로 다른 origin이며, 프로토콜과 포트도 포함해서 등록해야 한다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mshowr1c-4wtga4",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "에디터에서 연결하기"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "setup-editor-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이미지 블록을 추가하면 Upload to Drive와 Drive settings 버튼이 나타난다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mshox9gb-t2d45e",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1bdtfiJQxX12m39x8IVJXaAWtMPruQlHw=w2000",
+      "alt": "구글 드라이브로 CDN - 에디터 Drive 연결"
+    },
+    {
+      "id": "block-mshox7s9-svttnq",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Drive settings에는 OAuth Client ID (사진 참고)와 앞에서 추린 루트 폴더 ID (cc. 1. 공유 루트 폴더 만들기)를 한 번 입력한다. 참고로 이 값은 현재 브라우저 localStorage에만 저장되기 때문에 외부에 유출될 일은 없다."
+        }
+      ]
+    },
+    {
+      "id": "block-mshp0ma2-h91g9v",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/10AuCGiZRFJ-rkYgTRhGegbYGS9r7QxNq=w2000",
+      "alt": "인증 플랫폼 클라이언트 ID"
+    },
+    {
+      "id": "block-mshp2r0t-cktx1j",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1-uENP_5YJ7tOMGZWI1HhmdVEgiTbISc9=w2000",
+      "alt": "구글 드라이브로 CDN - 에디터 Drive 연결"
+    },
+    {
+      "id": "setup-editor-flow",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "단계"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "에디터가 하는 일"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "결과"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "제목 입력"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "현재 글 제목을 읽는다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "글별 이미지 폴더 이름"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "첫 업로드"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "루트 폴더 아래에 제목별 하위 폴더를 만든다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이미지 보관 위치 분리"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "Google 승인"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "drive.file 범위의 access token을 받는다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "브라우저에서 직접 API 호출"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "파일 선택"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이미지를 하위 폴더에 업로드하고 공개 읽기 권한을 만든다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "방문 가능한 이미지 URL"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "본문 반영"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이미지 블록의 src를 자동으로 채운다"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "Post JSON에 함께 저장"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "upload-details",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "업로드 뒤 실제로 일어나는 일"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "upload-details-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "파일을 선택하면 먼저 Drive에 빈 파일 메타데이터를 만들고, 이어서 이미지 바이트를 업로드한다. 성공하면 해당 파일에 anyone / reader 권한을 추가하고, file ID로 브라우저가 이미지 자체를 읽을 수 있는 URL을 만든다. 마지막으로 그 URL을 이미지 블록의 src에 넣고 input 이벤트를 발생시켜 Post JSON까지 함께 갱신한다."
+        }
+      ]
+    },
+    {
+      "id": "upload-url",
+      "type": "code",
+      "language": "text",
+      "code": "https://drive.google.com/uc?export=view&id={fileId}"
+    },
+    {
+      "id": "block-mshp73cm-i4w791",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "참고로 업로드가 성공했다는 것과 다른 방문자가 이미지를 볼 수 있다는 것은 별개의 확인이다. (아마 자동으로 되긴 할 텐데) 시크릿 창 또는 로그아웃 상태에서 생성된 글을 열어 이미지를 확인하는 것이 가장 간단하다. 파일을 나중에 삭제하거나 비공개로 바꾸면 블로그 이미지도 깨진다."
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "이 선택의 범위와 다음 단계"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "operations-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 구조는 개인 블로그에서 이미지 관리 시작 비용을 낮추는 데 초점을 맞췄다. 별도 서버나 결제 설정 없이 기존 Google 계정과 Drive 공간을 쓸 수 있고, 작성 화면에서 URL 복사 과정을 없앤다는 장점이 있다. 개발 동아리를 하고 있는데, 거기서도 가장 중요하고 어려운 일이 financial cost를 optimize하는 일이다. "
+        },
+        {
+          "text": "(재작년에 1000만원 적자를 봤다)",
+          "annotations": {
+            "strike": true
+          }
+        },
+        {
+          "text": " 꽤 트래픽이 나오는 서비스가 많고 grafana, prometheus 등의 infra 가 이미 잘 갖춰져 있기 때문에 아무래도 동아리 차원에서는 S3 버킷을 버릴 수 없을 것이다. 그렇지만 나도 이런 식으로 배포를 해보면서 얻어가는 지식들을 접목시키면 조금 더 재정에 도움이 되지 않을까 싶다. "
+        }
+      ]
+    },
+    {
+      "id": "operations-closing",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "일단 개발일지 v1은 여기까지 적고, 제대로 된 글로 돌아올 거 같다. 아마도 미국 연수 갔다온 걸 적지 않을까..."
+        }
+      ]
+    }
+  ]
+}
