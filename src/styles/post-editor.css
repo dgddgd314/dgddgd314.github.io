@@ -552,9 +552,7 @@
 
 .editor-block--bulleted_list .editor-text::before { content: "\2022"; margin-right: 8px; color: var(--editor-teal); }
 
-.editor-block[data-depth="1"] .editor-text::before { content: "\25e6"; }
 
-.editor-block[data-depth="2"] .editor-text::before { content: "\25aa"; }
 
 .editor-block--numbered_list .editor-text::before {
   content: counter(numbered-list) ".";
@@ -1133,3 +1131,36 @@
   .editor-export { padding-right: 10px; padding-left: 10px; }
   .editor-export .editor-panel--preview { padding-right: 0; padding-left: 0; }
 }
+
+.editor-toggle__header { display: flex; align-items: flex-start; }
+.editor-toggle__disclosure { flex: 0 0 24px; min-height: 28px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.editor-toggle__disclosure::before { content: '▸'; color: var(--editor-muted); }
+.editor-toggle__disclosure[aria-expanded='true']::before { content: '▾'; }
+.editor-toggle__header .editor-text { display: inline-block; flex: 1; min-width: 0; margin-top: 3px; }
+
+/* Toggle editor: compact Notion-style hierarchy without generic nesting guides. */
+.editor-block-children {
+  margin-left: 24px;
+  padding-left: 0;
+  border-left: 0;
+}
+.editor-toggle__header {
+  align-items: center;
+}
+.editor-toggle__disclosure {
+  flex-basis: 28px;
+  width: 28px;
+  min-height: 30px;
+}
+.editor-toggle__disclosure::before {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.editor-toggle__children {
+  margin-top: 2px;
+}
+
+.editor-toggle__children > .editor-block-children > .editor-block--paragraph:only-child .editor-text:empty::before { content: '내용을 입력하세요'; color: #aeb8c2; }
+.editor-toggle__empty { width: 100%; min-height: 30px; border: 0; padding: 4px 0; color: #aeb8c2; background: transparent; font: inherit; text-align: left; cursor: text; }
+.editor-block--drag-inside { border-color: rgba(72, 166, 167, 0.7); background: #eefafa; }
+.editor-block--drag-inside > .editor-toggle { border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(72, 166, 167, 0.22); }

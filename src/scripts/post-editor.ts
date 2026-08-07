@@ -56,7 +56,7 @@ type BlockDragState = {
   blockIds: string[];
   mode: "move" | "select";
   targetId: string;
-  placement: "before" | "after";
+  placement: "before" | "after" | "inside";
   moved: boolean;
 };
 
@@ -319,15 +319,8 @@ export function initPostEditor(): void {
     syncBlockSelectionUI();
   }
 
-  function richRootMarkup(block: EditorBlock, placeholder: string): string {
-    return `<div
-      class="editor-text"
-      contenteditable="true"
-      spellcheck="true"
-      data-rich-root
-      data-field="richText"
-      data-placeholder="${escapeHtml(placeholder)}"
-    >${richTextToHtml(block.richText)}</div>`;
+  function richRootMarkup(block: EditorBlock, placeholder: string, tag: "div" | "span" = "div"): string {
+    return `<${tag} class="editor-text" contenteditable="true" spellcheck="true" data-rich-root data-owner-id="${block.id}" data-field="richText" data-placeholder="${escapeHtml(placeholder)}">${richTextToHtml(block.richText)}</${tag}>`;
   }
 
   function renderControls(): string {
@@ -424,13 +417,8 @@ export function initPostEditor(): void {
     }
 
     if (block.type === "toggle") {
-      return `<section class="editor-block editor-block--toggle${shellClass}" data-id="${block.id}" data-depth="${depth}">
-        ${renderControls()}
-        <details class="editor-toggle" open>
-          <summary>${richRootMarkup(block, "토글 제목")}</summary>
-          ${childrenMarkup}
-        </details>
-      </section>`;
+      const isOpen = block.isOpen === true;
+      return `<section class="editor-block editor-block--toggle${shellClass}" data-id="${block.id}" data-depth="${depth}">${renderControls()}<section class="editor-toggle"><div class="editor-toggle__header"><button type="button" class="editor-toggle__disclosure" data-toggle-action="toggle" aria-label="토글 내용 ${isOpen ? "접기" : "펼치기"}" aria-expanded="${isOpen}"></button>${richRootMarkup(block, "토글 제목", "span")}</div><div class="editor-block-children editor-toggle__children"${isOpen ? "" : " hidden"}>${childrenMarkup || `<button type="button" class="editor-toggle__empty" data-toggle-empty>내용을 입력하세요</button>`}</div></section></section>`;
     }
 
     if (block.type === "table_of_contents") {
@@ -472,6 +460,7 @@ export function initPostEditor(): void {
           contenteditable="true"
           spellcheck="true"
           data-rich-root
+          data-owner-id="${block.id}"
           data-field="richText"
           data-placeholder="/ 입력으로 블록 추가"
         >${richTextToHtml(block.richText)}</${tag}>
@@ -488,15 +477,7 @@ export function initPostEditor(): void {
       : `${renderBlock(block, depth)}${children}`;
   }
 
-  function ensureToggleChildren(items: EditorBlock[]): void {
-    items.forEach((block) => {
-      if (block.type === "toggle" && !block.children?.length) block.children = [createEditorBlock("paragraph")];
-      if (block.children?.length) ensureToggleChildren(block.children);
-    });
-  }
-
   function render(): void {
-    ensureToggleChildren(blocks);
     renderPageAppearance();
     blocksRoot.innerHTML = blocks.map((block) => renderBlockTree(block)).join("");
     bindBlocks();
@@ -1509,7 +1490,7 @@ export function initPostEditor(): void {
     return [...new Set(roots)].sort((left, right) => order.indexOf(left) - order.indexOf(right));
   }
 
-  function moveBlocksToTarget(blockIds: string[], targetId: string, placement: "before" | "after"): boolean {
+  function moveBlocksToTarget(blockIds: string[], targetId: string, placement: "before" | "after" | "inside"): boolean {
     const roots = selectionRootIds(blockIds);
     if (!roots.length || roots.includes(targetId)) return false;
     const targetLocation = findBlockLocation(targetId);
@@ -1527,13 +1508,20 @@ export function initPostEditor(): void {
     });
     const destination = findBlockLocation(targetId);
     if (!destination) return false;
-    destination.siblings.splice(destination.index + (placement === "after" ? 1 : 0), 0, ...movingBlocks);
+    if (placement === "inside") {
+      if (destination.block.type !== "toggle") return false;
+      destination.block.children ??= [];
+      destination.block.children.push(...movingBlocks);
+      destination.block.isOpen = true;
+    } else {
+      destination.siblings.splice(destination.index + (placement === "after" ? 1 : 0), 0, ...movingBlocks);
+    }
     return true;
   }
 
   function clearDragTarget(): void {
-    blocksRoot.querySelectorAll<HTMLElement>(".editor-block--drag-before, .editor-block--drag-after").forEach((element) => {
-      element.classList.remove("editor-block--drag-before", "editor-block--drag-after");
+    blocksRoot.querySelectorAll<HTMLElement>(".editor-block--drag-before, .editor-block--drag-after, .editor-block--drag-inside").forEach((element) => {
+      element.classList.remove("editor-block--drag-before", "editor-block--drag-after", "editor-block--drag-inside");
     });
   }
 
@@ -1583,9 +1571,14 @@ export function initPostEditor(): void {
       }
       clearDragTarget();
       state.targetId = targetId;
-      state.placement = moveEvent.clientY < target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2 ? "before" : "after";
+      const header = target.querySelector<HTMLElement>(".editor-toggle__header");
+      const rect = (header ?? target).getBoundingClientRect();
+      const relativeY = moveEvent.clientY - rect.top;
+      state.placement = target.classList.contains("editor-block--toggle") && relativeY >= rect.height * 0.2 && relativeY <= rect.height * 0.8
+        ? "inside"
+        : relativeY < rect.height / 2 ? "before" : "after";
       state.moved = true;
-      target.classList.add(state.placement === "before" ? "editor-block--drag-before" : "editor-block--drag-after");
+      target.classList.add(state.placement === "before" ? "editor-block--drag-before" : state.placement === "after" ? "editor-block--drag-after" : "editor-block--drag-inside");
     };
 
     const finish = (): void => {
@@ -1638,6 +1631,19 @@ export function initPostEditor(): void {
     const before = sliceRichText(value, 0, snapshot.start);
     const after = sliceRichText(value, snapshot.end);
 
+    if (block.type === "toggle") {
+      block.richText = before;
+      const child = createEditorBlock("paragraph", "", { richText: after });
+      block.children ??= [];
+      block.children.unshift(child);
+      block.isOpen = true;
+      selectedId = child.id;
+      render();
+      window.requestAnimationFrame(() => focusBlock(child.id));
+      scheduleSave();
+      return;
+    }
+
     if (!getRichTextPlainText(value) && block.type !== "paragraph") {
       if (parent && ["bulleted_list", "numbered_list", "todo"].includes(block.type)) {
         moveBlockWithTab(blockId, true);
@@ -1671,6 +1677,14 @@ export function initPostEditor(): void {
     if (!location || !snapshot || snapshot.start !== 0 || snapshot.end !== 0) return false;
     const { block, siblings, index, parent } = location;
     const text = blockPlainText(block);
+
+    if (block.type === "toggle") {
+      siblings[index] = replaceBlockType(block, "paragraph", text);
+      render();
+      window.requestAnimationFrame(() => focusBlock(blockId));
+      scheduleSave();
+      return true;
+    }
 
     if (!text && block.type !== "paragraph") {
       siblings[index] = replaceBlockType(block, "paragraph", "");
@@ -1899,19 +1913,22 @@ export function initPostEditor(): void {
         });
       });
       element.querySelectorAll<HTMLButtonElement>("[data-table-action]").forEach((button) => {
-        button.addEventListener("click", () => handleTableAction(blockId, button.dataset.tableAction ?? ""));
+        button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") === element) handleTableAction(blockId, button.dataset.tableAction ?? ""); });
       });
+      element.querySelectorAll<HTMLButtonElement>("[data-toggle-action]").forEach((button) => button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") !== element) return; const block = getBlock(blockId); if (!block || block.type !== "toggle") return; block.isOpen = !block.isOpen; element.querySelector<HTMLElement>(".editor-toggle__children")?.toggleAttribute("hidden", !block.isOpen); button.setAttribute("aria-expanded", String(block.isOpen)); syncOutput(); scheduleSave(); }));
+      element.querySelectorAll<HTMLButtonElement>("[data-toggle-empty]").forEach((button) => button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") !== element) return; const block = getBlock(blockId); if (!block || block.type !== "toggle") return; const child = createEditorBlock("paragraph"); block.children = [child]; block.isOpen = true; render(); window.requestAnimationFrame(() => focusBlock(child.id)); scheduleSave(); }));
       element.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[data-field], textarea[data-field]").forEach((field) => {
         const eventName = field.type === "checkbox" ? "change" : "input";
-        field.addEventListener(eventName, () => updatePlainField(blockId, field));
+        field.addEventListener(eventName, () => { if (field.closest<HTMLElement>("[data-id]") === element) updatePlainField(blockId, field); });
       });
       element.querySelectorAll<HTMLElement>("[data-rich-root]").forEach((editable) => {
         editable.addEventListener("input", () => {
+          if (editable.dataset.ownerId !== blockId) return;
           updateRichTextFromEditable(blockId, editable);
           updateSlashMenu(blockId, editable);
         });
-        editable.addEventListener("keydown", (event) => handleRichKeydown(event, blockId, editable));
-        editable.addEventListener("blur", () => window.setTimeout(hideSlashMenu, 120));
+        editable.addEventListener("keydown", (event) => { if (editable.dataset.ownerId === blockId) handleRichKeydown(event, blockId, editable); });
+        editable.addEventListener("blur", () => { if (editable.dataset.ownerId === blockId) window.setTimeout(hideSlashMenu, 120); });
       });
     });
   }
@@ -1958,6 +1975,7 @@ export function initPostEditor(): void {
     if (block.backgroundColor) base.backgroundColor = block.backgroundColor;
     if (block.textColor) base.textColor = block.textColor;
     if (isRichTextBlock(block.type)) base.richText = normalizeRichText(block.richText);
+    if (block.type === "toggle") { if (block.isOpen) base.isOpen = true; base.children = (block.children ?? []).map(serializedBlock); }
     if (block.type === "heading") base.level = block.level ?? 1;
     if (block.type === "todo") base.checked = Boolean(block.checked);
     if (block.type === "callout") base.icon = block.icon ?? "i";
@@ -1982,7 +2000,7 @@ export function initPostEditor(): void {
       base.hasHeaderRow = block.hasHeaderRow !== false;
       base.rows = normalizeTableRows(block.rows);
     }
-    if (block.children?.length) base.children = block.children.map(serializedBlock);
+    if (block.type !== "toggle" && block.children?.length) base.children = block.children.map(serializedBlock);
     return base;
   }
 

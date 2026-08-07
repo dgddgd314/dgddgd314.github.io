@@ -64,6 +64,7 @@ export type CalloutBlock = BaseBlock & {
 export type ToggleBlock = BaseBlock & {
   type: "toggle";
   richText: RichText[];
+  isOpen?: boolean;
 };
 
 export type CodeBlock = BaseBlock & {

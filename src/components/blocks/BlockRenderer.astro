@@ -135,7 +135,7 @@ const equationHtml = block.type === "equation"
 
     {
       block.type === "toggle" && (
-        <details class="notion-toggle">
+        <details class="notion-toggle" open={block.isOpen === true}>
           <summary><RichText value={block.richText} /></summary>
           {block.children?.length && (
             <div class="notion-children">
