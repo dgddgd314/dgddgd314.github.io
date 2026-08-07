@@ -1,0 +1,676 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "ogc-2026-01-problem-and-alns",
+    "description": "공간이 출고 순서를 만들고, 지연이 다시 공간을 잠식하는 조선소 block 배치 문제를 왜 두 단계로 나눴으며 그 분리가 어디서부터 어긋났는지 돌아본다.",
+    "pubDate": "2026-08-07",
+    "category": "ogc2026",
+    "tags": "ogc2026, optimization, alns, scheduling",
+    "badge": "done",
+    "title": "[OGC2026] 결정변수를 나누면 문제도 나뉠 줄 알았다 (1)"
+  },
+  "page": {
+    "icon": "🏗️",
+    "cover": {
+      "type": "color",
+      "value": "#f4efe7",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "opening",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "산업공학과 입장에서 OGC (Optimization Grand Challenge) 대회는 정말 major 하고 큰 대회이다. 올해는 해외까지 참여 범위가 확대되었고 상금 역시 크게 확대된 만큼, 열심히 해서 돈을 벌고 싶었다. 비록 순위권에 들지는 못했지만 의미있던 경험이라고 생각해서 이렇게 글을 쓰게 되었다."
+        }
+      ]
+    },
+    {
+      "id": "series-note",
+      "type": "callout",
+      "backgroundColor": "gray",
+      "richText": [
+        {
+          "text": "회고는 4편으로 나눠 적을 예정이다. 1부는 문제를 처음 보고 어떤 구조를 택했는지, 2부는 그 구조의 핵심이었던 배치 엔진을 왜 갈아엎었는지, 3부는 제한 시간 안에 반드시 답을 내는 프로그램을 어떻게 만들었는지, 4부는 좋아 보이는 아이디어들을 어떤 기준으로 버렸는지에 대한 이야기다."
+        }
+      ],
+      "icon": "🧭"
+    },
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "problem-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "문제: Pack the Block, Beat the Clock"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "problem-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "입력에는 여러 개의 "
+        },
+        {
+          "text": "bay",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "와 여러 개의 "
+        },
+        {
+          "text": "block",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "이 있다. bay는 폭과 높이를 가진 직사각형 작업장이고, 각각 하나의 크레인이 달려 있다. block은 각 층이 다각형인 불규칙 폴리곤이며, 회전 가능한 방향도 여럿이다."
+        }
+      ]
+    },
+    {
+      "id": "problem-elements",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "대상"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "결정해야 하는 것"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "제약/의미"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "bay"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "어떤 block을 받을지"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "폭×높이가 다르고, bay마다 크레인이 하나씩 있다"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "block"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "bay·좌표·방향·진입일·진출일"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "다층 폴리곤, release/due date, 최소 체류 기간, 작업량, bay 선호도를 가진다"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "crane"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "진입·진출 가능한 순서"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "위층 구조와 다른 block의 위치 때문에 반입·반출이 막힐 수 있다"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "block-msijgpb6-3ivin7",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1HFvJ_ZJNsORQuGCWay5bJCPwAjWzVeAL=w2000",
+      "alt": "",
+      "caption": [
+        {
+          "text": "하나의 bay 입체 사진. (우리 팀원 분이 자체적으로 만들어주신 visualize 모델이다.)"
+        }
+      ],
+      "isHeroImage": true
+    },
+    {
+      "id": "block-msikg2c3-g71vx6",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "문제의 가장 큰 틀은 block들을 bay에 겹치지 않게 배치하는 문제이다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msijb78l-5kqvwa",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "scheduling을 해야 하는데, block은 정해진 날짜 "
+        },
+        {
+          "text": "a",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 일 이후에 들어오며 특정 기간 "
+        },
+        {
+          "text": "b",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "일 동안 bay에 존재해야 한다. 만약 block이 정해진 기한 "
+        },
+        {
+          "text": "c (>a+b)",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 일 보다 늦게 빠져나간다면 패널티를 받는다. 이 패널티를 "
+        },
+        {
+          "text": "Z1항 = 납기를 넘긴 진출일의 총합(tardiness)",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 이라 정의한다."
+        }
+      ]
+    },
+    {
+      "id": "block-msijcbmy-0ik397",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "두 번째로 각"
+        },
+        {
+          "text": " bay 별 작업량이 균등하게 분배되는지를 정의하는 Z2 항이 있다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-msijcs7m-qoinm7",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "각 block 별로 배정되기 선호하는 bay가 존재하며, 이는 각 block 별로 bay 별 점수의 형태로 주어진다. "
+        },
+        {
+          "text": "각 block이 선호하는 bay에 배정되는지를 의미하는 Z3 항",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이 존재한다."
+        }
+      ]
+    },
+    {
+      "id": "block-msijay7e-c2y3fs",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그래서 단순한 scheduling이 아니고, 추가적으로 공간적 정보까지 생각해서 각 block마다 "
+        },
+        {
+          "text": "어느 bay에",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 들어갈지와 "
+        },
+        {
+          "text": "어디에·어떤 방향으로",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 놓을지, 마지막으로 "
+        },
+        {
+          "text": "언제 넣고 뺄지",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "를 모두 가져야 하는 까다로운 문제였다.\n"
+        }
+      ]
+    },
+    {
+      "id": "block-msilpbf3-rzdaxb",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "목적함수: 늦지 않는 것이 거의 전부\n"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "objective-equation",
+      "type": "equation",
+      "equation": "\\min\\; w_1 Z_1 + w_2 Z_2 + w_3 Z_3"
+    },
+    {
+      "id": "objective-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "평가 점수는 세 항의 가중합이었다. 다시 한 번 말하지만 Z1은 납기를 넘긴 진출일의 총합(tardiness), Z2는 bay별 정규화 작업량의 불균형, Z3는 선호하지 않는 bay로 갔을 때의 손실이다."
+        }
+      ]
+    },
+    {
+      "id": "block-msiki0gg-4vjzsn",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "만약 저 세 항의 가중치가 모두 엇비슷했다면 훨씬 어려운 문제가 되었을 것이다. 한편 실제 산업환경을 고려한 결과인지, "
+        },
+        {
+          "text": "Z1의 가중치가 나머지 두 가중치를 압도할 정도로 크기 때문에",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 일단은 Z1을 줄이는 것이 가장 중요한 문제였다.\n"
+        }
+      ]
+    },
+    {
+      "id": "block-msilpmp3-81kv8w",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "제약조건: 크레인 제약\n"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "objective-list-1",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "크레인 제약조건이 있다. 쉽게 생각해서 각 block이 bay에서 나갈 때, 반드시 block을 위쪽으로(크레인을 이용하여)만 꺼낼 수 있기 때문에 위로 들어올리는 과정에서 block과 '걸리는' 블록이 있으면 bay에서 나갈 수 없다. 수식으로 설명하기는 좀 그렇고 아래 그림을 참고하자."
+        }
+      ]
+    },
+    {
+      "id": "block-msilh4gz-l9kz9c",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1Vmeypq5Bz3vy91gSiy58YLufMoZUq0Y6=w2000",
+      "alt": ""
+    },
+    {
+      "id": "objective-list-2",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "위 크레인 제약조건을 제외하고 나머지 제약조건들은 특이하지는 않았다. 문제 정의 과정에서 자연스럽게 정의된다. (블럭이 겹치면 안되는 조건, non-zero 등등)\n"
+        }
+      ]
+    },
+    {
+      "id": "structure-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "이 문제에서 공간은 단순한 공간이 아니었다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "structure-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "여기까지 보면 결정해야 하는 변수가 많아서 어려운 문제처럼 보인다. 실제로 처음에는 나도 그렇게 받아들였다. 그런데 대회를 끝내고 다시 생각해 보니 진짜 어려운 부분은 변수의 개수보다 "
+        },
+        {
+          "text": "뒤에서 정한 결정이 앞에서 정한 결정의 의미를 계속 바꾼다는 구조",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "에 있었다. bay, 좌표, 방향, 시간은 단순히 차례대로 채우면 되는 칸들이 아니었다."
+        }
+      ]
+    },
+    {
+      "id": "structure-precedence-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "좌표 하나가 출고 순서에 영향을 준다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "structure-precedence-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "보통 packing 문제라면 block끼리 겹치지 않고 container 안에만 들어가면 일단 유효한 배치라고 할 수 있다. 하지만 이 문제에서는 두 block이 전혀 겹치지 않아도 한 block이 다른 block의 크레인 경로를 막을 수 있었다. 그러면 공간에서의 상대적인 위치가 미래의 진출 순서를 강제하기도 한다. (이거 때문에 networkx package를 쓸까 잠깐 고민을 했던 적이 있다) 결국 block을 어디에 놓을지 정한다는 것은 좌표 하나를 고르는 일이 아니라, 추가적인 선후관계에까지 영향을 주게 된다."
+        }
+      ]
+    },
+    {
+      "id": "block-msj4vtfk-wekfzs",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "그래서 이 문제에서는 '빈 공간이 있다' 와 '그 공간에 놓은 block을 나중에 다시 꺼낼 수 있다' 가 같은 말이 아니게 된다. "
+        }
+      ]
+    },
+    {
+      "id": "structure-feedback-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "생각보다 지연이 주는 영향이 굉장히 크다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "structure-feedback-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Z1을 처음 봤을 때는 due date를 넘긴 만큼 점수가 나빠지는 일반적인 tardiness 항이라고 생각했다. 그런데 이 문제에서 늦게 나가는 block은 더 오래 bay에 남아 있고, 그동안 다음 block이 사용할 공간까지 계속 차지한다. 하나의 지연이 다른 block의 배치 실패를 만들고, 그 block의 지연이 또 다음 공간을 막는 식으로 문제가 연쇄적으로 커질 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "structure-feedback-flow",
+      "type": "code",
+      "language": "text",
+      "code": "출고 지연\n  → block이 공간을 더 오래 점유\n  → 다음 block의 배치 가능 위치 감소\n  → 다음 block도 지연\n  → 더 긴 공간 점유"
+    },
+    {
+      "id": "structure-feedback-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 feedback loop 때문에 초반의 작은 배치 실수 하나가 수백 일짜리 지연으로 커지기도 한다. 당시에는 이것을 주로 bay의 혼잡이나 점수식의 부족함으로 해석했는데, 나중에는 decoder가 공간을 어떻게 보고 있는지부터 다시 의심하게 되었다. (-> 2부를 참고해보자!)"
+        }
+      ]
+    },
+    {
+      "id": "structure-late-score-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "가장 중요한 점수는 가장 늦게 보였다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "structure-late-score-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "문제를 더 까다롭게 만든 것은 Z1, Z2, Z3가 같은 시점에 보이지 않는다는 점이었다. block을 어느 bay에 보낼지만 정하면 Z2와 Z3는 바로 계산할 수 있다. 반면 가장 비싼 Z1은 실제 좌표와 방향을 정하고, 시간을 흘려 block을 넣었다가, 크레인으로 다시 꺼내 보는 과정까지 끝내야 알 수 있다. "
+        }
+      ]
+    },
+    {
+      "id": "decomposition-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "그래서 문제를 두 단계로 나누었다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "decomposition-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "당시에는 결정 시점에 따라 문제를 나누는 것이 가장 자연스러워 보였다. Phase 1에서는 block마다 bay만 정한다. 이 단계에서는 Z2와 Z3를 빠르게 계산할 수 있고, 시간대가 겹치는 block이 한 bay에 몰리는지도 대략 추정할 수 있다. Phase 2에서는 그 배정을 받아 실제 좌표·방향·진입일·진출일을 만들고 크레인 제약까지 검사한다. "
+        }
+      ]
+    },
+    {
+      "id": "pipeline-code",
+      "type": "code",
+      "language": "text",
+      "code": "입력\n  → Phase 0: 반복해서 쓸 기하 정보 전처리\n  → Phase 1: block별 bay 배정\n  → Phase 2: 좌표·방향·입출고 시각을 실제로 구성\n  → Outer ALNS: bay 배정을 부수고 다시 만들기"
+    },
+    {
+      "id": "team-note",
+      "type": "callout",
+      "backgroundColor": "gray",
+      "richText": [
+        {
+          "text": "참고로 이 전체 구조와 구현의 큰 부분은 같이 한 팀원분이 맡아주셨다. 나는 구간별 알고리즘 최적화와 실험 아이디어를 주로 보탰다. "
+        }
+      ],
+      "icon": "🙇"
+    },
+    {
+      "id": "decomposition-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "계산량만 생각하면 꽤 합리적인 분리였다. 모든 block의 bay, 좌표, 방향, 시간을 한 번에 움직이는 대신, 바깥에서는 영향력이 크면서도 표현이 단순한 bay만 바꿀 수 있었다. 지금도 이 분해 자체가 완전히 틀렸다고 생각하지는 않는다. 문제는 계산을 나누면서 정보도 한 방향으로만 흐르게 만들었다는 데 있었다."
+        }
+      ]
+    },
+    {
+      "id": "decomposition-trap-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "결정변수를 나눴지, 문제를 나눈 것은 아니었다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "decomposition-trap-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "처음의 머릿속에서는 Phase 1이 결정을 내리고 Phase 2가 그 결정을 충실히 실행하는 구조였다. 그래서 Phase 1에서 좋은 bay assignment를 만들면 Phase 2도 그에 비례해 좋은 실제 해를 만들어 줄 것이라고 생각했다. 하지만 전체 점수의 대부분을 차지하는 Z1은 Phase 2 안에서 만들어졌다. 이게 좀 큰 문제인게, Z1을 줄이는게 가장 중요한데 그걸 Phase 2에 가서나 보고 있으면... 당연히 좋은 알고리즘이 아닐 것이다. "
+        }
+      ]
+    },
+    {
+      "id": "decomposition-trap-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "우리는 Phase 2를 해를 번역하는 decoder라고 불렀지만, 실제로는 가장 중요한 목적함수를 직접 만들어 내는 또 하나의 optimizer에 가까웠다."
+        }
+      ]
+    },
+    {
+      "id": "decomposition-trap-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "결국 결정변수는 Phase 1과 Phase 2로 나눌 수 있었지만, 문제의 인과관계까지 두 조각으로 나뉘지는 않았다. 뒤 단계에서 발견한 실제 혼잡과 지연이 앞 단계의 bay 배정으로 다시 돌아가야 했다. 이 feedback을 제대로 만들지 못한 것이 이후 여러 시행착오의 출발점이었다."
+        }
+      ]
+    },
+    {
+      "id": "why-alns-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "왜 하필 ALNS였을까"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "why-alns-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 문제를 MIP나 LP로 적는 것 자체가 불가능하다는 뜻은 아니다. (실제로 맨 처음 초기 알고리즘은 MIP로 구현했었다) 그렇지만 이 정도로 복잡한 문제의 경우 최신 논문들에서 대부분 heuristic한 방법론을 쓰고 있었고, MIP/LP formulation 방법이 잘 떠오르지 않아 결국 완성된 해를 빠르게 만들고 고치는 heuristic 접근을 진행했다."
+        }
+      ]
+    },
+    {
+      "id": "why-alns-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그중 ALNS를 택한 이유도 다른 metaheuristic보다 무조건 우월해서는 아니었다. 우리가 바깥에서 감당할 수 있는 상태가 bay assignment였기 때문이다. block 하나의 bay를 바꾸면 해당 bay의 부하만 달라지는 것이 아니라 입고 순서, 남는 공간의 모양, 다른 block의 좌표와 지연까지 함께 달라졌다. 작은 local move의 영향을 싸게 계산하기 어려웠기 때문에, 일부를 크게 부순 뒤 여러 방식으로 다시 채우고 마지막에는 Phase 2를 끝까지 돌려 결과를 확인하는 구조가 잘 맞았다."
+        }
+      ]
+    },
+    {
+      "id": "alns-flow-1",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Destroy: 현재 bay 배정에서 일부 block을 뺀다. random, worst, related 방식을 번갈아 사용해 서로 다른 크기의 변화를 만든다."
+        }
+      ]
+    },
+    {
+      "id": "alns-flow-2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Repair: 빠르게 계산할 수 있는 부하·선호도·혼잡 proxy를 이용해 빠진 block을 greedy 또는 regret 방식으로 다시 넣는다."
+        }
+      ]
+    },
+    {
+      "id": "alns-flow-3",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Realize: 새 배정을 Phase 2에 넘겨 좌표와 시간을 실제로 만들고, 공식 목적함수와 feasibility를 확인한다."
+        }
+      ]
+    },
+    {
+      "id": "alns-flow-4",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "Accept: 좋아진 해는 받고, 조금 나빠진 해도 확률적으로 받아 한 가지 배정 구조에 너무 일찍 갇히지 않게 한다."
+        }
+      ]
+    },
+    {
+      "id": "closing-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "1부를 마치며"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "closing-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "지금 다시 보면 처음의 Phase 분리는 틀렸다기보다 불완전했다. 복잡한 계산을 감당하기 위해 decision space를 나눈 것은 필요했다. 다만 뒤 단계가 앞 단계의 결정을 수정하고, 실제로 만들어진 지연을 다시 탐색 상태에 돌려주는 구조까지 같이 설계했어야 했다. 우리는 결정변수를 나누는 데 성공한 뒤 문제도 나뉘었다고 착각했다. 그 착각을 깨는 데 꽤 많은 trial & error가 필요했다."
+        }
+      ]
+    },
+    {
+      "id": "next-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "다음 글에서는 그 원인을 찾기 위해 Phase 2를 어떻게 다시 보게 되었는지 적으려고 한다. NFP 경계의 의미 있는 후보만 보면 충분하다고 믿었던 거에서 bay의 격자를 끝까지 훑는 full scan으로 바꾼 과정이다. 더 단순해 보이는 방식이 왜 더 빠르고 더 좋은 해를 만들었는지가 이 프로젝트에서 가장 기억에 남는 반전이었다."
+        }
+      ]
+    }
+  ]
+}
