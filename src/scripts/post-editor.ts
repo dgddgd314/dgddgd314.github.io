@@ -378,8 +378,12 @@ export function initPostEditor(): void {
     }
 
     if (block.type === "image") {
+      const imageSrc = block.src?.trim() ?? "";
       return `<section class="editor-block editor-block--image${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
+        <div class="editor-image-preview${imageSrc ? "" : " is-empty"}" data-image-preview>
+          <img data-image-preview-image src="${escapeHtml(imageSrc)}" alt="${escapeHtml(block.alt ?? "")}"${imageSrc ? "" : " hidden"} />
+          <div class="editor-image-fields">
         <label><span>이미지 URL</span><input data-field="src" value="${escapeHtml(block.src ?? "")}" placeholder="/image.webp" /></label>
         <label><span>대체 텍스트</span><input data-field="alt" value="${escapeHtml(block.alt ?? "")}" placeholder="이미지 설명" /></label>
         <label><span>캡션</span><input data-field="caption" value="${escapeHtml(getRichTextPlainText(block.caption))}" placeholder="선택 사항" /></label>
@@ -388,6 +392,8 @@ export function initPostEditor(): void {
             <input type="checkbox" data-field="isHeroImage" ${block.isHeroImage ? "checked" : ""} />
             <span>\uB300\uD45C \uC774\uBBF8\uC9C0 \uC124\uC815</span>
           </label>
+        </div>
+          </div>
         </div>
       </section>`;
     }
@@ -1275,6 +1281,20 @@ export function initPostEditor(): void {
       block.caption = createRichText(field.value);
     } else {
       (block as Record<string, unknown>)[key] = field.value;
+    }
+    if (block.type === "image" && (key === "src" || key === "alt")) {
+      const preview = field.closest<HTMLElement>("[data-image-preview]");
+      const image = preview?.querySelector<HTMLImageElement>("[data-image-preview-image]");
+      if (image) {
+        if (key === "src") {
+          const src = block.src?.trim() ?? "";
+          image.src = src;
+          image.hidden = !src;
+          preview?.classList.toggle("is-empty", !src);
+        } else {
+          image.alt = block.alt ?? "";
+        }
+      }
     }
     if (key === "src" && block.type === "image" && !block.src?.trim()) {
       delete block.isHeroImage;
