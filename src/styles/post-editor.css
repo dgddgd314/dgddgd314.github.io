@@ -967,6 +967,15 @@
 .editor-block--code { background: var(--editor-soft-panel); }
 .editor-block--image,
 .editor-block--bookmark { background: transparent; }
+
+.editor-image-preview { position: relative; overflow: hidden; min-height: 190px; aspect-ratio: 16 / 9; border: 1px solid var(--editor-line); border-radius: 8px; background: var(--editor-soft-panel); }
+.editor-image-preview > img { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--editor-soft-panel); }
+.editor-image-preview.is-empty { min-height: 0; aspect-ratio: auto; border: 0; background: transparent; }
+.editor-image-fields { display: grid; gap: 5px; padding: 8px; background: var(--editor-panel); }
+.editor-image-preview:not(.is-empty) .editor-image-fields { position: absolute; inset: 0; align-content: center; padding: 18px; background: rgba(255, 255, 255, 0.94); opacity: 0; pointer-events: none; transition: opacity 140ms ease; }
+.editor-image-preview:not(.is-empty):hover .editor-image-fields,
+.editor-image-preview:not(.is-empty):focus-within .editor-image-fields { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .editor-image-preview:not(.is-empty) .editor-image-fields { position: static; padding: 8px; background: var(--editor-panel); opacity: 1; pointer-events: auto; } }
 /* Native editor emoji picker */
 .emoji-picker { display: grid; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; }
 .emoji-picker__search-row { padding: 10px 10px 7px; }
