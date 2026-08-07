@@ -27,6 +27,7 @@ export type EditorBlock = {
   richText?: RichText[];
   level?: 1 | 2 | 3;
   checked?: boolean;
+  isOpen?: boolean;
   icon?: string;
   language?: string;
   code?: string;
@@ -351,6 +352,10 @@ export function createEditorBlock(
 ): EditorBlock {
   const block: EditorBlock = { id: createId(), type, ...options };
   if (isRichTextBlock(type)) block.richText = normalizeRichText(options.richText, text);
+  if (type === "toggle") {
+    block.isOpen = options.isOpen === true;
+    if (!Object.hasOwn(options, "children")) block.children = [createEditorBlock("paragraph")];
+  }
   if (type === "heading") block.level = options.level ?? 1;
   if (type === "todo") block.checked = options.checked ?? false;
   if (type === "callout") block.icon = options.icon ?? "i";
