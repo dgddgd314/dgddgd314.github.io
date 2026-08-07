@@ -1,0 +1,680 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "ogc-2026-02-rebuilding-the-decoder",
+    "description": "NFP 경계 후보와 복잡한 점수식으로 만든 배치기를 버리고, raster full scan과 시간순 dispatcher로 다시 만든 과정과 그 뒤에 남은 설계의 교훈.",
+    "pubDate": "2026-08-08",
+    "category": "ogc2026",
+    "tags": "ogc2026, optimization, geometry",
+    "badge": "done",
+    "title": "[OGC2026] 폴리곤 packing에서 full scaning으로  (2)"
+  },
+  "page": {
+    "icon": "🧩",
+    "cover": {
+      "type": "color",
+      "value": "#e8f1ee",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "opening",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "1부에서는 문제 설명 및 ALNS 선택 이유를 설명했다면 2부에서는 NFP 를 버리고 full scan으로 전환하게 된 과정을 설명한다. 아마 가장 유의미한 cutting이지 않았나 생각한다."
+        }
+      ]
+    },
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "elegant-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "가설을 함부로 세우면 안되는 이유"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "elegant-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "아무래도 기하 polygon 작업을 하기 때문에, 맨 처음에 Phase 0 - 기하 전처리 및 Phase 2 - block의 bay 배치 이 두 부분에서 shapely package를 이용하여 배치하였다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msj1t1oq-hptn02",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "shapely를 사용했던 이유는 다음과 같은 직관이 있었기 때문인데"
+        }
+      ]
+    },
+    {
+      "id": "block-msj1mw1s-4pouan",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "block이 의미 있게 놓일 만한 곳은 대개 다른 block이나 bay의 경계에 닿는 지점이다. \n"
+        }
+      ]
+    },
+    {
+      "id": "block-msj1mv1r-qg5wdm",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그래서 IFP와 NFP를 만들고, 그렇게 구해진 영역의 접점과 코너에서 후보를 뽑고 각 후보를 점수화했다. 기하학적으로 의미 있는 소수의 후보만 정확하게 보면 된다는 생각이었다.\n"
+        }
+      ]
+    },
+    {
+      "id": "block-msj1tiys-5b4p7p",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": " IFP, NFP란?"
+        }
+      ],
+      "children": [
+        {
+          "id": "ifp-explanation-title",
+          "type": "heading",
+          "richText": [
+            {
+              "text": " IFP: bay 안에 완전히 들어가는 anchor의 영역"
+            }
+          ],
+          "level": 3
+        },
+        {
+          "id": "ifp-explanation-copy-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " IFP(Inner-Fit Polygon)는 bay를 B, 특정 방향으로 회전한 block을 P라고 할 때, P를 평행이동해도 bay 밖으로 한 점도 튀어나가지 않는 anchor 위치의 집합이다. 아래 식에서 t는 block의 anchor 위치를 뜻한다."
+            }
+          ]
+        },
+        {
+          "id": "ifp-explanation-equation",
+          "type": "equation",
+          "equation": "\\operatorname{IFP}(B,P)=B\\ominus P=\\{t\\mid P+t\\subseteq B\\}"
+        },
+        {
+          "id": "ifp-explanation-copy-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 예시로 직사각형 bay에 직사각형 block을 넣는 가장 단순한 경우라면, IFP는 bay의 각 변을 block 크기만큼 안쪽으로 줄인 직사각형처럼 보인다. anchor가 IFP 안에 있으면 block 전체가 bay 안에 있고, IFP 경계에 있으면 block이 bay 벽에 정확히 닿으며, IFP 밖이면 block 일부가 bay 밖으로 나간다."
+            }
+          ]
+        },
+        {
+          "id": "ifp-explanation-copy-3",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 우리 문제의 block은 여러 layer에 서로 다른 polygon을 가질 수 있다. 따라서 실제로는 각 layer가 bay 경계를 넘지 않아야 하고, 모든 layer의 조건을 동시에 만족하는 anchor만 남겨야 한다. 즉 layer별로 얻은 허용 영역의 교집합이 최종 IFP가 된다고 생각해야 한다."
+            }
+          ]
+        },
+        {
+          "id": "nfp-explanation-title",
+          "type": "heading",
+          "richText": [
+            {
+              "text": " NFP: 다른 block과 충돌하게 되는 anchor의 영역"
+            }
+          ],
+          "level": 3
+        },
+        {
+          "id": "nfp-explanation-copy-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " NFP(No-Fit Polygon)는 이미 놓인 block Q를 고정해 두고 새 block P를 그 주위로 움직일 때, P와 Q가 겹치게 되는 anchor 위치의 집합이다. 계산할 때는 고정 block Q와 움직이는 block을 원점에 대해 뒤집은 -P의 Minkowski sum을 이용한다."
+            }
+          ]
+        },
+        {
+          "id": "nfp-explanation-equation",
+          "type": "equation",
+          "equation": "\\operatorname{NFP}(Q,P)=Q\\oplus(-P)"
+        },
+        {
+          "id": "nfp-explanation-copy-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 새 block P의 anchor가 NFP 내부에 들어가면 두 block의 내부가 겹치므로 배치할 수 없다. NFP 경계에 있으면 두 block이 겹치지 않은 채 변이나 꼭짓점에서 막 접하고, NFP 바깥에 있으면 서로 떨어져 있다. 이미 놓인 block이 여러 개라면 각 block이 만드는 NFP를 현재 위치로 옮겨 모두 금지 영역으로 사용한다. 여러 layer 중 하나에서라도 polygon이 겹치면 충돌이므로, layer별 금지 영역은 합집합으로 취급한다."
+            }
+          ]
+        },
+        {
+          "id": "ifp-nfp-candidate-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 즉 정리하면 어떤 block의 방향이 정해졌을 때 배치 가능한 anchor는 "
+            },
+            {
+              "text": "'IFP 안쪽'이면서 동시에 '모든 NFP의 바깥쪽'인 점",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": "이다. "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-msj3esvz-ljt8z9",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1rG8bVzgLkT8ncp85OJIHaLxJc3JzODhQ=w2000",
+      "alt": ""
+    },
+    {
+      "id": "block-msj2gz9l-cu41xk",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": " 왜 구해진 영역의 접점과 코너를 보았나?\n"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-msj2hxgp-ho01vj",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 가장 중요한 이유는 여전히 영역이 2D 영역이기 때문에 가짓수를 모두 돌려볼 수 없다는 점"
+            }
+          ]
+        },
+        {
+          "id": "block-msj2lbqc-itjq9q",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 추가로 모서리의 경우 다른 block / bay의 경계면과 맞닿는 점이 존재한다는 것을 의미하며, 따라서 코너의 경우 다른 block / bay의 경계면과 적어도 2개만큼 맞닿는 것을 의미하기 때문에 더 block을 빽빽하게 넣기 좋을 것이라 생각했다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-msj2hta0-dnd0fh",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 접근은 설명하기 좋았다. 왜 이 좌표를 보았는지 말할 수 있었고, 후보 수도 작았다. 문제는 '좋은 위치는 경계에 있다'와 '우리가 만든 경계 후보 집합 안에 좋은 위치가 있다'가 전혀 다른 말이라는 점이었다. 다층 폴리곤과 크레인 통로, 시간에 따라 사라지는 block이 겹치자 우리가 만든 유한 후보는 생각보다 많은 자리를 보지 못했다. 후보를 영리하게 줄인 것이 아니라 가능성을 먼저 잘라 낸 셈이었다."
+        }
+      ]
+    },
+    {
+      "id": "symptom-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "관찰"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "처음의 해석"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "나중의 해석"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "점유율 50% 아래에서 forced"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "bay 배정이 나쁨"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "배치기가 유효 좌표를 누락"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "미래 빈 구간으로 보내면 해결"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "시간 혼잡 문제"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "현재 시점의 공간 탐색 실패를 우회"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "점수식을 바꿀수록 첫 해가 늦어짐"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "더 정교해진 대가"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "틀린 decoder를 비싸게 여러 번 호출"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "block-msj1odgq-cha68q",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "무엇보다 시간이 상당히 느렸다...",
+          "annotations": {
+            "strike": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "raster-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "full scan으로의 전환"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "raster-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "위와 같이 shapely를 이용한 기하적 계산에서 벗어나 bay와 block을 격자 mask로 바꾸었다. 쉽게 설명하면 그냥 bay를 2D 영역에서 격자로 해석하고, 그 격자 위에 블럭이 조금이라도 올라가 있으면 해당 격자 위에 블럭이 있다고 놓는 방식이다. 말만 들으면 그냥 무식한 방법이다. (그리고 실제로도...)"
+        }
+      ]
+    },
+    {
+      "id": "block-msj37d9l-mmqi11",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1qacXzUZhxKsuQhJWTNpuDV2UXXBuPgkb=w2000",
+      "alt": "",
+      "isHeroImage": true
+    },
+    {
+      "id": "block-msj1put4-dkmmms",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "무식한 방법이지만 결과적으로 다음과 같은 두 부분에서 이득을 봤다:"
+        }
+      ]
+    },
+    {
+      "id": "block-msj1q2bj-gn5g8n",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "IFP, NFP는 전체 공간 중에서 block이 배치될 수 있는 곳을 상당히 한정했지만, full scan으로 진행하게 될 경우 \"좋은 배치\"를 잘 점수화 하게 될 경우 배치에 있어서 "
+        },
+        {
+          "text": "훨씬 뛰어난 자유도",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "를 보장"
+        }
+      ]
+    },
+    {
+      "id": "block-msj1r0c3-jnmchx",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "생각보다 폴리곤 교차에 많은 시간이 쓰이고 있었는지, "
+        },
+        {
+          "text": "연속된 메모리 공간을 bit 연산으로 훑는 쪽이 훨씬 빠름",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "\n"
+        }
+      ]
+    },
+    {
+      "id": "result-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "결과: 생각보다 놀라움!"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "result-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "같은 20개 문제"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "기존 decoder"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "새 decoder"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "첫 답이 가장 늦은 문제"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "73.3초"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "약 18초"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "30초 제한 timeout"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "5개"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "0개"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "30초 목적함수 중앙값"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "기준"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "97.8% 감소"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "60초 목적함수 중앙값"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "기준"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "96.7% 감소"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "result-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "20개 모두 새 버전이 압도적으로 이겼다! 점수가 30분의 1 가까이 된 것도 놀라웠지만, 첫 답이 네 배쯤 빨라진 것이 더 중요했다. 우리는 '정확하게 많이 보는 방식은 느릴 것'이라고 생각했는데, 실제로 느렸던 것은 소수의 후보를 만들기 위해 복잡한 기하 연산과 점수 계산을 반복하던 쪽이었다."
+        }
+      ]
+    },
+    {
+      "id": "not-bruteforce",
+      "type": "callout",
+      "backgroundColor": "yellow",
+      "richText": [
+        {
+          "text": "참고로 이 경험을 'brute force가 낫다'고 일반화하고 싶지는 않다. 우리에게 맞았던 것은 탐색 단위를 격자로 바꾸자 전체 확인을 값싼 연속 연산으로 만들 수 있었고, 그 결과 휴리스틱 후보 누락까지 없앨 수 있었다는 사실이다. "
+        }
+      ],
+      "icon": "🔄"
+    },
+    {
+      "id": "block-msj3udk3-vffiev",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "지금 다시 돌이켜보면..."
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "second-lesson-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "시간이 분명히 줄긴 했지만, 다시 돌이켜보면 버려지는 공간이 너무 많은 거 같기도 하고 전체를 색칠하는데 걸리는 시간이 꽤 큰 거 같다. 그 때 당시에는 저 부분에 lazy-segtree 아이디어를 얹을까 했는데 귀찮음 이슈 + 생각보다 그렇게 크게 단축되지 않을 거 같다는 생각이 들어서 잠시 우선순위를 뒤로 미루고, 다른 급한 이슈들이 계속 발견되는 바람에 이걸 계속 붙잡고 있지 못했었는데 확실히 좋은 아이디어였던 거 같다."
+        }
+      ]
+    },
+    {
+      "id": "block-msj45lcf-v7balh",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "lazy-segtree (느리게 갱신되는 세그먼트 트리)란?"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-msj462l8-0exjro",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "  세그먼트 트리는 배열의 특정 구간에 대한 합이나 최댓값을 빠르게 관리하는 자료구조이다. 여기에 lazy propagation을 붙이면 [l, r] 구간 전체에 값을 더할 때 모든 원소를 즉시 갱신하지 않고, 해당 구간을 대표하는 노드에 변경 사항만 기록해 두었다가 실제로 필요할 때 아래 노드로 전파한다. 세그트리 자체도 유용하고 잘 정돈된 자료구조인데, lazy-seg는 여기서 더 효율화된 구조이다. 시간복잡도는 "
+            },
+            {
+              "text": "O(logN)",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "이다."
+            }
+          ]
+        },
+        {
+          "id": "block-msj48ef8-culbdz",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 이걸 당시 구조에 적용하려던 이유는 block을 색칠하는 방식 때문이었다. block의 convex hull을 격자로 바꾸면 각 행에서 block이 차지하는 칸은 대부분 하나의 연속된 구간으로 나타난다. (위 그림을 참고하자) "
+            }
+          ]
+        },
+        {
+          "id": "block-msj49eg3-2he1lv",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 예를 들어 어떤 행에서 mask가 5번 칸부터 17번 칸까지 차지한다면, 기존 방식은 개념적으로 그 13개 칸을 전부 "
+            },
+            {
+              "text": "+1",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "로 색칠한다. block이 빠질 때는 같은 영역을 다시 "
+            },
+            {
+              "text": "-1",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "로 색칠한다. 이런 식으로 블록의 배치를 덧셈과 연결시킬 수 있다. "
+            }
+          ]
+        },
+        {
+          "id": "block-msj4be9v-l1tblc",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " "
+            },
+            {
+              "text": "자세한 내용은 다른 PS 블로그나 GPT를 참고하도록 하자...",
+              "annotations": {
+                "strike": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-msj4be9k-c0rbvu",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "재미있는 점은 최종적으로 lazy segment tree를 넣지는 않았지만, 이 아이디어의 핵심 일부는 나중의 row-run·prefix 최적화와 상당히 비슷했다는 것이다. 각 cell을 독립적으로 보지 않고, convex mask의 한 행을 하나의 연속 구간으로 표현한 뒤 prefix와 gap 정보를 이용해 판정하도록 바꾸었다. 일반적인 segment tree보다 현재의 전수 scan과 NumPy 연산에 잘 맞는 형태였고, 실제 decoder 속도도 약 1.7~2배 빨라졌다.\n"
+        }
+      ]
+    },
+    {
+      "id": "block-msj3xm80-8i6w4b",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암튼 두 번째 이야기는 여기서 마무리하려고 한다. 뭔가 기억에 확 남았던 이유가 고집했던 가설이 사실은 틀렸고, 그걸 버려서 가장 드라마틱한 성능 향상을 느꼈던 예시여서가 아닐까 싶다. "
+        }
+      ]
+    }
+  ]
+}
