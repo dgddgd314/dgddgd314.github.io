@@ -1,0 +1,741 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "ogc-2026-03-why-good-ideas-lost",
+    "description": "decoder가 좋아진 뒤에도 예전 proxy score를 믿었던 실수, 더 좋은 전역 배정을 찾고도 최종 코드에서는 버린 이유에 대한 회고.",
+    "pubDate": "2026-08-10",
+    "category": "ogc2026",
+    "tags": "ogc2026, optimization, alns",
+    "badge": "done",
+    "title": "[OGC2026] 더 좋은 전역 배정을 찾고도 버린 이유 (3)"
+  },
+  "page": {
+    "icon": "🧪",
+    "cover": {
+      "type": "color",
+      "value": "#f3eee8",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "opening",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "(2)번에서도 얘기했듯 프로젝트 후반에는 아이디어가 부족하지 않았다. 오히려 그 반대였다. decoder가 빨라져서 적당히 좋은 해가 시간 안에 나왔다 + 추가로 timeout을 막는 로직을 추가하니 이제는 해볼 수 있는 것, 하고 싶은 것이 더 많아지는 느낌? fragmentation을 줄여 볼 수도 있었고, 여러 수 앞을 보는 beam을 붙일 수도 있었고, bay 배정을 전역 모델로 다시 풀 수도 있었다. 이 시기에 제일 어려운 일은 좋은 아이디어를 떠올리는 것이 아니라, "
+        },
+        {
+          "text": "좋아 보이는 결과와 실제 개선을 구분하는 일이었다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "judge-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "실험을 평가하는 판정기를 잘 설정하기"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "judge-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이전 코드 구조를 다시 자세히 살펴보자."
+        }
+      ]
+    },
+    {
+      "id": "block-mskjqh8q-25liv0",
+      "type": "code",
+      "language": "text",
+      "code": "입력\n  → Phase 0: 반복해서 쓸 기하 정보 전처리\n  → Phase 1: block별 bay 배정\n  → Phase 2: 좌표·방향·입출고 시각을 실제로 구성\n  → Outer ALNS: bay 배정을 부수고 다시 만들기"
+    },
+    {
+      "id": "block-mskjmjai-cpzm4b",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "여기서 Phase 1에서 적절한 bay-block 배정을 위해서는 proxy score이 반드시 필요하다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mskjtccm-4gg3ka",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "조금 더 자세한 설명"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mskjti9e-v3pv7w",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "Phase 1만 진행한 상태에서는 Phase 2가 아직까지 진행되지 않았다. 진짜 기하적 위치를 고려하여 block을 bay 위에 배치하는 단계는 Phase 2이기 때문에, 아직까지 Z1 값을 모르는 상태이다. "
+            }
+          ]
+        },
+        {
+          "id": "block-mskjws62-bdnutp",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "따라서 Phase 1에서는 "
+            },
+            {
+              "text": "전체 목적함수 값을 알 수 없기 때문에,",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": " bay-block 배정만 보고서 예상되는 목적함수 값을 대략적으로 추정하는 proxy score이 반드시 필요하다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mskjtdja-3qw9wx",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "문제는 우리 팀에서 대회 초기에 설정했던, 조금 더 정확하게는 decoder의 성능 개선 이전에 설정했던 proxy score을 너무 쉽게 믿었다. 간과한 점은 decoder의 성능이 너무 좋아져 버렸고, 그 결과 성능이 안 좋았을 때는 목적함수를 잘 tracking 하던 proxy score의 식이 성능 개선 이후에는 서서히 관련이 없어져 버렸다는 것이다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mskkjagd-ajvy5t",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "proxy가 틀린건 아니지만..."
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "proxy-target-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "초기의 decoder는 후보 위치를 충분히 보지 못했고, 한 번 애매한 자리를 골라 버리면 뒤에서 되돌릴 방법도 거의 없었다. 그래서 block을 널널하게 나누고 위험해 보이는 배정을 미리 피하는 proxy가 실제 점수를 꽤 잘 설명했다. 그때는 decoder가 처리하지 못한 어려움이 거의 그대로 목적함수에 남았기 때문이다."
+        }
+      ]
+    },
+    {
+      "id": "proxy-target-copy-3",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "하지만 전체 scan (2부 참고) 및 다양한 테크닉이 차례로 들어가면서 상황이 달라졌다. 예전에는 나쁜 배정으로 끝났을 입력도 Phase 2가 꽤 많이 복구하기 시작했다. 반대로 예전 proxy가 안전하다고 좋아하던 널널한 배정은, 더 강해진 decoder가 활용할 수 있는 선택지를 Phase 1에서 미리 없애는 경우도 생겼다. 새 decoder로 탐색하면서도 한동안 old decoder의 약점을 기준으로 배정을 채점하고 있었던 셈이다."
+        }
+      ]
+    },
+    {
+      "id": "proxy-target-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이걸 뒤늦게 깨닫고 나니 proxy score을 조금 다르게 보게 되었다. proxy를 bay 배정 자체의 품질처럼 생각했지만, 사실 proxy가 흉내 내야 했던 것은 "
+        },
+        {
+          "text": "그 배정을 현재 decoder에 넣었을 때 나올 결과",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "였다. 같은 bay 배정이라도 decoder가 어디까지 수습할 수 있는지에 따라 실제 목적함수는 달라진다. 그렇다면 decoder가 크게 바뀌는 순간 proxy가 맞혀야 하는 정답도 같이 바뀌는 것이 당연했다."
+        }
+      ]
+    },
+    {
+      "id": "block-msm1vbu7-f322o3",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1otG2R8WGLG6_ypluVrkTB1zmnog-Xwx-=w2000",
+      "alt": "",
+      "isHeroImage": true
+    },
+    {
+      "id": "forced-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "처음에는 proxy를 더 정교하게 만들면 된다고 생각했다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "forced-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "가장 직접적인 상황 예시를 들어보자. 대회 초기, decoder를 고치기 이전 Z1이 너무 크게 나온 해를 뜯어보니 forced placement와 지나치게 고립된 block이 Z1의 대부분을 만들고 있었다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mskl0znf-ln11xk",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "forced placement (강제 배치)는 Phase 1의 bay-block 배정과 Phase 2가 받은 이후 직접 기하적으로 배치하는 과정이 서로 분리되어 있기 때문에 발생한다. Phase 1이 각 bay의 상황을 자세히는 모르는 상태에서 bay-block을 배정하기 때문에 Phase 2 과정에서"
+        },
+        {
+          "text": " 어쩌다 보니 실제로는 공간이 없어 block 배치가 안되는 상황이 생기기 때문이다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " (모양이 너무 기괴하다던가 등의 이유로) "
+        }
+      ]
+    },
+    {
+      "id": "block-mskl7yhm-uw700h",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "이 경우 모든 block이 배치된 이후 최종적으로 "
+        },
+        {
+          "text": "밀린 block들을 한 번에 모아서 배치",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "하며 이를 forced placement라 한다. (강제 배치라는 말이 이제는 이해가 될 것이다.) "
+        }
+      ]
+    },
+    {
+      "id": "block-msklb66d-pr5utl",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "지나치게 고립된 block",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이란 위의 forced placement에서 파생된 문제이다. 모든 block이 배치된 이후 깅제 배치를 진행하는데, 일반적으로 block들은 중반부에 bay를 가득 채우지, 후반부는 밀집되어서 들어오지 않는다. 즉 공간이 많은 널널한 후반부에 forced block이 배치되지 않고, 모든 예정된 block의 배치가 완료된 이후 밀린 block들을 처리하게 된다. 이를 지나치게 고립된 block 문제라 정의했다."
+        }
+      ]
+    },
+    {
+      "id": "block-mskl112w-8ps968",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "두 가지 문제에 의해 낮은 점유율에서도 forced가 생겼고, 실제 입고 시점보다 수십 일에서 길게는 훨씬 뒤로 밀리는 block도 보였다. 그래서 이런 위험을 Phase 1에서 미리 감지해 벌점을 주는 forced-risk profile을 만들었다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msklg96o-f3yi3p",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "놀랍게도 저 forced-risk profile은 Phase 1인데도 불구하고"
+        },
+        {
+          "text": " forced risk 수를 아주 잘 맞췄고, 해당 profile을 proxy score에 넣었더니 20개 문제에서 20번 모두 기존 설정을 이겼다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 다만 첫 feasible solution이 나오는 최악 시간은 33.4초에서 43.3초로 늦어졌다. 아무튼 점수가 올랐으므로 이때까지도 나는 ‘위험 예측을 더 싸게 계산하면 되겠다’고 생각했다."
+        }
+      ]
+    },
+    {
+      "id": "forced-copy-3",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그런데 decoder를 교체하니"
+        },
+        {
+          "text": " 저 forced 문제 자체를 거의 없애 버렸다. ",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "같은 30초 조건에서 median objective가 약 97.8% 줄었고 forced placement도 평균적으로 20개씩 발생하던게 거의 발생하지 않았다. 바로 이전까지 좋았던 proxy가 갑자기 정확도가 떨어진 이유는 식이 잘못 구현돼서가 아니었다."
+        },
+        {
+          "text": " ",
+          "textColor": "orange"
+        },
+        {
+          "text": "그 식이 열심히 예측하던 실패를 decoder가 더는 만들지 않았기 때문이다.",
+          "annotations": {
+            "bold": true
+          },
+          "textColor": "orange"
+        }
+      ]
+    },
+    {
+      "id": "judge-again-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "proxy score을 다룰 때 주의해야 할 점"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "judge-again-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이후 실험에서는 ‘좋아졌다’는 말을 바로 쓰지 않으려고 했다. Phase 1의 proxy가 좋아진 것인지, 같은 배정을 한 번 decode했을 때 실제 목적함수가 좋아진 것인지, 아니면 동일한 시간 동안 ALNS까지 돌린 최종 best가 좋아진 것인지를 구분했다. 세 숫자는 연결되어 있지만 같은 뜻은 아니다."
+        }
+      ]
+    },
+    {
+      "id": "judge-again-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "확인한 값"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "그 값으로 답할 수 있는 질문"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "Phase 1 proxy"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이 배정은 decode해 볼 만해 보이는가?"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "raw decode objective"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "decoder가 이 아이디어를 실제 해로 바꿀 수 있는가?"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "same wall-clock ALNS best"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "느려진 횟수와 탐색 다양성까지 감수하고도 최종적으로 이기는가?"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "proxy-revalidation-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "지금 다시 한다면 proxy의 순위부터 다시 확인할 것 같다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "proxy-revalidation-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "proxy는 최종 점수와 단위도 다르고 절댓값의 크기도 다르기 때문에, 둘의 숫자가 비슷한지를 보는 것은 별 의미가 없다. 정말 필요했던 것은 proxy가 좋다고 고른 배정이 현재 decoder에서도 대체로 좋은 순서를 유지하는지였다. 당시에는 이 확인을 체계적으로 하지 않았지만, 지금 다시 실험을 설계한다면 다음처럼 했을 것 같다."
+        }
+      ]
+    },
+    {
+      "id": "proxy-revalidation-toggle",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "decoder 변경 뒤 proxy drift를 확인하는 방법"
+        }
+      ],
+      "children": [
+        {
+          "id": "proxy-revalidation-child-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "먼저 현재 ALNS가 실제로 방문하는 bay 배정들을 모은다. 무작위 배정만 뽑으면 실전 탐색이 보는 분포와 달라서 proxy가 멀쩡해 보일 수 있다."
+            }
+          ]
+        },
+        {
+          "id": "proxy-revalidation-child-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "각 배정을 동일한 최신 decoder로 실현한 뒤 proxy 순위와 실제 목적함수 순위를 비교한다. 전체 평균 하나만 보지 않고 문제 크기, bay 밀도, 시간 구간별로 나눠 어느 조건에서 순위가 뒤집히는지도 본다."
+            }
+          ]
+        },
+        {
+          "id": "proxy-revalidation-child-3",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "마지막으로 proxy가 좋은 후보를 고르는 데 쓰일 때와 ALNS의 destroy-repair 선택에 쓰일 때를 따로 검증한다. 같은 식이라도 후보 pruning에서는 유용하고 최종 답으로는 위험할 수 있기 때문이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "judge-again-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "proxy와 raw decode는 아이디어의 mechanism을 확인하는 데는 여전히 유용했다. 다만 최종 코드에 넣을지는 결국 최종 점수로 실행해야 한다. 이 proxy 점수와 실제 scoring의 구분을 가장 세게 가르쳐 준 것이 beam search였다.\n"
+        }
+      ]
+    },
+    {
+      "id": "block-mslzzrd2-k0iex0",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "각 부품을 최적화하는 것이 문제를 최적화하지는 않는다."
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "beam-copy-rewrite-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "현재 Phase 2에서 ALNS 이전 초기 해를 구할 때는 greedy로 block을 배치한다. 그런데 하나만 보는 거 보다는 그 이후 블록들 역시 고려하면 당연히 더 좋은 배치가 나오겠지? 이 아이디어가 바로 "
+        },
+        {
+          "text": "beam lookahead",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "이다. 몇 수 뒤까지 같이 보면 지금의 선택이 미래 공간을 어떻게 망치는지 미리 알 수 있을 것 같이기 때문이다. 이론적으로는 틀린 말 하나 없으며 구현 결과 실제로 한 번의 decode(=즉 Phase 2까지만 돌린 것)만 비교하면 점수가 최대 26.6% 좋아졌다. 처음 결과를 봤을 때는 이 정도 차이를 버릴 이유가 없어 보였다."
+        }
+      ]
+    },
+    {
+      "id": "beam-copy-rewrite-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "하지만 "
+        },
+        {
+          "text": "한 번의 해를 구성하는 시간이 2~4배로 늘었다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 같은 제한 시간 동안 ALNS를 돌리자 더 적은 이웃만 확인할 수 있었고, 최종 best는 비교한 문제에서 모두 기존 greedy에 졌다. 빠른 근사 beam도 만들어 iteration 수를 되찾아 봤지만, 이번에는 앞을 보면서 얻었던 판단력이 같이 사라졌다. 한 번의 decode를 잘 만드는 것과 좋은 해를 반복해서 탐색하는 것 사이에는 우리가 생각한 것보다 큰 간격이 있었다."
+        }
+      ]
+    },
+    {
+      "id": "beam-copy-rewrite-3",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "raw decode의 26.6% 개선은 가짜 결과가 아니다. 단지 다른 질문에 대한 정답이었다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mslzwczu-u9595i",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "‘한 번만 만들 거라면 beam이 좋은가?’에는 yes였고, "
+        }
+      ]
+    },
+    {
+      "id": "block-mslzwh7q-848o7h",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "‘정해진 시간 동안 ALNS가 가장 좋은 해를 찾는가?’에는 no였다. \n"
+        }
+      ]
+    },
+    {
+      "id": "global-assignment-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "더 좋은 전역 bay 배정을 실제로 찾았다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "global-assignment-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "beam이 한 번의 decode와 전체 탐색을 구분하게 해줬다면, 전역 bay 배정 실험은 그 구분을 끝까지 밀어붙인 사례였다. Phase 1의 greedy는 block을 하나씩 보며 지금 가장 좋아 보이는 bay를 고른다. 그렇다면 모든 block을 한꺼번에 보고 배정을 조율하면 greedy가 못 가는 훨씬 좋은 시작점을 만들 수 있지 않을까? 이 질문에 답하려고 전체 문제 중 배정 층만 떼어 낸 정수 최적화 모델을 만들었다."
+        }
+      ]
+    },
+    {
+      "id": "global-assignment-toggle",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "전역 bay 배정에는 무엇을 넣었나"
+        }
+      ],
+      "children": [
+        {
+          "id": "global-assignment-child-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "결정 변수는 y[i,j], 즉 block i를 bay j에 넣으면 1이 되는 0/1 변수다. 물리적으로 들어갈 수 없는 block-bay 조합은 변수 자체를 만들지 않았고, 각 block은 정확히 하나의 bay에 들어가도록 했다."
+            }
+          ]
+        },
+        {
+          "id": "global-assignment-child-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "좌표, 회전, crane과 실제 배치 순서는 모델에서 뺐다. 대신 날짜별로 한 bay에 살아 있는 block의 면적 합이 채움 한도를 넘는 양을 overflow로 두어 Z1의 대리값으로 사용했다. 배정만으로 정확히 계산되는 Z2와 Z3는 그대로 넣었다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "global-assignment-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "prob38에서 solver가 만든 배정을 현재 decoder로 한 번 실현하니 "
+        },
+        {
+          "text": "기존 greedy 배정보다 목적함수가 12.8% 낮았다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " proxy만 좋아진 것이 아니라 Phase 2까지 통과한 진짜 점수가 좋아졌으니, 처음에는 드디어 Phase 1의 벽을 넘었다고 생각했다."
+        }
+      ]
+    },
+    {
+      "id": "global-assignment-copy-3",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "하지만 solver 배정과 greedy 배정에서 각각 같은 시간만큼 ALNS를 시작해 보니 결과가 뒤집혔다."
+        },
+        {
+          "text": " 12.8% 앞서던 prob38은 ALNS 뒤에는 오히려 7% 나빠졌고,",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 함께 비교한 5개 문제에서 solver 시작점이 이긴 문제는 하나도 없었다. "
+        }
+      ],
+      "children": [
+        {
+          "id": "global-assignment-copy-4",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "우리 구조에서는 ALNS가 매 반복 배정을 부수고 다시 만든 다음 Phase 2가 좌표와 시각을 처음부터 재구성한다. 그러는 동안 solver가 어렵게 만든 전역 조율은 몇 번의  ALNS 과정 이후 상당부분 사라진다. 한 번 잘 decode되는 배정이 neighborhood가 계속 좋은 해로 이동할 수 있는 배정을 의미하지는 않는다. "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "global-quote-rewrite",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1hZ1AcV7-X-Ayn11zTTM1Fc45fqtbI8yP=w2000",
+      "alt": ""
+    },
+    {
+      "id": "block-msm1wuha-4yq4jq",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "우리가 최적화해야 했던 것은 가장 좋은 bay 배정 하나가 아니라, 제한 시간 동안 좋은 해를 계속 발견하게 만드는 배정과 decoder와 neighborhood의 조합이었다."
+        }
+      ]
+    },
+    {
+      "id": "portfolio-title-rewrite",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "마지막에는 하나의 proxy를 고르는 일을 포기했다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "portfolio-copy-rewrite-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "여기서 포기했다는 말은 아무 규칙이나 섞었다는 뜻은 아니다. 오히려 각 규칙이 언제 맞는지를 인정했다는 쪽에 가깝다. "
+        },
+        {
+          "text": "작은 문제와 큰 문제, 짧은 제한과 긴 제한에서 같은 점수식을 강요하지 않았다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 여러 가지 proxy 식들을 직접 만들어보고 약 15시간짜리 sweep으로 실제 champion을 한 번도 만들지 못한 proxy를 제거하는 식으로 진행했다."
+        }
+      ]
+    },
+    {
+      "id": "portfolio-copy-rewrite-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "처음에는 portfolio가 아직 정답인 proxy를 못 찾아서 쓰는 임시방편처럼 느껴졌다. 지금 생각하면 반대다. instance와 시간 예산에 따라 decoder가 어려워하는 지점이 달라지는 문제에서, 심지어 각 문제마다 block의 모양이 크게 다른 문제들에서 하나의 식이 언제나 같은 순서를 내야 한다고 믿는 쪽이 돌이켜보면 훨씬 이상하다."
+        }
+      ]
+    },
+    {
+      "id": "versioned-proxy-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "지금 다시 한다면 proxy도 decoder와 함께 versioning할 것 같다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "versioned-proxy-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "정리하면 우리는 decoder를 바꿀 때 실행 시간과 최종 objective는 꼼꼼하게 다시 쟀지만, proxy가 새 objective를 여전히 tracking하는지는 같은 수준으로 확인하지 않았다. 지금 다시 한다면 decoder의 큰 변경은 proxy score의 버전도 바꾸는 사건으로 취급할 것 같다."
+        }
+      ]
+    },
+    {
+      "id": "versioned-proxy-list-1",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "decoder가 크게 바뀌면 기존 proxy와 최종 objective의 instance별 순위 상관부터 다시 잰다."
+        }
+      ]
+    },
+    {
+      "id": "versioned-proxy-list-2",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "proxy 개선은 후보 가설로만 보고, raw decode에서 실제로 이어지는지 한 번 더 확인한다."
+        }
+      ]
+    },
+    {
+      "id": "versioned-proxy-list-3",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "최종 채택은 ALNS best와 다양한 문제 input을 모두 고려한 뒤 결정한다.\n"
+        }
+      ]
+    },
+    {
+      "id": "ending-rewrite-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "더 좋은 전역 배정을 실제로 찾고도 버린 경험이 기억에 남는 이유는, 그 실험이 단순한 실패가 아니었기 때문이다. 우리가 기대했던 중간 결과는 전부 좋아졌다. proxy도 좋아졌고 한 번 decode한 진짜 목적함수도 좋아졌다. 그런데 최종 시스템은 졌다.\n"
+        }
+      ]
+    },
+    {
+      "id": "next-story",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "다음 글에서는 여기까지 고친 뒤에도 남아 있던 아쉬움을 적어보려고 한다. Phase 1에서 bay를 먼저 정하고 Phase 2에서 실제 배치를 만든 뒤 Outer ALNS가 다시 Phase 1을 흔드는 현재 구조가 무엇을 쉽게 만들었고, 반대로 어떤 가능성을 처음부터 보지 못하게 했는지에 대한 이야기다."
+        }
+      ]
+    }
+  ]
+}
