@@ -1,0 +1,967 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "ogc-2026-04-what-we-could-not-build",
+    "description": "bay assignment에 갇힌 ALNS neighborhood, 임시방편으로 남은 in-bay 탐색, local re-realization과 instance별 proxy 가중치 예측까지. 대회에서 끝내 구현하지 못한 것들에 대한 마지막 회고.",
+    "pubDate": "2026-08-11",
+    "category": "ogc2026",
+    "tags": "ogc2026, optimization, alns, machine-learning",
+    "badge": "done",
+    "title": "[OGC2026] layout을 고치고 싶었는데 bay만 흔들고 있었다 (4)"
+  },
+  "page": {
+    "icon": "🧭",
+    "cover": {
+      "type": "color",
+      "value": "#edf3f0",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "opening",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "마지막 글에는 결국 하지 못한 것들을 적어보려고 한다. 대회가 조금만 더 길었다면 넣었을 기능 목록이라기보다는 애초에 어디를 더 크게 바꿨어야 했는지에 대한 이야기다. 최적화 과정부터 해서 greedy 등등 다양한 부분들을 변경했지만 끝까지 거의 그대로였던 전제가 하나 있었다. "
+        },
+        {
+          "text": "좋은 layout을 찾고 싶으면서도 ALNS에서는 주로 block의 bay 배정만 바꾸고 있었다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "bay-only-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "neighborhood의 차원"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "bay-only-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Outer ALNS의 한 iteration을 단순하게 적으면 다음과 같다."
+        }
+      ]
+    },
+    {
+      "id": "bay-only-code",
+      "type": "code",
+      "language": "text",
+      "code": "현재 해의 bay[]\n  → destroy: 일부 block의 bay 번호를 지움\n  → repair: proxy score로 새 bay 번호를 선택\n  → realize: Phase 1과 Phase 2를 처음부터 다시 실행\n  → 실제 목적함수로 accept / reject"
+    },
+    {
+      "id": "bay-only-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Solution 객체에는 entry, exit, 좌표, orientation까지 들어 있었다. related destroy도 실제 좌표와 시간 정보를 일부 사용했다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msq20yvl-tccutb",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "하지만 새로운 해를 만드는 repair가 직접 결정하는 것은 거의 항상 bay assignment였다. 즉 좌표와 방향, 한 bay 안의 배치 순서는 탐색 변수가 아니라 "
+        },
+        {
+          "text": "bay 번호를 decoder에 넣으면 뒤에서 따라오는 결과였다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-msq2vsrx-o71avz",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "즉 우리의 ALNS로는"
+        }
+      ]
+    },
+    {
+      "id": "block-msqc7k28-ufm7h5",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "특정 block의 bay 배정을 바꾸기만 할 뿐, block의 bay 내부 배정(시간+공간)을 바꾸지는 못한다.\n"
+        }
+      ]
+    },
+    {
+      "id": "bay-only-copy-3",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "초기에는 이것이 자연스러웠다. 어느 block을 어느 bay에 넣는지만 정해도 Z2와 Z3가 확정되고, 전체 조합 수 역시 충분히 컸다. Phase 2의 성능이 좋지 않을 때는 잘못된 bay 배정이 forced placement와 tardiness로 곧바로 이어졌으므로 bay를 바꾸는 것만으로도 얻을 것이 많았다. "
+        },
+        {
+          "text": "문제는 decoder가 강해진 뒤에도 neighborhood의 표현력은 거의 그대로였다는 점이다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-msq24nz4-3zj353",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "직관적인 비유 및 설명"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-msq24rye-rndf4l",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "어떤 지역에서 "
+        },
+        {
+          "text": "가장 높은 고도를 가지는 위치 및 그 고도를 구해야 하는 문제",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "를 생각해보자. (잘 아시다시피 인공지능의 학습을 포함한 대부분의 복잡한 최적화 문제는 단지 2차원이 아닐 뿐, 이런 형태를 가진다.) 직관적으로 빨간색이 진할수록 최적이라 해보자."
+        }
+      ]
+    },
+    {
+      "id": "block-msq2vi4g-ohqfnw",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "우리의 neighborhood는 성능이 좋지 않다, 즉 다음과 같은 "
+        },
+        {
+          "text": "노란색 직선",
+          "annotations": {
+            "bold": true
+          },
+          "textColor": "yellow"
+        },
+        {
+          "text": " 형태의 1차원(=bay-block 재배정) 공간만 탐색할 수 있다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msqaxynn-patwt7",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1yv8s50jiv-2PAyxLZZrK9pkAqpbUuwFw=w2000",
+      "alt": ""
+    },
+    {
+      "id": "block-msq3k7zk-c39x0g",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이게 초기 (특히 decoder 성능 향상이 있기 이전)에는 큰 관계가 없었다, 왜냐하면 저 1차원 공간 위에서 가장 최적화된 답을 찾는 것도 시간 관계상 쉽지 않았기 때문이다."
+        }
+      ]
+    },
+    {
+      "id": "block-msqb1k64-xuervd",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1QSmTKtCK9Re_Nq0HGvDneXXDLS8U1NJd=w2000",
+      "alt": "",
+      "isHeroImage": true
+    },
+    {
+      "id": "block-msq3l8wn-xuuxkb",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "하지만 decoder 성능 향상이 있던 이후, 이제 1차원 공간 위에서는 거의 항상 최적화된 답을 찾을 수 있다. (일례로, 5분 이후 성능 개선이 없는 문제들이 대부분이다.)"
+        }
+      ]
+    },
+    {
+      "id": "block-msq3mcfj-xopj0i",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이제는 성능 향상을 하려면 새로운 공간을 탐색해야 하는 상황이고, 이건 neighborhood의 표현력을 늘려야 하는 문제이다. 즉 지금의 bay-block 재배정 차원을 벗어나서, 다른 방식으로 생성된 이웃을 탐색에 넣어야 한다는 의미이다."
+        }
+      ]
+    },
+    {
+      "id": "block-msqba44z-8my329",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1uiOo5kNeBQ8s4VFTtmvNYkq-c5oq_7HI=w2000",
+      "alt": ""
+    },
+    {
+      "id": "block-msq7h0zm-3se9fv",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "IN-BAY를 임시방편으로 넣어봤더니\n"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "inbay-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "후반에 붙인 in-bay perturbation은 이 차원을 처음 건드린 코드였다. bay assignment는 그대로 두고, 한 bay 안에서 어떤 block을 먼저 배치할지만 바꾸었다. 그런데 이것을 정식 neighborhood로 설계한 것은 아니었다. 기존 ALNS가 일정 횟수 동안 좋아지지 않을 때만 별도의 probe처럼 호출했다."
+        }
+      ]
+    },
+    {
+      "id": "inbay-toggle",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "실제 in-bay 구현이 임시방편에 가까웠던 이유"
+        }
+      ],
+      "children": [
+        {
+          "id": "inbay-child-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "정체가 감지되면 Z1, Z3가 큰 bay 몇 개만 고른 뒤 다양한 규칙에 맞게 순서를  만들었다."
+            }
+          ]
+        },
+        {
+          "id": "inbay-child-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "각 순서를 dispatch_order_hint라는 일회성 우선순위로 Phase 2에 넘기고, 해당 후보들 중에서 proxy가 적당히 높은 애들을 골라서 실제로 배치 후 가장 좋은 것을 골랐다.\n"
+            }
+          ]
+        },
+        {
+          "id": "inbay-child-4",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "즉 새로운 탐색 축을 제대로 연 것이 아니라, 정체했을 때 decoder의 dispatch 규칙을 잠깐 바꿔 보는 probe에 가까웠다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "inbay-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그런데도 prob28에서 열네 번 시도해 두 번 실제 개선을 만들었고 최종 목적함수를 2.53% 줄였다. 이 숫자가 in-bay 구현이 훌륭했다는 뜻은 아니다. 오히려 이렇게 대충 탐색한 차원에서도 이득이 나왔다는 사실이 해당 차원을 탐색했었어야 한다는 것을 뒷받침한다."
+        }
+      ]
+    },
+    {
+      "id": "block-msqbd8pf-oibikt",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1qANwua_a81E8jFEPld5ilw2DWTAYxklY=w2000",
+      "alt": ""
+    },
+    {
+      "id": "inbay-copy-3",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "시간이 더 있었다면 in-bay를 별도 예외 처리로 두지 않고 state와 neighborhood 안으로 올리고 싶다. bay 번호만 바꾸는 move와 bay 내부 구조를 바꾸는 move가 같은 ALNS 안에서 경쟁하고, 어떤 문제가 어느 축에서 더 자주 개선되는지 adaptive operator selection이 직접 학습하도록 만드는 것이다."
+        }
+      ]
+    },
+    {
+      "id": "neighborhood-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "탐색 축"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "만들 수 있었던 neighborhood"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "bay assignment"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "block 이동, 두 bay 사이 swap, 관련 block 묶음 재배정"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "in-bay order"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "인접 순서 교환, tardy cohort 앞으로 이동, 구간 reverse"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "orientation"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "혼잡 시간대의 큰 block 방향 고정·해제, 방향 묶음 destroy"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "space-time region"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "특정 bay의 특정 시간 구간만 비우고 다시 배치"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "state-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이렇게 하려면 ALNS state도 bay 하나가 아니라 bay 내부 배정 순서, 배정 시기, 필요한 경우 방향과 보존할 위치을 함께 가져야 한다. 물론 상태가 커지면 중복 판정이 어려워지고 neighborhood 수도 빠르게 늘어난다. 그래도 실제 가장 뛰어난 점수를 탐색 공간에서 탐색하지 못한 채 의미없는 계산만을 기다리는 것보다는 맞는 방향이었다고 생각한다."
+        }
+      ]
+    },
+    {
+      "id": "block-msq7hbm6-iputtv",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "서로 다른 layout이 decoder를 지나면 비슷한 layout이 된다\n"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "collapse-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "3부에서 전역 solver가 만든 bay 배정이 raw decode에서는 12.8% 좋았지만 ALNS 뒤에는 이득이 사라졌다고 적었다. 지금 구조의 관점에서 보면 그 결과는 조금 다르게 보인다. "
+        }
+      ]
+    },
+    {
+      "id": "collapse-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이득이 사라졌다는 말은 결국 같은 해로 수렴했다는 것을 의미한다. 즉 전역 solver가 탐색해서 새로운 layout을 찾았다고 생각하지만 실제 그 공간 역시 이미 ALNS가 탐색하고 있었다고 보는 것이 타당하다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msq9wh3p-216uph",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "전역 solver는 greedy가 아니라 MIP를 통해 해를 구하기 때문에 매우 뛰어난 해라고 보는 것이 타당한데, 이 역시 ALNS 이후 해가 묻힌다면 더 이상 이 차원에서는 이 점수가 한계라는 것을 인정했어야 했다. 이 때문에 bay-only neighborhood를 더 정교하게 만드는 것만으로는 한계가 있었을 것이라 예상한다.\n"
+        }
+      ]
+    },
+    {
+      "id": "local-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "전체를 다시 만들지 말고, 망가뜨린 부분만 다시 배치"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "local-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "현재는 block 몇 개의 bay만 바꿔도 realize가 Phase 1 timing과 Phase 2 배치를 거의 처음부터 다시 만든다. 구현은 단순하지만, 이전 해에서 잘 만들어 놓은 좌표와 순서까지 전부 버린다. 작은 neighborhood를 적용했는데 실제 layout은 전혀 다른 방식으로 재생성될 수 있으므로 move의 원인과 결과도 흐려진다."
+        }
+      ]
+    },
+    {
+      "id": "local-code",
+      "type": "code",
+      "language": "text",
+      "code": "원했던 local re-realization\n\n문제가 있는 bay·시간 구간 선택\n  → 해당 구간과 충돌하는 block만 제거\n  → 나머지 block의 bay·좌표·순서는 고정\n  → 제거된 block의 bay·순서·방향을 함께 repair\n  → 불가능할 때만 영향 범위를 바깥으로 확장"
+    },
+    {
+      "id": "local-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "예를 들어 특정 bay에서 tardiness가 커지는 시간 구간을 하나 고르고, 그 구간에 살아 있는 block과 주변의 빈 공간만 neighborhood로 잡을 수 있다. 그 안에서는 greedy뿐 아니라 작은 beam이나 CP-SAT 같은 비싼 repair를 써도 전체 문제를 푸는 것보다는 훨씬 작다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msqbq53d-p7isfq",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1qSycD5BmxynOf2GMQ1mVcM4giZQNJwlY=w2000",
+      "alt": ""
+    },
+    {
+      "id": "block-msqbq3tq-kfm338",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그리고 이는 다음과 같은 장점을 가진다."
+        }
+      ]
+    },
+    {
+      "id": "local-benefit-1",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "이미 잘 놓인 block과 공간 구조를 보존할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "local-benefit-2",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "전체 decoder를 매번 호출하지 않으므로 더 많은 neighborhood를 평가할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "local-benefit-3",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "어떤 order·orientation·좌표 변화가 실제 개선을 만들었는지 ALNS가 학습할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "local-toggle",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "물론 local re-realization이 어려운 이유"
+        }
+      ],
+      "children": [
+        {
+          "id": "local-child-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "한 block의 entry와 exit가 바뀌면 같은 bay의 뒤쪽 block뿐 아니라 crane 가능 여부와 다른 시간대의 점유 상태까지 연쇄적으로 달라진다. 어디까지를 고정해도 안전한지 dependency를 추적해야 한다."
+            }
+          ]
+        },
+        {
+          "id": "local-child-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "부분 배치가 실패했을 때 neighborhood 범위를 넓히는 규칙, 기존 좌표를 반드시 지킬지 soft penalty만 줄지, 부분 해의 feasibility를 어떻게 빠르게 인증할지도 필요하다."
+            }
+          ]
+        },
+        {
+          "id": "local-child-3",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "대회 중에는 decoder 전체를 안정화하는 것만으로도 급했기 때문에 이 정도 구조 변경을 시작하기 어려웠다. 그래도 지금 다시 가장 먼저 손댈 곳을 고르면 이 부분일 것 같다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "proxy-future-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "마지막 아쉬움은 모든 문제에 비슷한 proxy를 강요한 것"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "proxy-future-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "현재 Phase 1과 repair의 핵심 cost는 대략 부하 불균형 Z2, bay preference Z3, 시간대별 면적 혼잡을 더한 형태였다. crowd 항을 w1 규모로 올리고 eta와 weight를 조정하면서 초기에 큰 개선을 얻었지만, 결국 한 설정은 문제마다 전혀 다른 block과 시간 구조를 같은 방식으로 요약했다."
+        }
+      ]
+    },
+    {
+      "id": "proxy-future-code",
+      "type": "code",
+      "language": "text",
+      "code": "repair_cost(i, j)\n  = λ_z2 · Z2_after(i → j)\n  + λ_pref · preference_loss(i, j)\n  + λ_crowd · time_area_overflow(i, j)\n  + 앞으로 추가할 forced·fragmentation·order 관련 proxy"
+    },
+    {
+      "id": "proxy-future-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "어떤 문제는 같은 시기에 큰 block이 몰려 crowd가 핵심이고, 어떤 문제는 들어갈 수 있는 bay가 적은 기괴한 형상이 병목이다. w3가 큰 문제에서는 dynamic reroute로 얻은 Z1보다 preference 손해가 더 클 수도 있다. 3부에서 한 proxy가 모든 instance와 decoder 버전에서 옳아야 한다고 믿은 것이 문제였다고 적었는데, 여기서 한 발 더 나가면 proxy의 식뿐 아니라 항별 가중치도 instance마다 달라져야 했다."
+        }
+      ]
+    },
+    {
+      "id": "ml-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "문제 profile을 입력받아 proxy 항목별 가중치를 출력하는 ML"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "ml-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "여기서 하고 싶었던 ML은 block의 좌표를 직접 예측하는 모델이 아니다. 문제 파일을 읽으면 얻을 수 있는 block·bay·시간 profile을 입력으로 넣고, 그 문제에서 사용할 proxy 항목별 가중치를 출력하는 작은 모델에 가깝다."
+        }
+      ]
+    },
+    {
+      "id": "ml-code",
+      "type": "code",
+      "language": "text",
+      "code": "x(instance)\n  = [block profile, time profile, bay profile, w1·w2·w3]\n\nML(x)\n  → λ(instance)\n  = [λ_z2, λ_pref, λ_crowd, λ_forced, λ_fragmentation, λ_order, ...]\n\nproxy_instance(i, j) = Σ_k λ_k(instance) · feature_k(i, j)"
+    },
+    {
+      "id": "ml-profile-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "입력 profile"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "예시 feature"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "block"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "개수, 면적·aspect ratio 분위수, 오목함, orientation 수, 들어갈 수 있는 bay 수"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "time"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "release 밀도, due-date slack, 시간별 active block 수·면적, peak가 유지되는 길이"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "bay"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "bay 개수, 면적·가로세로 비율, block 대비 여유 공간, eligible bay 편중"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "objective"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "w1:w2:w3 비율, preference 분포, workload 불균형 가능성"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "ml-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "학습 데이터는 sweep에서 만들 수 있다. 한 instance에 여러 proxy weight vector를 넣고 동일한 wall-clock으로 ALNS를 실행한 뒤, 가장 좋은 최종 목적함수를 만든 vector를 label로 삼는 식이다. 더 안정적으로는 하나의 정답 vector를 회귀하기보다 후보 vector들의 순위를 학습하고 상위 몇 개를 portfolio로 실행할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "ml-toggle",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "실제로 학습한다면 먼저 부딪힐 문제"
+        }
+      ],
+      "children": [
+        {
+          "id": "ml-child-1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "공개된 instance 수가 많지 않으므로 복잡한 neural network는 쉽게 문제 번호를 외운다. "
+            }
+          ],
+          "children": [
+            {
+              "id": "block-msqa234k-xlkmf9",
+              "type": "paragraph",
+              "richText": [
+                {
+                  "text": "처음에는 gradient boosting이나 작은 ranking model을 쓰고 leave-one-instance-out으로 검증하는 편이 현실적일 것이다. "
+                }
+              ]
+            },
+            {
+              "id": "block-msqa25sm-8tbzzn",
+              "type": "paragraph",
+              "richText": [
+                {
+                  "text": "또 다른 방식으로 고려했던 건 problem set이 1부터 40까지 주어졌기 때문에, 적당히 두 problem을 골라서 전체 블록의 절반씩 가져와서 새로운 dataset을 만드는 방식이다. 이 방식으로는 약 780개의 problem을 얻을 수 있고, 780개를 넘어서 새로운 dataset을 만들기 너무 쉽다."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ml-child-2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "best weight는 seed와 시간 예산에 따라 바뀔 수 있다. label을 한 번의 champion으로 정하지 말고 여러 seed의 평균, worst regression, 짧은 예산과 긴 예산을 함께 기록해야 한다."
+            }
+          ]
+        },
+        {
+          "id": "ml-child-3",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "decoder를 크게 고치면 3부에서 말한 것처럼 proxy가 맞혀야 하는 대상이 다시 바뀐다. ML model과 training log에도 decoder version을 함께 묶어야 한다. (그리고 이건 시간이 매우 아까운 일이다)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "probe-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "짧은 probe run을 추가하기"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "probe-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "입력 JSON만 보고 계산한 profile은 문제의 난도와 병목이 어디에서 일어나는지 아무래도 완전히 설명하지는 못할 것이다. 그래서 전체 시간의 앞부분을 짧은 probe로 쓰고, 실제 decoder가 만든 동적 profile을 ML 입력에 추가하는 방법이 해결책이 될 수 있을 것이라 생각한다."
+        }
+      ]
+    },
+    {
+      "id": "probe-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "probe에서 관찰할 값"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "알려 주는 것"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "첫 feasible 시간·평균 decode 시간"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "비싼 proxy와 neighborhood를 감당할 수 있는가"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "forced·reroute·fragmentation"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "crowd, 형상, 순서 중 실제로 막힌 축이 무엇인가"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "방문한 배정의 proxy와 raw objective 순위"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "현재 proxy가 이 instance에서도 제대로 정렬되는가"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "operator별 개선률·정체 길이"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "남은 시간에 어떤 neighborhood를 더 사용할 것인가"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "probe-copy-2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "처음부터 전체 예산의 10%를 무조건 쓰기보다는 첫 feasible 해와 몇 번의 ALNS iteration에서 이미 만들어지는 log를 재사용하는 편이 좋다. 정적 profile로 λ_initial을 예측해 시작하고, probe가 끝나면 동적 profile까지 넣어 λ_updated를 한 번 갱신한다. 여기서 ML의 output은 여전히 proxy 항목별 가중치이고, probe는 그 가중치를 고르기 위한 추가 입력이다."
+        }
+      ]
+    },
+    {
+      "id": "redesign-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "지금 다시 만든다면"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "redesign-code",
+      "type": "code",
+      "language": "text",
+      "code": "문제 입력\n  → block·time·bay profile\n  → ML이 초기 proxy weight λ₀ 예측\n  → layout-aware ALNS\n       · bay move\n       · in-bay order move\n       · orientation / space-time region move\n       · local re-realization\n  → 짧은 probe log로 병목 확인\n  → proxy weight λ₁ 및 operator 비중 갱신\n  → 남은 시간 탐색"
+    },
+    {
+      "id": "redesign-list-1",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "먼저 실제 layout의 중요한 결정을 state와 neighborhood가 표현할 수 있게 만든다."
+        }
+      ]
+    },
+    {
+      "id": "redesign-list-2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "그다음 전체 재배치 대신 local re-realization으로 좋은 구조를 보존하고 평가 비용을 줄인다."
+        }
+      ]
+    },
+    {
+      "id": "redesign-list-3",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "마지막으로 instance profile과 probe 결과를 사용해 repair proxy의 항별 가중치를 조정한다."
+        }
+      ]
+    },
+    {
+      "id": "redesign-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "대회 중에는 반대 순서로 가기 쉬웠다. 구조를 다시 짜는 것은 오래 걸리니 현재 state 안에서 proxy weight와 operator를 계속 조정했다. 그 선택 덕분에 실제 점수는 많이 좋아졌지만, 동시에 bay assignment라는 익숙한 축을 너무 오래 붙잡게 되었다. 결국 대회 후반부에 한계점이 명확하게 보였던 거 같다. ML부터 붙였더라도 같은 neighborhood 안에서 더 영리하게 bay만 골랐을 가능성이 크다."
+        }
+      ]
+    },
+    {
+      "id": "last-title",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "끝나고 나서야 보이는 것"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "last-copy-1",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 구조를 실제로 다시 만들었다고 해서 순위가 반드시 올랐을지는 모른다. 그래도 지금 코드에서 가장 아쉬운 것은 더 좋은 heuristic 하나를 못 넣었다는 점이 아니다."
+        }
+      ]
+    },
+    {
+      "id": "last-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "우리는 layout을 고치고 싶었지만, 오랫동안 bay만 흔들고 있었다. 다음에 비슷한 문제를 만난다면 점수식을 고치기 전에 내가 만든 탐색 공간이 진짜 바꾸고 싶은 것을 표현하고 있는지부터 볼 것 같다."
+        }
+      ]
+    },
+    {
+      "id": "ending",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 글로 OGC2026 이야기는 일단 마무리하려고 한다. 좋은 점수식을 만들면 좋은 해가 나올 것이라 생각했던 시작부터, decoder를 갈아엎고, 좋아 보이는 중간 결과를 버리는 법을 배우고, 마지막에는 탐색 공간 자체의 한계를 보게 되었다. 결과보다 trial & error가 훨씬 길었던 프로젝트였지만 그래서 오히려 남길 만한 이야기가 많았던 것 같다."
+        }
+      ]
+    },
+    {
+      "id": "block-msqan811-2qwhmu",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1pRJhrg4VIFfyPve4j5aM48EvFbba6A0z=w2000",
+      "alt": ""
+    }
+  ]
+}
