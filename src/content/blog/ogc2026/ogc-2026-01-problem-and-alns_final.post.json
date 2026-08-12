@@ -234,7 +234,7 @@
           "text": " 일 보다 늦게 빠져나간다면 패널티를 받는다. 이 패널티를 "
         },
         {
-          "text": "Z1항 = 납기를 넘긴 진출일의 총합(tardiness)",
+          "text": "Z1항 = 늦은 진출일의 총합(tardiness)",
           "annotations": {
             "bold": true
           }
@@ -514,6 +514,24 @@
       "richText": [
         {
           "text": "당시에는 결정 시점에 따라 문제를 나누는 것이 가장 자연스러워 보였다. Phase 1에서는 block마다 bay만 정한다. 이 단계에서는 Z2와 Z3를 빠르게 계산할 수 있고, 시간대가 겹치는 block이 한 bay에 몰리는지도 대략 추정할 수 있다. Phase 2에서는 그 배정을 받아 실제 좌표·방향·진입일·진출일을 만들고 크레인 제약까지 검사한다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msqe4koj-co4fkb",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "즉 알고리즘은 먼저 “어느 block을 어느 bay에 보낼지”를 정한 뒤(Phase 1), 그 결정을 바탕으로 실제 좌표·방향·입출고 시각을 만드는 배치기, 즉 "
+        },
+        {
+          "text": "decoder",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "를 돌린다(Phase 2)"
         }
       ]
     },
