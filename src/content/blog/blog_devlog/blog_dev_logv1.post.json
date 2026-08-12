@@ -1,8 +1,8 @@
 {
   "version": 2,
   "meta": {
-    "slug": "blog_dev_log",
-    "description": "정적 블로그의 구조를 잡고, 블록 에디터와 Google Drive 이미지 업로드를 붙이기까지의 첫 기록.",
+    "slug": "blog_dev_log_v1",
+    "description": "정적 블로그의 구조를 잡고, 블록 에디터와 Google Drive 이미지 업로드를 붙이기까지의 첫 기록",
     "pubDate": "2026-08-05",
     "category": "blog_dev",
     "tags": "astro,blog,editor,google-drive",
@@ -37,10 +37,18 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "조금이라도 봐주시면 감사하겠습니다: https://insidecastle.tistory.com",
+          "text": "조금이라도 봐주시면 감사하겠습니다: ",
           "annotations": {
             "strike": true
           },
+          "textColor": "gray"
+        },
+        {
+          "text": "https://insidecastle.tistory.com",
+          "annotations": {
+            "strike": true
+          },
+          "href": "https://insidecastle.tistory.com/",
           "textColor": "gray"
         }
       ]
@@ -223,7 +231,8 @@
       "id": "block-mseyrf1y-39tx7o",
       "type": "image",
       "src": "https://drive.google.com/uc?export=view&id=17hmpU9vkeDR-PHAQD4qhENf0DzCAHsUn",
-      "alt": ""
+      "alt": "editor 이미지",
+      "isHeroImage": true
     },
     {
       "id": "block-mseyfccg-j2v1r9",

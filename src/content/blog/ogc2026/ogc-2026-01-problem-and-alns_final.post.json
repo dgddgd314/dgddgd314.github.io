@@ -33,7 +33,7 @@
       "backgroundColor": "gray",
       "richText": [
         {
-          "text": "회고는 4편으로 나눠 적을 예정이다. 1부는 문제를 처음 보고 어떤 구조를 택했는지, 2부는 그 구조의 핵심이었던 배치 엔진을 왜 갈아엎었는지, 3부는 제한 시간 안에 반드시 답을 내는 프로그램을 어떻게 만들었는지, 4부는 좋아 보이는 아이디어들을 어떤 기준으로 버렸는지에 대한 이야기다."
+          "text": "회고는 4편으로 나눠 적을 예정이다. 1부는 문제를 처음 보고 어떤 구조를 택했는지, 2부는 그 구조의 핵심이었던 배치 엔진을 왜 갈아엎었는지, 3부는 좋아 보이는 아이디어들을 어떤 기준으로 버렸는지, 4부는 미처 구현하지 못했던 내용들에 대한 이야기다."
         }
       ],
       "icon": "🧭"
@@ -182,7 +182,7 @@
       "id": "block-msijgpb6-3ivin7",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1HFvJ_ZJNsORQuGCWay5bJCPwAjWzVeAL=w2000",
-      "alt": "",
+      "alt": "pack the block, beat the clock 문제 시각화",
       "caption": [
         {
           "text": "하나의 bay 입체 사진. (우리 팀원 분이 자체적으로 만들어주신 visualize 모델이다.)"
@@ -378,7 +378,7 @@
       "id": "block-msilh4gz-l9kz9c",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1Vmeypq5Bz3vy91gSiy58YLufMoZUq0Y6=w2000",
-      "alt": ""
+      "alt": "pack the block, beat the clock 문제 설명"
     },
     {
       "id": "objective-list-2",
