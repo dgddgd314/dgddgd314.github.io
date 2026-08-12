@@ -168,7 +168,7 @@
       "id": "block-msm1vbu7-f322o3",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1otG2R8WGLG6_ypluVrkTB1zmnog-Xwx-=w2000",
-      "alt": "",
+      "alt": "proxy score의 문제 및 배치 문제",
       "isHeroImage": true
     },
     {
@@ -625,7 +625,7 @@
       "id": "global-quote-rewrite",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1hZ1AcV7-X-Ayn11zTTM1Fc45fqtbI8yP=w2000",
-      "alt": ""
+      "alt": "어떻게 decoder는 local minumum에 갇히는가"
     },
     {
       "id": "block-msm1wuha-4yq4jq",

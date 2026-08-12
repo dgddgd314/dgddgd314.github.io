@@ -170,7 +170,7 @@
       "id": "block-msqaxynn-patwt7",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1yv8s50jiv-2PAyxLZZrK9pkAqpbUuwFw=w2000",
-      "alt": ""
+      "alt": "전체 문제 시각화 및 search area"
     },
     {
       "id": "block-msq3k7zk-c39x0g",
@@ -185,7 +185,7 @@
       "id": "block-msqb1k64-xuervd",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1QSmTKtCK9Re_Nq0HGvDneXXDLS8U1NJd=w2000",
-      "alt": "",
+      "alt": "과거 decoder 일 때는 1차원 공간 위를 탐색하는 것 조차 어렵다.",
       "isHeroImage": true
     },
     {
@@ -210,7 +210,7 @@
       "id": "block-msqba44z-8my329",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1uiOo5kNeBQ8s4VFTtmvNYkq-c5oq_7HI=w2000",
-      "alt": ""
+      "alt": "decoder가 업데이트 된 이후에는 새로운 형태의 이웃을 추가해야 한다."
     },
     {
       "id": "block-msq7h0zm-3se9fv",
@@ -282,7 +282,7 @@
       "id": "block-msqbd8pf-oibikt",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1qANwua_a81E8jFEPld5ilw2DWTAYxklY=w2000",
-      "alt": ""
+      "alt": "block을 배치하는 순서가 중요한 이유"
     },
     {
       "id": "inbay-copy-3",
@@ -456,7 +456,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "예를 들어 특정 bay에서 tardiness가 커지는 시간 구간을 하나 고르고, 그 구간에 살아 있는 block과 주변의 빈 공간만 neighborhood로 잡을 수 있다. 그 안에서는 greedy뿐 아니라 작은 beam이나 CP-SAT 같은 비싼 repair를 써도 전체 문제를 푸는 것보다는 훨씬 작다. "
+          "text": "예를 들어 특정 bay에서 블록의 배치가 빡빡한 구간을 하나 고르고, 그 구간 block과 주변의 빈 공간만 neighborhood로 잡을 수 있다. 그 안에서는 greedy뿐 아니라 작은 beam이나 CP-SAT 같은 비싼 repair를 써도 전체 문제를 푸는 것보다는 훨씬 작다. "
         }
       ]
     },
@@ -464,7 +464,7 @@
       "id": "block-msqbq53d-p7isfq",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1qSycD5BmxynOf2GMQ1mVcM4giZQNJwlY=w2000",
-      "alt": ""
+      "alt": "기존 답안을 재사용하는 방법"
     },
     {
       "id": "block-msqbq3tq-kfm338",
@@ -961,7 +961,7 @@
       "id": "block-msqan811-2qwhmu",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1pRJhrg4VIFfyPve4j5aM48EvFbba6A0z=w2000",
-      "alt": ""
+      "alt": "OGC2026 certificate"
     }
   ]
 }
