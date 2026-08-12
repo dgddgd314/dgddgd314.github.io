@@ -2,7 +2,7 @@
   "version": 2,
   "meta": {
     "slug": "ogc-2026-04-what-we-could-not-build",
-    "description": "bay assignment에 갇힌 ALNS neighborhood, 임시방편으로 남은 in-bay 탐색, local re-realization과 instance별 proxy 가중치 예측까지. 대회에서 끝내 구현하지 못한 것들에 대한 마지막 회고.",
+    "description": "bay assignment에 갇힌 ALNS neighborhood, 임시방편으로 남은 in-bay 탐색, 전체를 처음부터 배치하지 않고, 바뀐 block 주변만 다시 배치해 보는 방식과 instance별 proxy 가중치 예측까지. 대회에서 끝내 구현하지 못한 것들에 대한 마지막 회고.",
     "pubDate": "2026-08-11",
     "category": "ogc2026",
     "tags": "ogc2026, optimization, alns, machine-learning",
@@ -289,7 +289,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "시간이 더 있었다면 in-bay를 별도 예외 처리로 두지 않고 state와 neighborhood 안으로 올리고 싶다. bay 번호만 바꾸는 move와 bay 내부 구조를 바꾸는 move가 같은 ALNS 안에서 경쟁하고, 어떤 문제가 어느 축에서 더 자주 개선되는지 adaptive operator selection이 직접 학습하도록 만드는 것이다."
+          "text": "시간이 더 있었다면 in-bay를 별도 예외 처리로 두지 않고 state(ALNS가 기억하고 직접 바꾸는 요소들)와 neighborhood 안으로 올리고 싶다. bay 번호만 바꾸는 move와 bay 내부 구조를 바꾸는 move가 같은 ALNS 안에서 경쟁하고, 어떤 문제가 어느 축에서 더 자주 개선되는지 adaptive operator selection이 직접 학습하도록 만드는 것이다."
         }
       ]
     },
@@ -449,7 +449,7 @@
       "id": "local-code",
       "type": "code",
       "language": "text",
-      "code": "원했던 local re-realization\n\n문제가 있는 bay·시간 구간 선택\n  → 해당 구간과 충돌하는 block만 제거\n  → 나머지 block의 bay·좌표·순서는 고정\n  → 제거된 block의 bay·순서·방향을 함께 repair\n  → 불가능할 때만 영향 범위를 바깥으로 확장"
+      "code": "전체를 처음부터 배치하지 않고, 바뀐 block 주변만 다시 배치해 보는 방식: local re-realization\n\n문제가 있는 bay·시간 구간 선택\n  → 해당 구간과 충돌하는 block만 제거\n  → 나머지 block의 bay·좌표·순서는 고정\n  → 제거된 block의 bay·순서·방향을 함께 repair\n  → 불가능할 때만 영향 범위를 바깥으로 확장"
     },
     {
       "id": "local-copy-2",
@@ -768,7 +768,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "입력 JSON만 보고 계산한 profile은 문제의 난도와 병목이 어디에서 일어나는지 아무래도 완전히 설명하지는 못할 것이다. 그래서 전체 시간의 앞부분을 짧은 probe로 쓰고, 실제 decoder가 만든 동적 profile을 ML 입력에 추가하는 방법이 해결책이 될 수 있을 것이라 생각한다."
+          "text": "입력 JSON만 보고 계산한 profile은 문제의 난도와 병목이 어디에서 일어나는지 아무래도 완전히 설명하지는 못할 것이다. 그래서 전체 시간의 앞부분 동안 실험적으로 계산을 돌려보고, 해당 돌리는 과정의 로그 + 실제 decoder가 만든 동적 profile을 ML 입력에 추가하는 방법이 해결책이 될 수 있을 것이라 생각한다."
         }
       ]
     },
@@ -962,6 +962,108 @@
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1pRJhrg4VIFfyPve4j5aM48EvFbba6A0z=w2000",
       "alt": "OGC2026 certificate"
+    },
+    {
+      "id": "block-msqdmfyc-qarqna",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "참고문헌 (대회 진행할 때)"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-msqdw93v-n8hrmw",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "He, J., Hong, S.-I., & Kim, S.-H. (2024). Quick and situ-aware spatiotemporal scheduling for shipbuilding manufacturing. "
+        },
+        {
+          "text": "Journal of Scheduling",
+          "annotations": {
+            "italic": true
+          }
+        },
+        {
+          "text": ", "
+        },
+        {
+          "text": "27",
+          "annotations": {
+            "italic": true
+          }
+        },
+        {
+          "text": ", 409–422. "
+        },
+        {
+          "text": "https://doi.org/10.1007/s10951-024-00804-1",
+          "href": "https://www.google.com/search?q=https://doi.org/10.1007/s10951-024-00804-1"
+        },
+        {
+          "text": " "
+        }
+      ]
+    },
+    {
+      "id": "block-msqdwcz7-tludwn",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Tahir, M. A., & Raza, S. A. (2004). An optimized collision detection and response algorithm for arbitrarily shaped triangle-mesh objects against height-map based terrain. "
+        },
+        {
+          "text": "Proceedings of international Bhurban conference on applied sciences and technology",
+          "annotations": {
+            "italic": true
+          }
+        },
+        {
+          "text": "."
+        }
+      ]
+    },
+    {
+      "id": "block-msqdzthn-0av5sy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Talbi, E.-G. (2009). "
+        },
+        {
+          "text": "Metaheuristics: From design to implementation",
+          "annotations": {
+            "italic": true
+          }
+        },
+        {
+          "text": ". John Wiley & Sons."
+        }
+      ]
+    },
+    {
+      "id": "block-msqe2alj-j9p9y5",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Weng, Q., Yang, L., Yu, Y., Wang, W., Tang, X., Yang, G., & Zhang, L. (2023). Beware of fragmentation: Scheduling GPU-sharing workloads with fragmentation gradient descent. In "
+        },
+        {
+          "text": "Proceedings of the 2023 USENIX Annual Technical Conference (USENIX ATC 23)",
+          "annotations": {
+            "italic": true
+          }
+        },
+        {
+          "text": " (pp. 995–1008). USENIX Association. "
+        },
+        {
+          "text": "https://www.usenix.org/conference/atc23/presentation/weng",
+          "href": "https://www.usenix.org/conference/atc23/presentation/weng"
+        }
+      ]
     }
   ]
 }

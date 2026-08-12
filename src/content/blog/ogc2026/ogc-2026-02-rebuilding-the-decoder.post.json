@@ -73,7 +73,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "그래서 IFP와 NFP를 만들고, 그렇게 구해진 영역의 접점과 코너에서 후보를 뽑고 각 후보를 점수화했다. 기하학적으로 의미 있는 소수의 후보만 정확하게 보면 된다는 생각이었다.\n"
+          "text": "그래서 IFP(Inner Fit Polygon)와 NFP(No Fit Polygon)를 만들고, 그렇게 구해진 영역의 접점과 코너에서 후보를 뽑고 각 후보를 점수화했다. 기하학적으로 의미 있는 소수의 후보만 정확하게 보면 된다는 생각이었다.\n"
         }
       ]
     },
@@ -87,14 +87,34 @@
       ],
       "children": [
         {
-          "id": "ifp-explanation-title",
-          "type": "heading",
+          "id": "block-msqe7yep-515x60",
+          "type": "paragraph",
           "richText": [
             {
-              "text": " IFP: bay 안에 완전히 들어가는 anchor의 영역"
+              "text": "먼저 anchor의 정의 먼저 짚고 가자: anchor는 block의 위치를 대표하는 기준점이다. orientation마다 달라지며 보통은 block의"
+            },
+            {
+              "text": " 기준 꼭짓점 좌표",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": "라 생각하면 된다. (아래 사진들을 참고하자)"
             }
-          ],
-          "level": 3
+          ]
+        },
+        {
+          "id": "block-msqe7nlu-5ptmvs",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "IFP: bay 안에 완전히 들어가는 anchor의 영역",
+              "annotations": {
+                "bold": true
+              }
+            }
+          ]
         },
         {
           "id": "ifp-explanation-copy-1",
@@ -351,7 +371,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "위와 같이 shapely를 이용한 기하적 계산에서 벗어나 bay와 block을 격자 mask로 바꾸었다. 쉽게 설명하면 그냥 bay를 2D 영역에서 격자로 해석하고, 그 격자 위에 블럭이 조금이라도 올라가 있으면 해당 격자 위에 블럭이 있다고 놓는 방식이다. 말만 들으면 그냥 무식한 방법이다. (그리고 실제로도...)"
+          "text": "위와 같이 shapely를 이용한 기하적 계산에서 벗어나 bay와 block을 격자 mask로 바꾸었다. Full scan은 후보 몇 개만 고르지 않고 격자의 가능한 모든 위치를 훑는 방식이다. Mask는 각 격자 칸의 점유 여부를 담은 2D 배열이다. 쉽게 설명하면 그냥 bay를 2D 영역에서 격자로 해석하고, 그 격자 위에 블럭이 조금이라도 올라가 있으면 해당 격자 위에 블럭이 있다고 놓는 방식이다. 말만 들으면 그냥 무식한 방법이다. (그리고 실제로도...)"
         }
       ]
     },
@@ -610,7 +630,7 @@
           "type": "paragraph",
           "richText": [
             {
-              "text": " 이걸 당시 구조에 적용하려던 이유는 block을 색칠하는 방식 때문이었다. block의 convex hull을 격자로 바꾸면 각 행에서 block이 차지하는 칸은 대부분 하나의 연속된 구간으로 나타난다. (위 그림을 참고하자) "
+              "text": " 이걸 당시 구조에 적용하려던 이유는 block을 색칠하는 방식 때문이었다. block의 convex hull(도형을 감싸는 가장 작은 볼록껍질)을 격자로 바꾸면 각 행에서 block이 차지하는 칸은 대부분 하나의 연속된 구간으로 나타난다. (위 그림을 참고하자) "
             }
           ]
         },
