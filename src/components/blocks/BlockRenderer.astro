@@ -34,6 +34,10 @@ const equationHtml = block.type === "equation"
       strict: "warn",
     })
   : "";
+const rawImageDisplayWidth = block.type === "image" ? Number(block.displayWidth) : Number.NaN;
+const imageDisplayWidth = Number.isFinite(rawImageDisplayWidth) && rawImageDisplayWidth > 0
+  ? Math.round(Math.max(120, Math.min(760, rawImageDisplayWidth)))
+  : undefined;
 ---
 
 <section
@@ -159,7 +163,7 @@ const equationHtml = block.type === "equation"
 
     {
       block.type === "image" && (
-        <figure class="notion-image">
+        <figure class="notion-image" style={imageDisplayWidth ? `--image-display-width: ${imageDisplayWidth}px` : undefined}>
           <img src={toEmbeddableImageUrl(block.src)} alt={block.alt} loading="lazy" />
           {block.caption && <figcaption><RichText value={block.caption} /></figcaption>}
         </figure>
@@ -210,4 +214,3 @@ const equationHtml = block.type === "equation"
     }
   </div>
 </section>
-

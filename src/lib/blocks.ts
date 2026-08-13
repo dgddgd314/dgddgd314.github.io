@@ -83,6 +83,7 @@ export type ImageBlock = BaseBlock & {
   alt: string;
   caption?: RichText[];
   isHeroImage?: boolean;
+  displayWidth?: number;
 };
 
 export type BookmarkBlock = BaseBlock & {

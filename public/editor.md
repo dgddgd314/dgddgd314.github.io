@@ -41,7 +41,7 @@
 - `annotations`에는 `bold`, `italic`, `underline`, `strike`, `code`만 `true`로 넣는다.
 - 색상은 `default`, `gray`, `brown`, `orange`, `yellow`, `green`, `blue`, `purple`, `pink`, `red`, `teal` 중 하나를 권장한다.
 - 블록에는 선택적으로 `backgroundColor`, `textColor`, `children`을 넣을 수 있다. `children`은 하위 블록 배열이다.
-- 이미지 블록에는 선택적으로 `isHeroImage: true`를 넣을 수 있으며, 문서 전체에서 대표 이미지는 하나만 설정할 수 있다.
+- 이미지 블록에는 선택적으로 `isHeroImage: true`를 넣을 수 있으며, 문서 전체에서 대표 이미지는 하나만 설정할 수 있다. `displayWidth`에는 120~760 사이의 표시 너비(px)를 넣는다. 생략하면 기존과 같이 본문 너비를 모두 사용한다.
 - 제목은 문서의 구조를 반영해 H1부터 순서대로 사용한다. 목차가 필요한 문서에는 `table_of_contents` 블록을 제목 뒤에 하나 둔다.
 
 ## 블록 레퍼런스
@@ -67,7 +67,7 @@
 { "id": "divider-1", "type": "divider" }
 { "id": "code-1", "type": "code", "language": "ts", "code": "const answer = 42;" }
 { "id": "math-1", "type": "equation", "equation": "E = mc^2" }
-{ "id": "image-1", "type": "image", "src": "https://example.com/image.webp", "alt": "이미지 설명", "caption": [{ "text": "이미지 캡션" }], "isHeroImage": true }
+{ "id": "image-1", "type": "image", "src": "https://example.com/image.webp", "alt": "이미지 설명", "caption": [{ "text": "이미지 캡션" }], "isHeroImage": true, "displayWidth": 420 }
 { "id": "bookmark-1", "type": "bookmark", "url": "https://example.com", "title": "참고 자료", "description": "링크 설명" }
 ```
 

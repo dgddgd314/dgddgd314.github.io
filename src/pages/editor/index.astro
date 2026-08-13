@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import "../../styles/post-editor.css";
+
+const siteOrigin = Astro.site?.origin ?? "";
 ---
 
 <BaseLayout
@@ -8,7 +10,7 @@ import "../../styles/post-editor.css";
   description="Notion-like local post editor"
   mainClass="editor-main"
 >
-  <div class="post-editor" data-editor>
+  <div class="post-editor" data-editor data-site-origin={siteOrigin}>
     <header class="editor-topbar">
       <a class="editor-brand" href="/blog/" aria-label="Back to blog"><span>dgddgd</span><strong>314</strong></a>
       <div class="editor-actions" aria-label="Editor actions">
