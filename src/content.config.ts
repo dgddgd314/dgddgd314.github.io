@@ -35,6 +35,24 @@ const blogMetaSchema = z.object({
   status: status ?? (badge?.trim() ? [badge.trim()] : []),
 }));
 
+const pageCoverSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("color"),
+    value: z.string().regex(/^#[0-9a-fA-F]{6}$/, "cover color must be a six-digit hex value"),
+    position: z.coerce.number().min(0).max(100).optional(),
+  }),
+  z.object({
+    type: z.literal("image"),
+    value: z.string().trim().min(1),
+    position: z.coerce.number().min(0).max(100).optional(),
+  }),
+]);
+
+const pageAppearanceSchema = z.object({
+  icon: z.string().trim().min(1).optional(),
+  cover: pageCoverSchema.optional(),
+});
+
 type HeroImageCandidate = { src: string };
 
 const collectHeroImages = (blocks: unknown[]): HeroImageCandidate[] => {
@@ -53,7 +71,7 @@ const collectHeroImages = (blocks: unknown[]): HeroImageCandidate[] => {
 const blogSchema = z.object({
   version: z.literal(2),
   meta: blogMetaSchema,
-  page: z.unknown().optional(),
+  page: pageAppearanceSchema.optional(),
   blocks: z.array(z.unknown()),
 }).superRefine(({ blocks }, context) => {
   const heroImages = collectHeroImages(blocks);
