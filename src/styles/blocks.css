@@ -36,7 +36,7 @@
 .block-article {
   width: min(100%, 1066px);
   margin: 0 auto;
-  padding: 36px 24px 80px;
+  padding: 18px 24px 80px;
 }
 
 .block-hero,
@@ -49,8 +49,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 30px;
-  margin-bottom: 34px;
+  min-height: 24px;
+  margin-bottom: 14px;
   color: var(--block-ink-muted);
   font-size: 0.82rem;
   line-height: 1;
@@ -65,6 +65,23 @@
   color: var(--block-ink);
 }
 
+.block-cover {
+  width: 100%;
+  height: 210px;
+  margin-bottom: 26px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--block-surface-muted);
+  box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.06);
+}
+
+.block-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .block-page-icon {
   display: inline-flex;
   align-items: center;
@@ -72,12 +89,25 @@
   width: 78px;
   height: 78px;
   margin-bottom: 14px;
-  border-radius: 12px;
-  color: rgba(55, 53, 47, 0.75);
-  background: var(--block-surface-muted);
-  font-size: 2rem;
-  font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(55, 53, 47, 0.08);
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.block-hero--has-cover.block-hero--has-icon .block-cover {
+  margin-bottom: 0;
+}
+
+.block-hero--has-cover .block-page-icon {
+  position: relative;
+  z-index: 1;
+  margin-top: -39px;
+}
+
+.block-cover--color {
+  border-radius: 0;
+  background: var(--block-cover-color);
+  box-shadow: 0 0 0 100vmax var(--block-cover-color);
+  clip-path: inset(0 -100vmax);
 }
 
 .block-hero h1 {
@@ -567,20 +597,30 @@
 
 @media (max-width: 1080px) {
   .block-article {
-    padding: 24px 18px 64px;
+    padding: 14px 18px 64px;
   }
 
 }
 
 @media (max-width: 680px) {
   .notion-breadcrumb {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
+  }
+
+  .block-cover {
+    height: 150px;
+    margin-bottom: 22px;
+    border-radius: 6px;
   }
 
   .block-page-icon {
     width: 62px;
     height: 62px;
-    font-size: 1.55rem;
+    font-size: 3.1rem;
+  }
+
+  .block-hero--has-cover .block-page-icon {
+    margin-top: -31px;
   }
 
   .block-hero h1 {
