@@ -24,7 +24,7 @@ Posts are JSON documents in `src/content/blog/`. The content collection reads ev
     "pubDate": "2026-07-31",
     "category": "engineering",
     "tags": "astro, notes",
-    "badge": "note"
+    "status": ["done", "note"]
   },
   "page": {},
   "blocks": []

@@ -22,7 +22,7 @@
     "pubDate": "2026-08-04",
     "category": "engineering",
     "tags": "astro, editor",
-    "badge": "draft"
+    "status": ["draft"]
   },
   "page": {
     "icon": "📝",

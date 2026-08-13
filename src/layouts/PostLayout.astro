@@ -13,7 +13,7 @@ export interface Props extends BlogSchema {
   tocItems?: TocItem[];
 }
 
-const { title, description, pubDate, updatedDate, badge, tags = [], blocks = [], tocItems = [] } = Astro.props;
+const { title, description, pubDate, updatedDate, status = [], tags = [], blocks = [], tocItems = [] } = Astro.props;
 dayjs.extend(localizedFormat);
 const displayDate = dayjs(pubDate).format("ll");
 const numberedListStart = (items: Block[], index: number) => {
@@ -57,10 +57,12 @@ const numberedListStart = (items: Block[], index: number) => {
               <dd><time datetime={updatedDate.toISOString()}>{dayjs(updatedDate).format("ll")}</time></dd>
             </div>
           )}
-          {badge && (
+          {status.length > 0 && (
             <div>
               <dt>Status</dt>
-              <dd><span class="block-badge">{badge}</span></dd>
+              <dd class="block-property-status">
+                {status.map((item) => <span class="block-badge">{item}</span>)}
+              </dd>
             </div>
           )}
           {tags.length > 0 && (

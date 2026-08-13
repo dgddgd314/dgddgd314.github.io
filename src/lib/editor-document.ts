@@ -54,7 +54,7 @@ export type EditorMeta = {
   pubDate: string;
   category: string;
   tags: string;
-  badge: string;
+  status: string[];
 };
 
 export type EditorPageAppearance = {

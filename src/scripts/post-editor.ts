@@ -197,11 +197,17 @@ export function initPostEditor(): void {
   const jsonSize = root.querySelector<HTMLElement>("[data-json-size]");
   const toast = root.querySelector<HTMLElement>("[data-toast]");
   const jsonImport = root.querySelector<HTMLInputElement>("[data-json-import]");
+  const statusPicker = root.querySelector<HTMLElement>("[data-status-picker]");
+  const statusTrigger = root.querySelector<HTMLButtonElement>("[data-status-trigger]");
+  const statusChips = root.querySelector<HTMLElement>("[data-status-chips]");
+  const statusInput = root.querySelector<HTMLInputElement>("[data-status-input]");
+  const statusMenu = root.querySelector<HTMLElement>("[data-status-menu]");
 
   const today = new Date().toISOString().slice(0, 10);
   let blocks: EditorBlock[] = [];
   let pageAppearance: EditorPageAppearance = {};
   let emojiData: EmojiRecord[] | null = null;
+  let statuses: string[] = [];
   let emojiGroup = 0;
   let emojiTarget: EmojiTarget = { mode: "", blockId: "" };
   let selectedId = "";
@@ -233,7 +239,7 @@ export function initPostEditor(): void {
         pubDate: today,
         category: "engineering",
         tags: "astro, notion, editor",
-        badge: "draft",
+        status: ["draft"],
       },
       page: {
         icon: "🧠",
@@ -261,16 +267,50 @@ export function initPostEditor(): void {
     };
   }
 
+  function normalizeStatuses(value: unknown): string[] {
+    const values = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
+    return [...new Set(values.map((item) => String(item).trim()).filter(Boolean))];
+  }
+
+  function setStatusMenu(open: boolean): void {
+    if (!statusMenu || !statusTrigger) return;
+    statusMenu.hidden = !open;
+    statusTrigger.setAttribute("aria-expanded", String(open));
+  }
+
+  function renderStatusPicker(): void {
+    if (!statusChips || !statusTrigger) return;
+    statusTrigger.textContent = statuses.length ? `\uC0C1\uD0DC ${statuses.length}\uAC1C \uC120\uD0DD\uB428` : "\uC0C1\uD0DC \uC120\uD0DD";
+    statusChips.replaceChildren(...statuses.map((status) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "status-picker__chip";
+      chip.dataset.statusRemove = status;
+      chip.setAttribute("aria-label", `${status} \uC81C\uAC70`);
+      chip.textContent = `${status} x`;
+      return chip;
+    }));
+    root.querySelectorAll<HTMLButtonElement>("[data-status-option]").forEach((option) => {
+      const selected = statuses.includes(option.dataset.statusOption ?? "");
+      option.setAttribute("aria-pressed", String(selected));
+      option.classList.toggle("is-selected", selected);
+    });
+  }
+
   function getMeta(): EditorMeta {
-    return Object.fromEntries(
-      metaInputs.map((input) => [input.dataset.meta ?? "", input.value.trim()]),
-    ) as EditorMeta;
+    return {
+      ...Object.fromEntries(metaInputs.map((input) => [input.dataset.meta ?? "", input.value.trim()])),
+      status: [...statuses],
+    } as EditorMeta;
   }
 
   function setMeta(meta: Partial<EditorMeta>): void {
-  metaInputs.forEach((input) => {
-      input.value = meta[input.dataset.meta as keyof EditorMeta] ?? "";
+    metaInputs.forEach((input) => {
+      const value = meta[input.dataset.meta as keyof EditorMeta];
+      input.value = typeof value === "string" ? value : "";
     });
+    if (meta.status !== undefined) statuses = normalizeStatuses(meta.status);
+    renderStatusPicker();
   }
 
   function slugify(value: string): string {
@@ -678,7 +718,7 @@ export function initPostEditor(): void {
         pubDate: String(rawMeta.pubDate ?? today),
         category: String(rawMeta.category ?? ""),
         tags: String(rawMeta.tags ?? ""),
-        badge: String(rawMeta.badge ?? ""),
+        status: normalizeStatuses(rawMeta.status ?? rawMeta.badge),
       },
       page: normalizePageAppearance(raw.page),
       blocks: storedBlocks.length ? storedBlocks : fallback.blocks,
@@ -2305,6 +2345,37 @@ export function initPostEditor(): void {
   });
 
   root.querySelectorAll<HTMLButtonElement>("[data-page-action]").forEach((button) => {
+  statusTrigger?.addEventListener("click", () => {
+    setStatusMenu(statusMenu?.hidden ?? true);
+  });
+  root.querySelectorAll<HTMLButtonElement>("[data-status-option]").forEach((option) => {
+    option.addEventListener("click", () => {
+      const value = option.dataset.statusOption ?? "";
+      statuses = statuses.includes(value) ? statuses.filter((status) => status !== value) : [...statuses, value];
+      renderStatusPicker();
+      syncOutput();
+      scheduleSave();
+    });
+  });
+  statusChips?.addEventListener("click", (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>("[data-status-remove]");
+    if (!button) return;
+    statuses = statuses.filter((status) => status !== button.dataset.statusRemove);
+    renderStatusPicker();
+    syncOutput();
+    scheduleSave();
+  });
+  statusInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== ",") return;
+    event.preventDefault();
+    const next = normalizeStatuses(statusInput.value);
+    if (!next.length) return;
+    statuses = normalizeStatuses([...statuses, ...next]);
+    statusInput.value = "";
+    renderStatusPicker();
+    syncOutput();
+    scheduleSave();
+  });
     button.addEventListener("click", () => {
       const action = button.dataset.pageAction;
       if (action === "add-icon") void openEmojiMenu("page", "", button);
@@ -2366,7 +2437,7 @@ export function initPostEditor(): void {
           pubDate: today,
           category: "",
           tags: "",
-          badge: "",
+          status: [],
         });
         pageAppearance = {};
         blocks = [createEditorBlock("paragraph")];
@@ -2409,7 +2480,7 @@ export function initPostEditor(): void {
   document.addEventListener("pointerdown", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (inlineToolbar.contains(target) || colorMenu.contains(target) || slashMenu.contains(target) || emojiMenu.contains(target) || coverMenu.contains(target) || blockContextMenu?.contains(target)) return;
+    if (inlineToolbar.contains(target) || colorMenu.contains(target) || slashMenu.contains(target) || emojiMenu.contains(target) || coverMenu.contains(target) || blockContextMenu?.contains(target) || statusPicker?.contains(target)) return;
     if (!target.closest("[data-rich-root]")) hideInlineToolbar();
     hideColorMenu();
     hideEmojiMenu();
@@ -2417,6 +2488,7 @@ export function initPostEditor(): void {
     hideBlockContextMenu();
   });
   window.addEventListener("beforeunload", persist);
+    setStatusMenu(false);
 
   const state = loadDocument();
   setMeta({ ...state.meta, pubDate: state.meta.pubDate || today });

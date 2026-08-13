@@ -126,7 +126,8 @@
   color: var(--block-ink-soft);
 }
 
-.block-property-tags {
+.block-property-tags,
+.block-property-status {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
