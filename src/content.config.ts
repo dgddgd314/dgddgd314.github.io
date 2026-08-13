@@ -2,6 +2,15 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
+const statusSchema = z
+  .union([z.array(z.string()), z.string()])
+  .transform((value) => (Array.isArray(value) ? value : value.split(","))
+    .map((status) => status.trim())
+    .filter(Boolean))
+  .refine((items) => new Set(items).size === items.length, {
+    message: "status values must be unique",
+  });
+
 const blogMetaSchema = z.object({
   title: z.string(),
   slug: z.string().optional(),
@@ -9,7 +18,8 @@ const blogMetaSchema = z.object({
   pubDate: z.coerce.date(),
   updatedDate: z.coerce.date().optional(),
   heroImage: z.string().optional(),
-  badge: z.string().optional(),
+  status: statusSchema.optional(),
+  badge: z.string().optional(), // Legacy field, accepted for existing posts.
   category: z.string().optional(),
   tags: z
     .union([z.array(z.string()), z.string()])
@@ -20,7 +30,10 @@ const blogMetaSchema = z.object({
       message: "tags must be unique",
     })
     .optional(),
-});
+}).transform(({ badge, status, ...meta }) => ({
+  ...meta,
+  status: status ?? (badge?.trim() ? [badge.trim()] : []),
+}));
 
 type HeroImageCandidate = { src: string };
 

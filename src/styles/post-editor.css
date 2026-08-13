@@ -1387,3 +1387,14 @@
 .editor-toggle__empty { width: 100%; min-height: 30px; border: 0; padding: 4px 0; color: #aeb8c2; background: transparent; font: inherit; text-align: left; cursor: text; }
 .editor-block--drag-inside { border-color: rgba(72, 166, 167, 0.7); background: #eefafa; }
 .editor-block--drag-inside > .editor-toggle { border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(72, 166, 167, 0.22); }
+
+.status-picker { position: relative; display: grid; gap: 6px; }
+.status-picker__trigger { width: 100%; min-height: 32px; border: 1px solid var(--editor-line); border-radius: 6px; padding: 0 9px; color: var(--editor-soft); background: var(--editor-panel); font: inherit; font-size: 0.78rem; text-align: left; cursor: pointer; }
+.status-picker__chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.status-picker__chip { border: 0; border-radius: 999px; padding: 4px 7px; color: var(--editor-blue); background: var(--color-paper-mint); font: inherit; font-size: 0.72rem; font-weight: 720; cursor: pointer; }
+.status-picker__menu { display: grid; gap: 2px; border: 1px solid var(--editor-line); border-radius: 6px; padding: 5px; background: var(--editor-panel); box-shadow: 0 10px 24px rgba(30, 38, 48, 0.11); }
+.status-picker__menu[hidden] { display: none; }
+.status-picker__menu button { min-height: 29px; border: 0; border-radius: 4px; padding: 0 7px; color: var(--editor-soft); background: transparent; font: inherit; font-size: 0.76rem; text-align: left; cursor: pointer; }
+.status-picker__menu button:hover,
+.status-picker__menu button.is-selected { color: var(--editor-blue); background: var(--color-paper-blue); }
+.status-picker__menu button.is-selected::after { content: "?"; float: right; }
