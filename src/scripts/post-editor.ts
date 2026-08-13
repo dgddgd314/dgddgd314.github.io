@@ -1859,6 +1859,7 @@ export function initPostEditor(): void {
     if (!blockContextMenu) return;
     blockContextMenu.innerHTML = `
       <button type="button" data-context-action="color">\uC0C9 \uC124\uC815</button>
+      <button type="button" data-context-action="copy-url">\uC774 \uBE14\uB85D\uC73C\uB85C \uC774\uB3D9\uD558\uB294 URL \uBCF5\uC0AC</button>
       <button type="button" class="block-action-menu__delete" data-context-action="delete">\uBE14\uB85D \uC0AD\uC81C</button>
     `;
     blockContextMenu.dataset.blockId = blockId;
@@ -2084,6 +2085,23 @@ export function initPostEditor(): void {
     showToast(`${label} 복사됨`);
   }
 
+  function getBlockUrl(blockId: string): string {
+    const meta = getMeta();
+    const slug = meta.slug || slugify(meta.title || "untitled");
+    const siteOrigin = root.dataset.siteOrigin || window.location.origin;
+    const url = new URL(`/blog/${encodeURIComponent(slug)}`, siteOrigin);
+    url.hash = blockId;
+    return url.toString();
+  }
+
+  async function copyBlockUrl(blockId: string): Promise<void> {
+    try {
+      await copyText(getBlockUrl(blockId), "\uBE14\uB85D URL");
+    } catch {
+      showToast("URL\uC744 \uBCF5\uC0AC\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.");
+    }
+  }
+
   async function importJsonFile(file: File): Promise<void> {
     try {
       const raw: unknown = JSON.parse(await file.text());
@@ -2257,6 +2275,7 @@ export function initPostEditor(): void {
     const action = (event.target as Element | null)?.closest<HTMLElement>("[data-context-action]")?.dataset.contextAction;
     const blockId = blockContextMenu.dataset.blockId;
     if (action === "color" && blockId) openBlockColorMenu(blockId);
+    if (action === "copy-url" && blockId) void copyBlockUrl(blockId);
     if (action === "delete" && blockId) handleBlockAction(blockId, "remove");
     hideBlockContextMenu();
   });
@@ -2284,4 +2303,3 @@ export function initPostEditor(): void {
   render();
   persist();
 }
-
