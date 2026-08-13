@@ -449,12 +449,16 @@
 }
 
 .notion-image {
-  margin: 4px 0;
+  width: var(--image-display-width, 100%);
+  max-width: 100%;
+  margin: 4px auto;
 }
 
 .notion-image img {
   display: block;
   width: 100%;
+  height: auto;
+  max-width: 100%;
   border-radius: 3px;
   border: 1px solid var(--block-border);
 }

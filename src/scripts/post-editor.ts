@@ -27,6 +27,8 @@ import {
 } from "../lib/editor-document";
 
 const STORAGE_KEY = "dgddgd314.post-editor.v2";
+const IMAGE_MIN_DISPLAY_WIDTH = 120;
+const IMAGE_MAX_DISPLAY_WIDTH = 760;
 
 type Command = {
   target: string;
@@ -140,6 +142,13 @@ function asElement(node: Node | null): HTMLElement | null {
 function clampHeadingLevel(value: unknown): 1 | 2 | 3 {
   const level = Number(value);
   return level === 2 || level === 3 ? level : 1;
+}
+
+function normalizeImageDisplayWidth(value: unknown): number | undefined {
+  if (value === "" || value === null || value === undefined) return undefined;
+  const width = Number(value);
+  if (!Number.isFinite(width) || width <= 0) return undefined;
+  return Math.round(Math.max(IMAGE_MIN_DISPLAY_WIDTH, Math.min(IMAGE_MAX_DISPLAY_WIDTH, width)));
 }
 
 function normalizeText(value = ""): string {
@@ -379,20 +388,33 @@ export function initPostEditor(): void {
 
     if (block.type === "image") {
       const imageSrc = block.src?.trim() ?? "";
-      return `<section class="editor-block editor-block--image${shellClass}" data-id="${block.id}" data-depth="${depth}">
+      const displayWidth = normalizeImageDisplayWidth(block.displayWidth);
+      const widthStyle = displayWidth ? ` style="--editor-image-width: ${displayWidth}px"` : "";
+      return `<section class="editor-block editor-block--image${imageSrc ? "" : " editor-block--image-empty"}${shellClass}" data-id="${block.id}" data-depth="${depth}">
         ${renderControls()}
-        <div class="editor-image-preview${imageSrc ? "" : " is-empty"}" data-image-preview>
-          <img data-image-preview-image src="${escapeHtml(imageSrc)}" alt="${escapeHtml(block.alt ?? "")}"${imageSrc ? "" : " hidden"} />
+        <div class="editor-image-surface">
+          <div class="editor-image-stage" data-image-stage>
+            <div class="editor-image-preview${imageSrc ? "" : " is-empty"}" data-image-preview${widthStyle}>
+              <img data-image-preview-image src="${escapeHtml(imageSrc)}" alt="${escapeHtml(block.alt ?? "")}"${imageSrc ? "" : " hidden"} />
+              <output class="editor-image-size-label" data-image-size-label>${displayWidth ? `${displayWidth}px` : "\uBCF8\uBB38 \uB108\uBE44"}</output>
+              <button type="button" class="editor-image-resize-handle editor-image-resize-handle--left" data-image-resize="left" aria-label="\uC774\uBBF8\uC9C0 \uD06C\uAE30 \uC870\uC808"></button>
+              <button type="button" class="editor-image-resize-handle editor-image-resize-handle--right" data-image-resize="right" aria-label="\uC774\uBBF8\uC9C0 \uD06C\uAE30 \uC870\uC808"></button>
+            </div>
+          </div>
           <div class="editor-image-fields">
-        <label><span>이미지 URL</span><input data-field="src" value="${escapeHtml(block.src ?? "")}" placeholder="/image.webp" /></label>
-        <label><span>대체 텍스트</span><input data-field="alt" value="${escapeHtml(block.alt ?? "")}" placeholder="이미지 설명" /></label>
-        <label><span>캡션</span><input data-field="caption" value="${escapeHtml(getRichTextPlainText(block.caption))}" placeholder="선택 사항" /></label>
-        <div class="drive-image-upload" data-drive-image-actions>
-          <label class="hero-image-toggle">
-            <input type="checkbox" data-field="isHeroImage" ${block.isHeroImage ? "checked" : ""} />
-            <span>\uB300\uD45C \uC774\uBBF8\uC9C0 \uC124\uC815</span>
-          </label>
-        </div>
+            <label><span>이미지 URL</span><input data-field="src" value="${escapeHtml(block.src ?? "")}" placeholder="/image.webp" /></label>
+            <label><span>대체 텍스트</span><textarea data-field="alt" rows="2" placeholder="이미지 설명">${escapeHtml(block.alt ?? "")}</textarea></label>
+            <label><span>캡션</span><textarea data-field="caption" rows="2" placeholder="선택 사항">${escapeHtml(getRichTextPlainText(block.caption))}</textarea></label>
+            <div class="drive-image-upload" data-drive-image-actions>
+              <label class="hero-image-toggle">
+                <input type="checkbox" data-field="isHeroImage" ${block.isHeroImage ? "checked" : ""} />
+                <span>\uB300\uD45C \uC774\uBBF8\uC9C0 \uC124\uC815</span>
+              </label>
+              <div class="editor-image-size-control">
+                <label><span>\uD45C\uC2DC \uD3ED</span><input type="number" inputmode="numeric" data-image-width min="${IMAGE_MIN_DISPLAY_WIDTH}" max="${IMAGE_MAX_DISPLAY_WIDTH}" step="10" value="${displayWidth ?? ""}" placeholder="\uBCF8\uBB38 \uB108\uBE44" /></label>
+                <button type="button" data-image-width-reset>\uBCF8\uBB38 \uB108\uBE44\uB85C \uB418\uB3CC\uB9AC\uAE30</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>`;
@@ -584,6 +606,7 @@ export function initPostEditor(): void {
       options.alt = String(raw.alt ?? "");
       options.caption = normalizeRichText(raw.caption, typeof raw.caption === "string" ? raw.caption : "");
       options.isHeroImage = raw.isHeroImage === true;
+      options.displayWidth = normalizeImageDisplayWidth(raw.displayWidth);
     }
     if (type === "bookmark") {
       options.url = String(raw.url ?? "https://example.com");
@@ -1283,7 +1306,8 @@ export function initPostEditor(): void {
       (block as Record<string, unknown>)[key] = field.value;
     }
     if (block.type === "image" && (key === "src" || key === "alt")) {
-      const preview = field.closest<HTMLElement>("[data-image-preview]");
+      const blockElement = field.closest<HTMLElement>("[data-id]");
+      const preview = blockElement?.querySelector<HTMLElement>("[data-image-preview]");
       const image = preview?.querySelector<HTMLImageElement>("[data-image-preview-image]");
       if (image) {
         if (key === "src") {
@@ -1291,6 +1315,7 @@ export function initPostEditor(): void {
           image.src = src;
           image.hidden = !src;
           preview?.classList.toggle("is-empty", !src);
+          blockElement?.classList.toggle("editor-block--image-empty", !src);
         } else {
           image.alt = block.alt ?? "";
         }
@@ -1901,6 +1926,80 @@ export function initPostEditor(): void {
     scheduleSave();
   }
 
+  function updateImageWidthUI(element: HTMLElement, displayWidth?: number): void {
+    const preview = element.querySelector<HTMLElement>("[data-image-preview]");
+    const label = element.querySelector<HTMLOutputElement>("[data-image-size-label]");
+    const input = element.querySelector<HTMLInputElement>("[data-image-width]");
+    if (displayWidth) {
+      preview?.style.setProperty("--editor-image-width", `${displayWidth}px`);
+      if (label) label.textContent = `${displayWidth}px`;
+      if (input) input.value = String(displayWidth);
+      return;
+    }
+    preview?.style.removeProperty("--editor-image-width");
+    if (label) label.textContent = "\uBCF8\uBB38 \uB108\uBE44";
+    if (input) input.value = "";
+  }
+
+  function setImageDisplayWidth(blockId: string, value: unknown, element?: HTMLElement): void {
+    const block = getBlock(blockId);
+    if (!block || block.type !== "image") return;
+    const displayWidth = normalizeImageDisplayWidth(value);
+    if (displayWidth) block.displayWidth = displayWidth;
+    else delete block.displayWidth;
+    const blockElement = element ?? blocksRoot.querySelector<HTMLElement>(`[data-id="${blockId}"]`);
+    if (blockElement) updateImageWidthUI(blockElement, displayWidth);
+    syncOutput();
+    scheduleSave();
+  }
+
+  function beginImageResize(event: PointerEvent, blockId: string, handle: HTMLButtonElement): void {
+    if (event.button !== 0) return;
+    const block = getBlock(blockId);
+    const element = handle.closest<HTMLElement>("[data-id]");
+    const stage = element?.querySelector<HTMLElement>("[data-image-stage]");
+    const preview = element?.querySelector<HTMLElement>("[data-image-preview]");
+    if (!block || block.type !== "image" || !element || !stage || !preview || preview.classList.contains("is-empty")) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    selectedBlockIds.clear();
+    selectedId = blockId;
+    syncBlockSelectionUI();
+
+    const stageRect = stage.getBoundingClientRect();
+    const centerX = stageRect.left + stageRect.width / 2;
+    const maximum = Math.max(1, Math.min(IMAGE_MAX_DISPLAY_WIDTH, stageRect.width));
+    const minimum = Math.min(IMAGE_MIN_DISPLAY_WIDTH, maximum);
+    let nextWidth = normalizeImageDisplayWidth(block.displayWidth) ?? Math.round(maximum);
+    preview.classList.add("is-resizing");
+    handle.setPointerCapture?.(event.pointerId);
+
+    const update = (clientX: number): void => {
+      nextWidth = Math.round(Math.max(minimum, Math.min(maximum, Math.abs(clientX - centerX) * 2)));
+      updateImageWidthUI(element, nextWidth);
+    };
+
+    const onMove = (moveEvent: PointerEvent): void => {
+      moveEvent.preventDefault();
+      update(moveEvent.clientX);
+    };
+
+    const finish = (): void => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      preview.classList.remove("is-resizing");
+      if (nextWidth >= maximum - 2) setImageDisplayWidth(blockId, undefined, element);
+      else setImageDisplayWidth(blockId, nextWidth, element);
+    };
+
+    update(event.clientX);
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+  }
+
   function bindBlocks(): void {
     blocksRoot.querySelectorAll<HTMLElement>("[data-id]").forEach((element) => {
       const blockId = element.dataset.id;
@@ -1935,6 +2034,28 @@ export function initPostEditor(): void {
       });
       element.querySelectorAll<HTMLButtonElement>("[data-table-action]").forEach((button) => {
         button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") === element) handleTableAction(blockId, button.dataset.tableAction ?? ""); });
+      });
+      element.querySelectorAll<HTMLButtonElement>("[data-image-resize]").forEach((handle) => {
+        handle.addEventListener("pointerdown", (event) => beginImageResize(event, blockId, handle));
+        handle.addEventListener("keydown", (event) => {
+          if (!["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp"].includes(event.key)) return;
+          event.preventDefault();
+          const block = getBlock(blockId);
+          if (!block || block.type !== "image") return;
+          const stageWidth = Math.min(
+            IMAGE_MAX_DISPLAY_WIDTH,
+            element.querySelector<HTMLElement>("[data-image-stage]")?.getBoundingClientRect().width ?? IMAGE_MAX_DISPLAY_WIDTH,
+          );
+          const current = normalizeImageDisplayWidth(block.displayWidth) ?? Math.round(stageWidth);
+          const delta = event.key === "ArrowRight" || event.key === "ArrowUp" ? 10 : -10;
+          setImageDisplayWidth(blockId, current + delta, element);
+        });
+      });
+      element.querySelector<HTMLInputElement>("[data-image-width]")?.addEventListener("change", (event) => {
+        setImageDisplayWidth(blockId, event.currentTarget.value, element);
+      });
+      element.querySelector<HTMLButtonElement>("[data-image-width-reset]")?.addEventListener("click", () => {
+        setImageDisplayWidth(blockId, undefined, element);
       });
       element.querySelectorAll<HTMLButtonElement>("[data-toggle-action]").forEach((button) => button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") !== element) return; const block = getBlock(blockId); if (!block || block.type !== "toggle") return; block.isOpen = !block.isOpen; element.querySelector<HTMLElement>(".editor-toggle__children")?.toggleAttribute("hidden", !block.isOpen); button.setAttribute("aria-expanded", String(block.isOpen)); syncOutput(); scheduleSave(); }));
       element.querySelectorAll<HTMLButtonElement>("[data-toggle-empty]").forEach((button) => button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") !== element) return; const block = getBlock(blockId); if (!block || block.type !== "toggle") return; const child = createEditorBlock("paragraph"); block.children = [child]; block.isOpen = true; render(); window.requestAnimationFrame(() => focusBlock(child.id)); scheduleSave(); }));
@@ -2011,6 +2132,8 @@ export function initPostEditor(): void {
       base.alt = block.alt ?? "";
       if (block.caption?.length) base.caption = normalizeRichText(block.caption);
       if (block.isHeroImage) base.isHeroImage = true;
+      const displayWidth = normalizeImageDisplayWidth(block.displayWidth);
+      if (displayWidth) base.displayWidth = displayWidth;
     }
     if (block.type === "bookmark") {
       base.url = block.url ?? "";

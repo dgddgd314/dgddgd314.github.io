@@ -36,6 +36,7 @@ export type EditorBlock = {
   alt?: string;
   caption?: RichText[];
   isHeroImage?: boolean;
+  displayWidth?: number;
   url?: string;
   title?: string;
   description?: string;
