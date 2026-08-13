@@ -963,6 +963,10 @@
 .editor-block--code,
 .editor-block--image,
 .editor-block--bookmark { border-color: transparent; }
+.editor-block.editor-block--quote {
+  border-left: 3px solid var(--editor-line-strong);
+  padding-left: 14px;
+}
 .editor-block--equation { background: transparent; }
 .editor-block--code { background: var(--editor-soft-panel); }
 .editor-block--image,

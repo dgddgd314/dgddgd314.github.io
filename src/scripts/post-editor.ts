@@ -1843,9 +1843,9 @@ export function initPostEditor(): void {
         : /^\d+\.$/.test(shortcut)
           ? "numbered_list"
           : shortcut === ">"
-            ? "toggle"
+            ? "quote"
             : shortcut === "\""
-              ? "quote"
+              ? "toggle"
               : "";
       if (target) {
         event.preventDefault();
