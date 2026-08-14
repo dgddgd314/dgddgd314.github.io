@@ -1,0 +1,488 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "blog_dev_log_v1_1",
+    "description": "에디터의 이미지 크기 조절, 인용구 표시, Markdown 단축키와 다중 상태 지정 기능을 다듬은 v1.1 개발 기록.",
+    "pubDate": "2026-08-14",
+    "category": "blog_dev",
+    "tags": "astro,blog,editor",
+    "title": "[개발일지] 블로그 에디터 업데이트 (v1.1)",
+    "status": [
+      "done"
+    ]
+  },
+  "page": {
+    "icon": "✍️",
+    "cover": {
+      "type": "color",
+      "value": "#f5f0ff",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "v1에서 블로그와 블록 에디터의 뼈대를 만들었다면, v1.1에서는 실제로 글을 쓰면서 계속 걸리던 부분을 정리했다. "
+        }
+      ]
+    },
+    {
+      "id": "editor-updates",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "에디터에서 달라진 점"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "image-size",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 이미지 크기 조절"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "image-size-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이제 이미지 블록마다 표시 너비를 조절할 수 있다. 본문을 가득 채워 보여주고 싶은 이미지와, 설명 옆에 가볍게 넣고 싶은 이미지를 같은 방식으로 처리하기에는 불편함이 있었기 때문이다. 글의 흐름에 맞춰 이미지가 차지하는 비중을 직접 조절할 수 있게 했다."
+        }
+      ]
+    },
+    {
+      "id": "block-mst3aiov-ai66hb",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1O_uG63AGni26YyEM30K6IQ2n_DP6feVF=w2000",
+      "alt": "",
+      "displayWidth": 627
+    },
+    {
+      "id": "block-mst3lvzb-1xwggk",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 포스팅 내부 블록으로 이동"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-mst3m8wc-5kfbb0",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "나무위키에서 영감을 받은 기능으로, 해당 링크를 통해 들어오면 원래는 제목부터 보이는데 곧바로 해당 블록이 보인다. 이를 통해 포스팅 내부 참조 및 타 포스팅의 중간 부분을 참조할 수 있다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mst3nfbu-ni8aho",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "쓰는 방식은 각 블록 옆에 있는 점 6개를 누르면 나오는 "
+        },
+        {
+          "text": "이 블록으로 이동하는 URL 복사",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "를 통해 링크를 만들 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "block-mst3okgo-atu2i9",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1bFf67WZY2mLxl9oqfSNohiwQqxHuUfKm=w2000",
+      "alt": "",
+      "displayWidth": 323
+    },
+    {
+      "id": "block-mst3q8k1-gatv7m",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이후 해당 링크를 붙여넣으면 된다. 끝! "
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mst3u12c-fn92aq",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "예시로 다음과 같이 만들어보았다: "
+            },
+            {
+              "text": "🧭[OGC2026] layout을 고치고 싶었는데... - 직관적인 비유 및 설명",
+              "annotations": {
+                "bold": true
+              },
+              "href": "https://dgddgd314.github.io/blog/ogc-2026-04-what-we-could-not-build#block-msq24nz4-3zj353"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quote-fix",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[bug fix] 에디터에서 보이지 않던 인용구 수정"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "quote-fix-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "인용구 블록은 실제 포스팅에서는 정상적으로 렌더링됐지만, 정작 editor에서는 보이지 않는 문제가 있었다. 작성하는 화면에서 결과를 확인할 수 없으면 인용구를 쓰기가 꽤 망설여지기 때문에, editor 쪽 렌더링 문제를 수정했다. 이제 작성 중에도 인용구의 모양을 바로 확인할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "shortcuts",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[chore] Markdown과 맞춘 단축키"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "shortcuts-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "블록 변환 단축키도 조금 더 익숙한 Markdown 방식에 맞췄다."
+        }
+      ]
+    },
+    {
+      "id": "shortcuts-quote",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "> + 공백: 인용구"
+        }
+      ]
+    },
+    {
+      "id": "shortcuts-toggle",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "\" + 공백: 토글"
+        }
+      ]
+    },
+    {
+      "id": "shortcuts-closing",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "처음 쓰는 사람도 이미 알고 있는 문법처럼 느끼도록, 앞으로도 가능한 한 익숙한 입력 방식을 따라가려고 한다."
+        }
+      ]
+    },
+    {
+      "id": "post-status",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "글 상태를 여러 개로 관리하기"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "post-status-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "글의 상태는 텍스트를 직접 적는 대신 드롭다운에서 고르고, 한 글에 여러 상태를 함께 붙일 수 있도록 바꿨다. 지금은 아래 네 가지를 기준으로 사용한다."
+        }
+      ]
+    },
+    {
+      "id": "status-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "상태"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "의미"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "done",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "전체 공개가 완료된 글"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "encrypted",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "글 자체는 공개하지만, 내용을 보려면 키가 필요한 글"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "draft",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "아직 작성 중인 미완성 글"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "deprecated",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "과거 포스팅 또는 더는 최신 내용이 아닌 글"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "post-status-example",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "예를 들어 초안을 쓰는 동안에는 draft를 붙이고, 나중에 과거 기록으로 남겨 둘 글에는 deprecated를 함께 붙일 수 있다. "
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mst3cd7l-cqn6nc",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "(참고로 저 태그에 따른 기능이 아직 구현되지는 않았다)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mst3bjme-o4w6ob",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1ONsSwLrnHbnCjPzGjv7uNion1rft97P_=w2000",
+      "alt": "",
+      "displayWidth": 217
+    },
+    {
+      "id": "what-is-next",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "포스팅에서 달라진 점"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "block-mst3cy2u-h8a23b",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[UI/UX] 제목 부분 디자인 변경"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-mst3e1nn-y9oi2m",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존 디자인이 너무 별로고, 에디터에서 고른 색 및 이모지를 포스팅에서 확인할 수 없어 다음과 같이 UI/UX 변경이 진행되었다."
+        }
+      ]
+    },
+    {
+      "id": "block-mst3eiij-udg20x",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1DO_rAsQXcsofUWiRJGWfD4FFqkLaCvul=w2000",
+      "alt": "",
+      "displayWidth": 621
+    },
+    {
+      "id": "block-mst3iqsk-iniae2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존 N이 도대체 무슨 뜻인지 모르겠어서 알아보니 그냥 GPT가 알아서 넣었다고 하더라... 이모지로 대체 및 색을 위쪽에 까는 식으로 진행했다."
+        }
+      ]
+    },
+    {
+      "id": "block-mst3jhfb-3foq2j",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "참고로 커버는 현재 다음과 같이 변경할 수 있다:"
+        }
+      ]
+    },
+    {
+      "id": "block-mst3k2q7-msf5xj",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1xukpaijyFFbcCPS7FUsTGqMUeni8I5eL=w2000",
+      "alt": "",
+      "isHeroImage": true,
+      "displayWidth": 531
+    },
+    {
+      "id": "block-mst3kky9-t5f3ou",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "커버 색상 변경 및 이미지 링크 역시 지원한다. 이미지는 링크를 올리면 포스트 맨 상단에 깔려있게 된다."
+        }
+      ]
+    },
+    {
+      "id": "block-mst3dbrr-hhntw8",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "v1.2에서 해볼 것"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "what-is-next-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이번에 정리한 항목 중 일부는 방향과 UI만 잡아 둔 상태이며, 실제 구현은 다음 업데이트에서 진행할 예정이다. "
+        }
+      ]
+    },
+    {
+      "id": "next-reference",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 암호화 지원"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "next-reference-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "encrypted",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 태그가 붙은 글들에 대해 암호화를 지원할 예정이다. 글을 올리게 되지만, 파라미터로 키를 입력하면 로컬에서 이를 다시 복호화하는 방향이다. (서버리스로 구현하기 빡셀 거 같긴 한데, 일단 한 번 해본다는 마인드)"
+        }
+      ]
+    },
+    {
+      "id": "next-post-page",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[UI/UX] 모바일 환경 지원"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "next-post-page-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "일단 모바일 지원이 가장 급하다. (모바일로 내 블로그를 봤는데 처참하더라)"
+        }
+      ]
+    }
+  ]
+}
