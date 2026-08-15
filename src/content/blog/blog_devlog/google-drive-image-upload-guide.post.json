@@ -5,7 +5,7 @@
     "description": "Google Drive를 이미지 저장소로 사용하는 방법 및 업로드·공개 링크 변환 흐름을 정리.",
     "pubDate": "2026-08-06",
     "category": "blog_dev",
-    "tags": "google-drive,image-upload,astro,storage",
+    "tags": "google-drive,google,image-upload,astro,storage",
     "badge": "done",
     "title": "Google Drive 연동으로 이미지 업로드하기 (v1)"
   },
