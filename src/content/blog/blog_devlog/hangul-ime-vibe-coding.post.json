@@ -1,0 +1,1098 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "hangul-ime-vibe-coding",
+    "description": "Unicode 자모 표현, 초성·형태소 검색과 조사 처리까지 vibe coding이 놓치기 쉬운 한글의 개발 문제를 정리했다.",
+    "pubDate": "2026-08-18",
+    "category": "blog_dev",
+    "tags": "vibe-coding,unicode,frontend,editor,",
+    "title": "ㅇㅗㅏㅇㄱㅗㅏㄴ: Vibe Coding은 왜 한글 입력을 깨뜨릴까",
+    "status": [
+      "done"
+    ]
+  },
+  "page": {
+    "icon": "⌨️",
+    "cover": {
+      "type": "color",
+      "value": "#eef7f3",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "블로그 에디터에 이모지 검색 기능을 추가했다. 표정, 사람, 동물 같은 분류를 고를 수 있고 한국어 태그로 원하는 이모지를 찾는 기능이었다. 영어로 검색했을 때는 별문제가 없었지만, 한글을 입력하는 순간..."
+        }
+      ]
+    },
+    {
+      "id": "broken-input",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "벚꽃(🌸) → ㅂㅓㅈㄲㅗㅊ"
+        }
+      ]
+    },
+    {
+      "id": "block-msyvtdp9-2wk5tp",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/14ztRmd27HvI7cajwWE0H04IczMWeK8LA=w2000",
+      "alt": "이모지 검색창에서 별똥별이 완성형 한글이 아닌 자모로 분리 입력된 화면",
+      "caption": [
+        {
+          "text": "별똥별 입력 시 (v1.1)"
+        }
+      ],
+      "isHeroImage": true,
+      "displayWidth": 457
+    },
+    {
+      "id": "symptom-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "깨진 글자가 아니라 끊긴 입력"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "not-encoding",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "인코딩이 잘못됐다면 보통 알 수 없는 기호, 대체 문자(�), 또는 전혀 다른 글자가 나타난다. 이번 화면에는 정상적인 한글 자모가 입력 순서대로 남아 있다."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis-1",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "영어 검색은 정상적으로 동작했다."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis-2",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "한글은 완성형 음절이 아니라 자음과 모음이 따로 들어갔다."
+        }
+      ]
+    },
+    {
+      "id": "block-msytjlro-hbyh84",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "그렇다면 뭔가 검색 프로세스에 문제가 있어서 글자를 자꾸 끊는 거 아닐까?",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "\n"
+        }
+      ]
+    },
+    {
+      "id": "block-msytkvnk-qrgz4x",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "한글 한 글자는 키 입력 하나로 만들어지지 않는다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "english-vs-hangul",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "입력"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "키 입력 과정"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "확정되는 문자"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "영어 A"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "A 키 한 번"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "A"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "한글 벚"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "ㅂ + ㅓ + ㅈ"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "조합이 끝난 뒤 벚"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "ime-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "한글 키보드는 IME(Input Method Editor)를 통해 여러 키 입력을 하나의 음절로 조합한다. 사용자가 ㅂ, ㅓ, ㅈ을 누르는 동안 브라우저에는 아직 확정되지 않은 조합 상태가 존재한다. 이 과정은 대략 다음 이벤트를 거친다."
+        }
+      ]
+    },
+    {
+      "id": "ime-events",
+      "type": "code",
+      "language": "text",
+      "code": "compositionstart\n  ↓\ncompositionupdate + input(isComposing: true)\n  ↓\ncompositionend\n  ↓\ninput(isComposing: false)"
+    },
+    {
+      "id": "block-msytldf4-d1qhpk",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "문제는 검색 렌더링"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "cause-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이모지 검색창은 입력값이 바뀔 때마다 검색 결과를 다시 그리도록 구현되어 있었다. 문제는 결과 목록만 바꾼 것이 아니라 검색창을 포함한 선택기 전체를 "
+        },
+        {
+          "text": "innerHTML",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "로 교체했다는 점이다. 기존 코드는 대략 이런 구조였다."
+        }
+      ]
+    },
+    {
+      "id": "before-code",
+      "type": "code",
+      "language": "ts",
+      "code": "searchInput.addEventListener('input', (event) => {\n  const input = event.currentTarget;\n\n  // 검색창까지 포함한 선택기 전체를 다시 만든다.\n  renderEmojiPicker(input.value);\n\n  requestAnimationFrame(() => {\n    const nextInput = emojiMenu.querySelector('[data-emoji-search]');\n    nextInput?.focus();\n  });\n});"
+    },
+    {
+      "id": "cause-step-1",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "사용자가 첫 자음을 입력한다."
+        }
+      ]
+    },
+    {
+      "id": "cause-step-2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "input 이벤트가 발생하고 선택기 전체가 다시 렌더링된다."
+        }
+      ]
+    },
+    {
+      "id": "cause-step-3",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "기존 검색창이 삭제되면서 "
+        },
+        {
+          "text": "IME 조합도 끊긴다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "cause-step-4",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "다음 모음과 자음도 같은 과정을 반복하며 각각 확정된다."
+        }
+      ]
+    },
+    {
+      "id": "block-msytmob8-popuh0",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "영어에서는 왜 멀쩡했을까"
+        }
+      ],
+      "level": 3
+    },
+    {
+      "id": "why-english-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "일반적인 영문 입력에서는 키를 누르는 순간 문자가 바로 확정된다. 검색창이 매번 교체되는 구현 자체는 비효율적이지만 조합 중인 상태가 없으니 오류가 나타나지 않는다. 영어 테스트만 통과한 코드는 문제를 드러낼 입력을 만나지 않았던 셈이다. 일본어·중국어 IME나 모바일 예측 입력에서도 비슷한 문제가 생길 수 있을 것이다."
+        }
+      ]
+    },
+    {
+      "id": "fix-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "검색창은 그대로 두고 결과만 바꿨다"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "fix-principle",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "사용자가 입력 중인 DOM 요소는 조합이 끝날 때까지 유지한다."
+        }
+      ]
+    },
+    {
+      "id": "fix-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "선택기를 열 때 검색창과 탭을 한 번만 만들고, 검색어가 바뀌면 이모지 그리드만 갱신하는 식으로 구현해서 문제를 해결했다. 동시에 composition 이벤트를 확인해 한글 조합 중에는 검색을 미루고 조합이 끝난 뒤 완성된 문자열로 결과를 계산했다."
+        }
+      ]
+    },
+    {
+      "id": "after-code",
+      "type": "code",
+      "language": "ts",
+      "code": "let isComposing = false;\n\nsearchInput.addEventListener('compositionstart', () => {\n  isComposing = true;\n});\n\nsearchInput.addEventListener('compositionend', () => {\n  isComposing = false;\n  updateEmojiPickerResults(searchInput.value);\n});\n\nsearchInput.addEventListener('input', (event) => {\n  if (isComposing || event.isComposing) return;\n  updateEmojiPickerResults(searchInput.value);\n});"
+    },
+    {
+      "id": "partial-render-code",
+      "type": "code",
+      "language": "ts",
+      "code": "function updateEmojiPickerResults(query: string): void {\n  const grid = emojiMenu.querySelector('.emoji-picker__grid');\n  if (!grid) return;\n\n  // 검색창은 건드리지 않고 결과만 교체한다.\n  grid.innerHTML = emojiGridMarkup(query);\n}"
+    },
+    {
+      "id": "block-msyvs2la-sa0srx",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1jxz6PH7J48Orzp9dvNkUGAimOdpjwtLm=w2000",
+      "alt": "완성된 한글 검색어를 기준으로 이모지 검색 결과만 갱신하는 내부 로직",
+      "caption": [
+        {
+          "text": "내부 검색 로직도 각 낱자를 보는 게 아니라 완성된 한 글자를 바탕으로 검색하고 있다."
+        }
+      ],
+      "displayWidth": 475
+    },
+    {
+      "id": "vibe-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "Vibe Coding이 놓치는 건 대부분 기능보다 기본 가정"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "vibe-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이번 bugfix도 AI와 대화하면서 빠르게 구현했다. (아마 v1.2에 포함되어 패치될 것이다) 화면을 만들고 데이터를 붙이고 검색과 분류까지 연결하는 속도는 확실히 빨랐다. 하지만 생성된 코드가 암묵적으로 기대한 입력은 영어에 가까웠다. "
+        },
+        {
+          "text": "프롬프트를 한국어로 썼다고 해서 결과물이 자동으로 한글 입력 환경까지 이해하는 것은 아니다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "vibe-responsibility",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "AI가 나쁜 코드를 만들었다는 걸 비난하려는 건 아니다. (한 번만 더 AI 딸깍을 하면 해결이 된다) 사람이 직접 작성했어도 충분히 있을 수 있는 버그다. 다만 vibe coding에서는 구현 속도가 빨라지는 만큼, 코드가 전제로 삼은 사용자와 입력 환경을 검토하지 않은 채 다음 기능으로 넘어가는 일이 잦다. "
+        },
+        {
+          "text": "결국 어떤 입력을 테스트할지 정하고 결과를 책임지는 일은 여전히 개발자의 몫이다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "field-reports-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "개발 중에 다시 만날 수 있는 한글 문제들"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "field-reports-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 버그는 사실 이 프로젝트에서 처음 만난 건 아니다. 기존에 만들었던 앱 환경에서 비슷한 이슈가 있었고 그때 경험을 바탕으로 바로 troubleshooting을 할 수 있었다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msytsvql-h3qxhh",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "개발 중에는 입력 상태, 문자열 표현, 검색 단위, 문장 조립처럼 서로 다른 층위에서 같은 "
+        },
+        {
+          "text": "영어 중심의 ‘한 글자’ 가정이 반복된다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 아래 사례들은 한글이 입력되고, 저장되고, 검색되고, 다시 문장으로 출력되는 과정에서 실제로 만날 수 있는 문제들이다."
+        }
+      ]
+    },
+    {
+      "id": "field-ime-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "화면을 다시 그리는 동안 조합 중인 글자가 사라진다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-msyttqfh-en3g90",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "이건 실제로 VS Code에서 Claude나 Codex를 사용할 때 간간이 발견된다."
+        }
+      ]
+    },
+    {
+      "id": "field-ime-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "사실 이건 vibe coding을 하는 사람에게는 너무 사소해 보일 수 있고, 콘솔 환경이 아직 어색해서 버그인지도 모르고 넘어가곤 한다. 그렇지만 당연히 버그는 버그이고 이미 Claude 쪽에 "
+        },
+        {
+          "text": "이슈",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://github.com/anthropics/claude-code/issues/77401"
+        },
+        {
+          "text": "로 제보되기도 했다. 제보자는 터미널의 redraw/repaint 시점이 IME composition 상태와 충돌하는 것으로 추정했다. 내 이모지 검색창은 DOM을 직접 교체했고 이 사례는 터미널 렌더링에서 발생했다는 차이가 있지만, 화면 갱신이 아직 완성되지 않은 입력 상태를 침범했다는 실패 형태는 거의 같다."
+        }
+      ]
+    },
+    {
+      "id": "composition-replace-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "모아쓰기는 insert가 아니라 같은 자리의 replace다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-msyur8s5-go2xap",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "일부 모바일 에뮬레이터(ex. 블루스택 등)에서 한글 타이핑 시 자주 발견되는 이슈이다. "
+        },
+        {
+          "text": "(난 그래서 nox 씀)",
+          "annotations": {
+            "strike": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "composition-replace-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "조금 더 생각해보면 한글 입력은 단순히 여러 키를 한 글자로 합치는 일만도 아니다. 두벌식으로 ‘한’을 입력하는 동안 화면의 값은 "
+        },
+        {
+          "text": "ㅎ → 하 → 한",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "으로 변한다. ‘하’와 ‘한’은 앞의 문자열 뒤에 새 글자가 붙은 결과가 아니라, IME가 같은 조합 영역을 계속 교체한 결과다."
+        }
+      ]
+    },
+    {
+      "id": "block-msyvr4zg-9sox06",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1Gbgi0vX_9-MAC7PUwi5IYTbnuP0fudax=w2000",
+      "alt": "한글 한 음절이 같은 입력 위치에서 자모 조합에 따라 계속 바뀌는 모습",
+      "displayWidth": 485
+    },
+    {
+      "id": "composition-editor-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 차이는 상태 기반 UI나 리치 텍스트 에디터에서 커진다. 모든 input을 확정된 삽입으로 기록하면 undo history에 ㅎ, 하, 한이 각각 남고, 자동 저장·검색·Markdown 변환도 미완성 음절마다 실행된다. 브라우저가 관리하는 조합 영역과 애플리케이션 state가 서로를 덮어쓰면 마지막 음절이 중복되거나 사라질 수도 있다. 실제로 "
+        },
+        {
+          "text": "ProseMirror 이슈",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://github.com/ProseMirror/prosemirror/issues/1484"
+        },
+        {
+          "text": "에서는 한글을 입력하고 Enter를 눌렀을 때 마지막 글자가 사라지는 현상이 보고됐다. "
+        }
+      ]
+    },
+    {
+      "id": "block-msyv7vb7-266xxg",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그리고 블루스택에서도 이런 느낌으로 "
+        }
+      ]
+    },
+    {
+      "id": "block-msyv6d2i-561tf0",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "ㅎ하한ㄱ그글 ㅇ이입ㄹ려력 ㅇ이ㅅ슈 ",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "(한글 입력 이슈)\n"
+        }
+      ]
+    },
+    {
+      "id": "block-msyv6b88-sw0xjw",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "입력되는데, 이걸 고치는 건 \"블루스택 한글 입력 밀림 현상\" 으로 구글링하면 해결법이 쭉 뜨니 참고하기 바란다."
+        }
+      ]
+    },
+    {
+      "id": "unicode-forms-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "같은 ‘한’이 서로 다른 문자열일 수 있다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-msyv9sx9-qvh16x",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "이건 운영체제가 다른 환경에서 한글 파일명을 비교할 때 가끔 드러나는 문제이기도 하다."
+        }
+      ]
+    },
+    {
+      "id": "unicode-forms-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "입력을 무사히 끝냈다고 문자열 문제가 끝나는 것도 아니다. "
+        },
+        {
+          "text": "Unicode의 한글 FAQ",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://www.unicode.org/faq/korean.html"
+        },
+        {
+          "text": "에 따르면 한글에는 완성형 음절, 초성·중성·종성 위치를 가진 결합 자모, 호환 자모, 반각 자모가 따로 존재한다. 따라서 사용자가 같은 한글로 생각할 수 있는 입력도 내부에서는 다음처럼 표현될 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "unicode-forms-code",
+      "type": "code",
+      "language": "js",
+      "code": "const syllable = '한';                    // U+D55C, 완성형 음절 1개\nconst conjoining = '\\u1112\\u1161\\u11AB'; // 초성 ᄒ + 중성 ᅡ + 종성 ᆫ\nconst compatibility = 'ㅎㅏㄴ';           // 호환 자모 3개\n\nsyllable === conjoining;                    // false\nsyllable === conjoining.normalize('NFC');   // true\nsyllable === compatibility.normalize('NFC');  // false\nsyllable === compatibility.normalize('NFKC'); // true"
+    },
+    {
+      "id": "unicode-normalization-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "NFC는 결합 자모로 표현된 한을 완성형 한으로 맞출 수 있지만, 독립 글자인 호환 자모 ㅎㅏㄴ까지 같은 방식으로 합치지는 않는다. NFKC를 쓰면 호환 자모도 변환할 수 있지만 사용자가 일부러 낱자로 적은 ㄱㅏ까지 가로 바꿀 수 있다. "
+        },
+        {
+          "text": "Unicode 정규화 규칙",
+          "href": "https://unicode.org/reports/tr15/"
+        },
+        {
+          "text": "이 NFC와 NFKC를 구분하는 이유다."
+        }
+      ]
+    },
+    {
+      "id": "block-msyv9gbw-cd14wb",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "NFC, NFKC, NFD에 대한 자세한 설명"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-msyv9hm8-f4rsp2",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "먼저 IME 조합과 Unicode 정규화는 서로 다른 일이다. IME는 키 입력을 받아 사용자의 글자를 만드는 입력 과정이고, 정규화는 이미 만들어진 Unicode 문자열을 비교하기 쉬운 일정한 표현으로 바꾸는 과정이다. 정규화 이름의 C는 composition, D는 decomposition, K는 compatibility를 뜻한다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-nfd",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "NFD(Canonical Decomposition): 정준 분해를 적용한다. 완성형 ‘한’(U+D55C)은 초성 ᄒ, 중성 ᅡ, 종성 ᆫ의 세 코드 포인트로 풀린다. Unicode상 같은 내용으로 취급할 수 있지만 문자열 비교와 length 결과는 달라질 수 있다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-nfc",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "NFC(Canonical Composition): 정준 분해한 뒤 다시 조합할 수 있는 문자를 합친다. 결합 자모 한은 일반적으로 사용하는 완성형 ‘한’으로 합쳐진다. 다만 호환 자모 ㅎㅏㄴ은 정준 동등 관계가 아니므로 NFC만으로는 합쳐지지 않는다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-nfkc",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "NFKC(Compatibility Composition): 호환성 분해까지 적용한 뒤 다시 조합한다. 그래서 호환 자모 ㅎㅏㄴ은 ‘한’이 되고, ①은 1, 전각 Ａ는 A로 바뀐다. 검색에서는 유용할 수 있지만 사용자가 의도한 표기 차이도 사라지므로 원문·ID·코드에 무조건 적용하면 안 된다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-example",
+          "type": "code",
+          "language": "js",
+          "code": "const text = '한';\nconst nfd = text.normalize('NFD');\n\n[...nfd];                         // ['ᄒ', 'ᅡ', 'ᆫ']\nnfd.normalize('NFC');            // '한'\n'ㅎㅏㄴ'.normalize('NFC');       // 'ㅎㅏㄴ'\n'ㅎㅏㄴ'.normalize('NFKC');      // '한'\n'①'.normalize('NFKC');           // '1'"
+        },
+        {
+          "id": "normalization-policy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "실무에서는 원문을 보존하면서 비교·검색용 값을 별도로 만드는 방식이 안전하다. 정준 표현만 맞추려면 NFC를 우선 검토하고, 호환 자모나 전각 문자까지 같은 검색어로 취급하려는 경우에만 NFKC를 선택한다. 어느 형식을 쓰든 저장값과 검색어 양쪽에 같은 정책을 적용하고, 입력창에서는 compositionend 이후에 처리해야 IME 조합을 방해하지 않는다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "choseong-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "‘ㄱㅂ’로 ‘개발’을 찾는 것은 일반 문자열 검색이 아니다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "choseong-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "한국어 검색창에서는 ‘ㄱㅂ’로 ‘개발’을 찾거나 ‘ㅂㄲ’으로 ‘벚꽃’을 찾는 초성 검색이 꽤 자연스럽다. 하지만 완성형 음절 안에 들어 있는 초성은 검색어로 입력한 호환 자모와 같은 문자열이 아니다. 당연히 includes만으로는 찾을 수 없다."
+        }
+      ]
+    },
+    {
+      "id": "choseong-code",
+      "type": "code",
+      "language": "js",
+      "code": "import { getChoseong } from 'es-hangul';\n\n'개발'.includes('ㄱㅂ');  // false\ngetChoseong('개발');     // 'ㄱㅂ'\ngetChoseong('벚꽃');     // 'ㅂㄲ'"
+    },
+    {
+      "id": "choseong-details-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "직접 구현한다면 U+AC00부터 시작하는 완성형 음절의 위치에서 19개 초성 중 하나를 계산해야 한다. 여기에도 함정이 있다. 사용자가 입력한 ㄱ은 호환 자모이고, 분해된 원문에는 초성용 결합 자모 ᄀ이 들어 있을 수 있다. 된소리, 한글과 영문이 섞인 검색어, 완성형 검색과 초성 검색을 동시에 허용하는 경우까지 정책을 정해야 한다. "
+        },
+        {
+          "text": "es-hangul",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://github.com/toss/es-hangul"
+        },
+        {
+          "text": " 같은 라이브러리가 문자열 분해와 별개로 초성 추출 API를 제공하는 이유이기도 하다."
+        }
+      ]
+    },
+    {
+      "id": "morphology-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "공백으로 자른 검색어는 한국어의 단어를 놓친다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-msyuwhkf-e3sd2i",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "디스코드의 검색이 이런 식으로 구현되어 있어서... 정말 못 써먹겠다."
+        }
+      ]
+    },
+    {
+      "id": "morphology-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "초성까지 처리했다고 한국어 검색이 완성되는 것도 아니다. 영어 중심의 간단한 검색기는 보통 공백이나 punctuation으로 token을 나눈다. 하지만 한국어에서는 체언 뒤에 조사가 붙고 용언은 어미에 따라 형태가 달라지며, 여러 명사가 하나의 복합 명사가 된다. "
+        },
+        {
+          "text": "개발자",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": ", "
+        },
+        {
+          "text": "개발자는",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": ", "
+        },
+        {
+          "text": "개발자에게는",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 등은 표면 문자열이 다르지만 한국어 사용자는 "
+        },
+        {
+          "text": "개발자",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "라고 검색했을 때 세 표현이 모두 뜨기를 원한다. 그렇기 때문에 공백을 기준으로 하는 완전 일치 검색만 구현해서는 한국어 검색에 충분하지 않다."
+        }
+      ]
+    },
+    {
+      "id": "block-msywbr4o-4cw7go",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1n43Cb13PmNnQjhwJL5681Tnul7bx22V0=w2000",
+      "alt": "디스코드에서 서울대와 서울대입구 검색 결과 수가 기대와 다르게 나타난 화면",
+      "caption": [
+        {
+          "text": "상식적으로 서울대입구에는 서울대가 포함되기 때문에 검색 결과가 더 많아야 할 것 같은데..."
+        }
+      ],
+      "displayWidth": 725
+    },
+    {
+      "id": "morphology-code",
+      "type": "code",
+      "language": "text",
+      "code": "공백으로 본 값:  개발자는  /  검색결과를\n검색에 필요한 단위: 개발자 + 는  /  검색 + 결과 + 를"
+    },
+    {
+      "id": "morphology-vibe-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Vibe coding에서 ‘검색 기능을 만들어줘’라고 하면 대개 includes, lowercase, 공백 분리 정도의 구현이 먼저 나온다. 작은 목록에서는 충분하지만 "
+        },
+        {
+          "text": "데이터가 늘어나면 같은 개념을 가진 한국어 단어가 서로 다른 token으로 갈라진다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 이때 버그는 검색 결과가 완전히 망가지는 형태가 아니라 특정 조사와 복합어에서만 조용히 누락되는 형태라 더 늦게 발견된다."
+        }
+      ],
+      "children": [
+        {
+          "id": "morphology-nori-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "Elasticsearch의 한국어 분석기 Nori",
+              "annotations": {
+                "bold": true
+              },
+              "href": "https://www.elastic.co/docs/reference/elasticsearch/plugins/analysis-nori-tokenizer"
+            },
+            {
+              "text": "가 형태소 정보와 사용자 사전을 사용하고, 복합어를 원형 그대로 둘지 분해할지 none·discard·mixed 모드로 나누는 것도 검색 목적에 따라 정답이 달라지기 때문이다. 예를 들어 사용자 사전에 ‘세종시 → 세종 시’ 분해를 정의하고 mixed를 쓰면 세종시를 보존하면서 세종과 시로도 검색할 수 있다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "josa-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "변수로 만든 문장은 받침에 따라 틀린다"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "josa-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "한글의 구조는 입력과 검색뿐 아니라 출력 코드에도 들어온다. 삭제 확인창이나 알림 문구를 변수로 조립할 때 영어 문장처럼 명사 뒤에 고정된 문자열을 붙이면 바로 어색한 문장이 만들어진다."
+        }
+      ]
+    },
+    {
+      "id": "josa-code",
+      "type": "code",
+      "language": "js",
+      "code": "import { josa } from 'es-hangul';\n\nconst target = '폴더';\n\ntarget + '을 삭제했습니다.';            // '폴더을 삭제했습니다.'\njosa(target, '을/를') + ' 삭제했습니다.'; // '폴더를 삭제했습니다.'"
+    },
+    {
+      "id": "josa-rules-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "완성형 한글이라면 마지막 음절에서 종성 여부를 계산해 을/를, 이/가, 은/는, 과/와를 고를 수 있다. 하지만 으로/로는 ㄹ 받침일 때도 ‘로’를 사용하는 예외가 있고, 영문과 숫자는 철자가 아니라 실제 읽는 소리에 따라 달라진다. "
+        },
+        {
+          "text": "API",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 ‘에이피아이’라 "
+        },
+        {
+          "text": "API를",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": ", "
+        },
+        {
+          "text": "URL",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "은 ‘유알엘’이라 "
+        },
+        {
+          "text": "URL을",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "이 자연스럽다. 2는 ‘이’라 2를, 8은 ‘팔’이라 8을이 된다."
+        }
+      ],
+      "children": [
+        {
+          "id": "josa-library-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "es-hangul의 조사 함수",
+              "annotations": {
+                "bold": true
+              },
+              "href": "https://github.com/toss/es-hangul#사용-예시"
+            },
+            {
+              "text": "처럼 검증된 규칙을 사용하거나, 임의의 영문·숫자가 들어오는 화면이라면 ‘삭제할 항목: {target}’처럼 조사 선택이 필요 없는 문장으로 다시 설계하는 편이 안전하다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stages-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "\"한글을(를) 지원한다\""
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "stages-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이번에 찾아본 문제들을 묶어보면 공통점이 보인다. 프로그램은 흔히 key 하나, character 하나, 검색 token 하나, 화면의 단어 하나가 비슷한 단위라고 가정한다. 단순한 영문 입력에서는 이 가정의 문제가 잘 드러나지 않지만, 모아쓰기가 일어나는 글자, 특히 한글에서는 같은 음절이 처리 단계에 따라 전혀 다른 단위가 된다."
+        }
+      ]
+    },
+    {
+      "id": "stages-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "단계"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "실제로 다뤄야 하는 단위"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "놓쳤을 때 나타나는 문제"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "입력"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "계속 교체되는 조합 영역"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "자모 분리, 중복 입력, 잘못된 undo"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "저장·비교"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "완성형·결합 자모·호환 자모"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "동일한 한글의 검색·중복 검사 실패"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "검색"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "초성·형태소·복합어"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "관련 결과의 조용한 누락"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "출력"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "받침과 실제 발음"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "변수에 따라 틀리는 조사"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "closing-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "Vibe coding으로 구현 속도는 빨라졌지만, AI가 생성한 코드가 전제로 삼은 문자·단어·문장의 단위까지 자동으로 검증되지는 않았다. 결국 내가 사용하는 언어로 직접 입력하고, 찾고, 문장을 만들어보는 QA는 여전히 대체되지 않는다."
+        }
+      ]
+    }
+  ]
+}

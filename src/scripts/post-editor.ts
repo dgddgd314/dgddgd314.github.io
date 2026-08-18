@@ -938,9 +938,25 @@ export function initPostEditor(): void {
     return emojiData.filter((record) => record.group === emojiGroup).slice(0, 240);
   }
 
-  function renderEmojiPicker(query = ""): void {
+  function emojiGridMarkup(query: string): string {
     const records = visibleEmojis(query);
     const emptyLabel = query ? "검색 결과가 없습니다." : "최근 사용한 이모지가 없습니다.";
+    return records.length
+      ? records.map((record) => `<button type="button" class="emoji-picker__emoji" data-emoji-value="${encodeURIComponent(record.emoji)}" title="${escapeHtml(record.annotation)}" aria-label="${escapeHtml(record.annotation)}">${record.emoji}</button>`).join("")
+      : `<p class="emoji-picker__empty">${emptyLabel}</p>`;
+  }
+
+  function updateEmojiPickerResults(query: string): void {
+    const grid = emojiMenu.querySelector<HTMLElement>(".emoji-picker__grid");
+    if (!grid) return;
+
+    grid.innerHTML = emojiGridMarkup(query);
+    emojiMenu.querySelectorAll<HTMLButtonElement>("[data-emoji-group]").forEach((button) => {
+      button.classList.toggle("is-active", !query && Number(button.dataset.emojiGroup) === emojiGroup);
+    });
+  }
+
+  function renderEmojiPicker(query = ""): void {
     emojiMenu.innerHTML = `<section class="emoji-picker" aria-label="이모지 선택기">
       <div class="emoji-picker__search-row">
         <input type="search" data-emoji-search value="${escapeHtml(query)}" placeholder="이모지 검색" aria-label="이모지 검색" autocomplete="off" />
@@ -950,27 +966,41 @@ export function initPostEditor(): void {
         ${EMOJI_GROUPS.map((group) => `<button type="button" class="emoji-picker__tab${emojiGroup === group.id && !query ? " is-active" : ""}" data-emoji-group="${group.id}" title="${group.label}">${group.icon}</button>`).join("")}
       </div>
       <div class="emoji-picker__grid" role="grid">
-        ${records.length ? records.map((record) => `<button type="button" class="emoji-picker__emoji" data-emoji-value="${encodeURIComponent(record.emoji)}" title="${escapeHtml(record.annotation)}" aria-label="${escapeHtml(record.annotation)}">${record.emoji}</button>`).join("") : `<p class="emoji-picker__empty">${emptyLabel}</p>`}
+        ${emojiGridMarkup(query)}
       </div>
     </section>`;
 
-    emojiMenu.querySelector<HTMLInputElement>("[data-emoji-search]")?.addEventListener("input", (event) => {
-      const input = event.currentTarget;
-      renderEmojiPicker(input.value);
-      window.requestAnimationFrame(() => {
-        const nextInput = emojiMenu.querySelector<HTMLInputElement>("[data-emoji-search]");
-        nextInput?.focus();
-        nextInput?.setSelectionRange(input.value.length, input.value.length);
-      });
+    const picker = emojiMenu.querySelector<HTMLElement>(".emoji-picker");
+    const searchInput = emojiMenu.querySelector<HTMLInputElement>("[data-emoji-search]");
+    if (!picker || !searchInput) return;
+
+    let isComposing = false;
+    searchInput.addEventListener("compositionstart", () => {
+      isComposing = true;
     });
-    emojiMenu.querySelectorAll<HTMLButtonElement>("[data-emoji-group]").forEach((button) => {
-      button.addEventListener("click", () => {
-        emojiGroup = Number(button.dataset.emojiGroup);
-        renderEmojiPicker();
-      });
+    searchInput.addEventListener("compositionend", () => {
+      isComposing = false;
+      updateEmojiPickerResults(searchInput.value);
     });
-    emojiMenu.querySelectorAll<HTMLButtonElement>("[data-emoji-value]").forEach((button) => {
-      button.addEventListener("click", () => applyEmoji(decodeURIComponent(button.dataset.emojiValue ?? "")));
+    searchInput.addEventListener("input", (event) => {
+      if (isComposing || (event as InputEvent).isComposing) return;
+      updateEmojiPickerResults(searchInput.value);
+    });
+
+    picker.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const groupButton = target.closest<HTMLButtonElement>("[data-emoji-group]");
+      if (groupButton) {
+        emojiGroup = Number(groupButton.dataset.emojiGroup);
+        searchInput.value = "";
+        updateEmojiPickerResults("");
+        return;
+      }
+
+      const emojiButton = target.closest<HTMLButtonElement>("[data-emoji-value]");
+      if (emojiButton) applyEmoji(decodeURIComponent(emojiButton.dataset.emojiValue ?? ""));
     });
   }
 
