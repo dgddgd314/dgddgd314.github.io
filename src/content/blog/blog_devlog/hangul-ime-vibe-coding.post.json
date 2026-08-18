@@ -2,13 +2,13 @@
   "version": 2,
   "meta": {
     "slug": "hangul-ime-vibe-coding",
-    "description": "이모지 검색창의 한글 자모 분리 버그에서 시작해 모아쓰기, Unicode 자모 표현, 초성·형태소 검색과 조사 처리까지 vibe coding이 놓치기 쉬운 한글의 개발 문제를 정리했다.",
+    "description": "Unicode 자모 표현, 초성·형태소 검색과 조사 처리까지 vibe coding이 놓치기 쉬운 한글의 개발 문제를 정리했다.",
     "pubDate": "2026-08-18",
     "category": "blog_dev",
-    "tags": "vibe-coding,ime,hangul,unicode,frontend,editor,debugging",
+    "tags": "vibe-coding,unicode,frontend,editor,",
     "title": "ㅇㅗㅏㅇㄱㅗㅏㄴ: Vibe Coding은 왜 한글 입력을 깨뜨릴까",
     "status": [
-      "draft"
+      "done"
     ]
   },
   "page": {
@@ -46,12 +46,13 @@
       "id": "block-msyvtdp9-2wk5tp",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/14ztRmd27HvI7cajwWE0H04IczMWeK8LA=w2000",
-      "alt": "",
+      "alt": "이모지 검색창에서 별똥별이 완성형 한글이 아닌 자모로 분리 입력된 화면",
       "caption": [
         {
           "text": "별똥별 입력 시 (v1.1)"
         }
       ],
+      "isHeroImage": true,
       "displayWidth": 457
     },
     {
@@ -69,7 +70,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "인코딩이 잘못됐다면 보통 알 수 없는 기호, 대체 문자( ), 또는 전혀 다른 글자가 나타난다. 이번 화면에는 정상적인 한글 자모가 입력 순서대로 남아 있다."
+          "text": "인코딩이 잘못됐다면 보통 알 수 없는 기호, 대체 문자(�), 또는 전혀 다른 글자가 나타난다. 이번 화면에는 정상적인 한글 자모가 입력 순서대로 남아 있다."
         }
       ]
     },
@@ -279,7 +280,7 @@
       "type": "numbered_list",
       "richText": [
         {
-          "text": "다음 모음과 자음도 같은 과정을 반복하며 각각 확정된다.\n"
+          "text": "다음 모음과 자음도 같은 과정을 반복하며 각각 확정된다."
         }
       ]
     },
@@ -346,10 +347,10 @@
       "id": "block-msyvs2la-sa0srx",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1jxz6PH7J48Orzp9dvNkUGAimOdpjwtLm=w2000",
-      "alt": "",
+      "alt": "완성된 한글 검색어를 기준으로 이모지 검색 결과만 갱신하는 내부 로직",
       "caption": [
         {
-          "text": "내부 검색 로직도 각 낱자를 보는게 아니라 완성된 한 글자를 바탕으로 검색하고 있다."
+          "text": "내부 검색 로직도 각 낱자를 보는 게 아니라 완성된 한 글자를 바탕으로 검색하고 있다."
         }
       ],
       "displayWidth": 475
@@ -409,7 +410,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "이 버그는 사실 이 프로젝트에서 처음 만난 건 아니다. 기존에 만들었던 앱 환경에서 비슷한 이슈가 있었고 그 때 경험을 바탕으로 바로 troubleshooting을 할 수 있었다. "
+          "text": "이 버그는 사실 이 프로젝트에서 처음 만난 건 아니다. 기존에 만들었던 앱 환경에서 비슷한 이슈가 있었고 그때 경험을 바탕으로 바로 troubleshooting을 할 수 있었다. "
         }
       ]
     },
@@ -436,7 +437,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "화면을 다시 그리는 동안 조합 중인 글자가 사라진다 \n"
+          "text": "화면을 다시 그리는 동안 조합 중인 글자가 사라진다"
         }
       ],
       "level": 2
@@ -446,7 +447,7 @@
       "type": "quote",
       "richText": [
         {
-          "text": "이건 실제로 VSC에서 claude나 codex를 사용할 시 간간히 발견된다"
+          "text": "이건 실제로 VS Code에서 Claude나 Codex를 사용할 때 간간이 발견된다."
         }
       ]
     },
@@ -455,7 +456,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "사실 이건 vibe coding을 하는 사람들이라면 어쩌면 너무 사소하기도 하고, console이 아직은 어색해서 버그인지도 모르고 넘어가곤 한다. 그렇지만 당연히 버그는 버그이고 이미 Claude 쪽에 "
+          "text": "사실 이건 vibe coding을 하는 사람에게는 너무 사소해 보일 수 있고, 콘솔 환경이 아직 어색해서 버그인지도 모르고 넘어가곤 한다. 그렇지만 당연히 버그는 버그이고 이미 Claude 쪽에 "
         },
         {
           "text": "이슈",
@@ -516,7 +517,7 @@
       "id": "block-msyvr4zg-9sox06",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1Gbgi0vX_9-MAC7PUwi5IYTbnuP0fudax=w2000",
-      "alt": "",
+      "alt": "한글 한 음절이 같은 입력 위치에서 자모 조합에 따라 계속 바뀌는 모습",
       "displayWidth": 485
     },
     {
@@ -586,7 +587,7 @@
       "type": "quote",
       "richText": [
         {
-          "text": "이건 인터넷에서 파일을 다운받을 때 가끔 발생하는 문제이기도 하다."
+          "text": "이건 운영체제가 다른 환경에서 한글 파일명을 비교할 때 가끔 드러나는 문제이기도 하다."
         }
       ]
     },
@@ -605,7 +606,7 @@
           "href": "https://www.unicode.org/faq/korean.html"
         },
         {
-          "text": "에 따르면 한글에는 완성형 음절, 초성·중성·종성 위치를 가진 결합 자모, 호환 자모, 반각 자모가 따로 존재한다. 따라서 화면에 비슷하게 보이는 ‘한’도 내부에서는 다음처럼 표현될 수 있다."
+          "text": "에 따르면 한글에는 완성형 음절, 초성·중성·종성 위치를 가진 결합 자모, 호환 자모, 반각 자모가 따로 존재한다. 따라서 사용자가 같은 한글로 생각할 수 있는 입력도 내부에서는 다음처럼 표현될 수 있다."
         }
       ]
     },
@@ -627,7 +628,7 @@
           "href": "https://unicode.org/reports/tr15/"
         },
         {
-          "text": "이 NFC와 NFKC를 구분하는 이유다.\n"
+          "text": "이 NFC와 NFKC를 구분하는 이유다."
         }
       ]
     },
@@ -636,14 +637,60 @@
       "type": "toggle",
       "richText": [
         {
-          "text": "NFC, NFKC, NFD에 대한 자세한 설명\n"
+          "text": "NFC, NFKC, NFD에 대한 자세한 설명"
         }
       ],
       "children": [
         {
           "id": "block-msyv9hm8-f4rsp2",
           "type": "paragraph",
-          "richText": []
+          "richText": [
+            {
+              "text": "먼저 IME 조합과 Unicode 정규화는 서로 다른 일이다. IME는 키 입력을 받아 사용자의 글자를 만드는 입력 과정이고, 정규화는 이미 만들어진 Unicode 문자열을 비교하기 쉬운 일정한 표현으로 바꾸는 과정이다. 정규화 이름의 C는 composition, D는 decomposition, K는 compatibility를 뜻한다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-nfd",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "NFD(Canonical Decomposition): 정준 분해를 적용한다. 완성형 ‘한’(U+D55C)은 초성 ᄒ, 중성 ᅡ, 종성 ᆫ의 세 코드 포인트로 풀린다. Unicode상 같은 내용으로 취급할 수 있지만 문자열 비교와 length 결과는 달라질 수 있다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-nfc",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "NFC(Canonical Composition): 정준 분해한 뒤 다시 조합할 수 있는 문자를 합친다. 결합 자모 한은 일반적으로 사용하는 완성형 ‘한’으로 합쳐진다. 다만 호환 자모 ㅎㅏㄴ은 정준 동등 관계가 아니므로 NFC만으로는 합쳐지지 않는다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-nfkc",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "NFKC(Compatibility Composition): 호환성 분해까지 적용한 뒤 다시 조합한다. 그래서 호환 자모 ㅎㅏㄴ은 ‘한’이 되고, ①은 1, 전각 Ａ는 A로 바뀐다. 검색에서는 유용할 수 있지만 사용자가 의도한 표기 차이도 사라지므로 원문·ID·코드에 무조건 적용하면 안 된다."
+            }
+          ]
+        },
+        {
+          "id": "normalization-example",
+          "type": "code",
+          "language": "js",
+          "code": "const text = '한';\nconst nfd = text.normalize('NFD');\n\n[...nfd];                         // ['ᄒ', 'ᅡ', 'ᆫ']\nnfd.normalize('NFC');            // '한'\n'ㅎㅏㄴ'.normalize('NFC');       // 'ㅎㅏㄴ'\n'ㅎㅏㄴ'.normalize('NFKC');      // '한'\n'①'.normalize('NFKC');           // '1'"
+        },
+        {
+          "id": "normalization-policy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "실무에서는 원문을 보존하면서 비교·검색용 값을 별도로 만드는 방식이 안전하다. 정준 표현만 맞추려면 NFC를 우선 검토하고, 호환 자모나 전각 문자까지 같은 검색어로 취급하려는 경우에만 NFKC를 선택한다. 어느 형식을 쓰든 저장값과 검색어 양쪽에 같은 정책을 적용하고, 입력창에서는 compositionend 이후에 처리해야 IME 조합을 방해하지 않는다."
+            }
+          ]
         }
       ]
     },
@@ -706,7 +753,7 @@
       "type": "quote",
       "richText": [
         {
-          "text": "디스코드의 검색이 이런 식으로 구현되어 있어서... 정말 못써먹겠다."
+          "text": "디스코드의 검색이 이런 식으로 구현되어 있어서... 정말 못 써먹겠다."
         }
       ]
     },
@@ -715,7 +762,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "초성까지 처리했다고 한국어 검색이 완성되는 것도 아니다. 영어 중심의 간단한 검색기는 보통 공백이나 punctuation으로 token을 나눈다. 하지만 한국어에서는 명사 뒤에 조사와 어미가 붙고, 여러 명사가 하나의 복합 명사가 된다. "
+          "text": "초성까지 처리했다고 한국어 검색이 완성되는 것도 아니다. 영어 중심의 간단한 검색기는 보통 공백이나 punctuation으로 token을 나눈다. 하지만 한국어에서는 체언 뒤에 조사가 붙고 용언은 어미에 따라 형태가 달라지며, 여러 명사가 하나의 복합 명사가 된다. "
         },
         {
           "text": "개발자",
@@ -751,7 +798,7 @@
           }
         },
         {
-          "text": "라고 검색했을 때 저 3개가 모두 뜨기를 원한다. 그렇기 때문에 단순하게 공백을 기준으로 하는 full-matching으로만 검색 기능을 구현할 경우 한국어에는 적절하지 않다."
+          "text": "라고 검색했을 때 세 표현이 모두 뜨기를 원한다. 그렇기 때문에 공백을 기준으로 하는 완전 일치 검색만 구현해서는 한국어 검색에 충분하지 않다."
         }
       ]
     },
@@ -759,10 +806,10 @@
       "id": "block-msywbr4o-4cw7go",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1n43Cb13PmNnQjhwJL5681Tnul7bx22V0=w2000",
-      "alt": "",
+      "alt": "디스코드에서 서울대와 서울대입구 검색 결과 수가 기대와 다르게 나타난 화면",
       "caption": [
         {
-          "text": "상식적으로 서울대입구에는 서울대가 포함되기 때문에 검색 결과가 더 많아야 할 거 같은데..."
+          "text": "상식적으로 서울대입구에는 서울대가 포함되기 때문에 검색 결과가 더 많아야 할 것 같은데..."
         }
       ],
       "displayWidth": 725
@@ -814,7 +861,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "변수로 만든 문장은 받침 앞에서 틀린다"
+          "text": "변수로 만든 문장은 받침에 따라 틀린다"
         }
       ],
       "level": 2
@@ -912,7 +959,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "이번에 찾아본 문제들을 묶어보면 공통점이 보인다. 프로그램은 흔히 key 하나, character 하나, 검색 token 하나, 화면의 단어 하나가 비슷한 단위라고 가정한다. 이건 영어권 글자에서는 적절할지 몰라도, 모아쓰기가 일어나는 글자, 특히 한글에서는 같은 음절이 처리 단계에 따라 전혀 다른 단위가 된다."
+          "text": "이번에 찾아본 문제들을 묶어보면 공통점이 보인다. 프로그램은 흔히 key 하나, character 하나, 검색 token 하나, 화면의 단어 하나가 비슷한 단위라고 가정한다. 단순한 영문 입력에서는 이 가정의 문제가 잘 드러나지 않지만, 모아쓰기가 일어나는 글자, 특히 한글에서는 같은 음절이 처리 단계에 따라 전혀 다른 단위가 된다."
         }
       ]
     },
