@@ -236,9 +236,9 @@ const networkLinks = Array.from(edgeMap.values());
             </div>
           </div>
 
-          <div class="post-grid" data-layout-view="bento" data-post-grid>
+          <div class="post-grid" data-layout-view="bento" data-post-grid data-bento-count={Math.min(postsForPage.length, 5)}>
             {postsForPage.map(({ post, index, tags, tagList, categoryValue, key, url }) => (
-              <article class:list={["post-card", index === 0 && !initialTagValue && "post-card--feature"]} data-post-card data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue}>
+              <article class:list={["post-card", index === 0 && !initialTagValue && "post-card--feature"]} hidden={index >= 5} data-post-card data-bento-slot={index < 5 ? index + 1 : undefined} data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue}>
                 <a href={url} class="post-card__media" aria-label={post.data.title}>
                   {post.data.heroImage ? (
                     <img src={toEmbeddableImageUrl(post.data.heroImage)} alt="" loading="lazy" />
@@ -348,14 +348,9 @@ const networkLinks = Array.from(edgeMap.values());
   </div>
 
   <script>
-    let disposeBlogArchive = () => {};
-
     function initBlogArchive() {
       const root = document.querySelector("[data-blog-archive]");
       if (!root || root.dataset.blogArchiveInitialized === "true") return;
-
-      disposeBlogArchive();
-      root.dataset.blogArchiveInitialized = "true";
 
       const input = root?.querySelector("[data-post-search]");
       const cards = Array.from(root?.querySelectorAll("[data-post-card]") ?? []);
@@ -607,18 +602,12 @@ const networkLinks = Array.from(edgeMap.values());
       };
       window.addEventListener("resize", handleResize);
 
-      disposeBlogArchive = () => {
-        window.removeEventListener("resize", handleResize);
-        listObserver?.disconnect();
-      };
-
       setView(activeView);
       setLayout("bento");
       applyFilters();
+      root.dataset.blogArchiveInitialized = "true";
     }
 
-    document.addEventListener("astro:before-swap", () => disposeBlogArchive());
-    document.addEventListener("astro:page-load", initBlogArchive);
     initBlogArchive();
   </script>
 </BaseLayout>
