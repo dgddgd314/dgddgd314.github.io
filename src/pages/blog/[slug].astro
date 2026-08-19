@@ -22,7 +22,7 @@ interface Props {
 const { entry } = Astro.props;
 const post: BlogSchema = entry.data;
 const blocks = post.blocks as Block[];
-const tocItems = generateToc(blocks);
+const tocItems = post.encryptedBlocks ? [] : generateToc(blocks);
 ---
 
 <PostLayout
@@ -35,4 +35,5 @@ const tocItems = generateToc(blocks);
   tags={post.tags}
   blocks={blocks}
   tocItems={tocItems}
+  encryptedBlocks={post.encryptedBlocks}
 />

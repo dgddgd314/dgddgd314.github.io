@@ -1,0 +1,1061 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "client-side-encrypted-posts-static-site",
+    "description": "서버 없는 정적 블로그에서 PBKDF2로 키를 유도하고 AES-GCM으로 본문 블록만 암호화한 과정을 수학적 배경과 함께 정리했다.",
+    "pubDate": "2026-08-19",
+    "category": "blog_dev",
+    "tags": "cryptography,web-crypto,astro,static-site,editor",
+    "title": "서버 없이 비밀 글을 배포하는 법: PBKDF2와 AES-GCM으로 본문 암호화하기",
+    "status": [
+      "draft"
+    ],
+    "placement": [
+      "main"
+    ]
+  },
+  "page": {
+    "icon": "🔐",
+    "cover": {
+      "type": "color",
+      "value": "#eef4ff",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "블로그 글의 상태에는 오래전부터 "
+        },
+        {
+          "text": "encrypted",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "가 있었다. 이름은 그럴듯했지만 실제로는 화면에 배지만 붙이는 메타데이터였다. 이번에는 이 상태를 진짜 기능으로 만들었다. 제목·날짜·태그는 누구나 볼 수 있지만, 본문은 공유받은 키를 입력한 브라우저에서만 읽을 수 있도록 했다."
+        }
+      ]
+    },
+    {
+      "id": "intro-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "서버가 본문을 숨겨 주는 대신, 본문을 공개해도 읽을 수 없는 형태로 바꾸고 복원 책임을 키를 가진 브라우저에 넘긴다."
+        }
+      ]
+    },
+    {
+      "id": "problem-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "정적 사이트에서 비밀 글을 공개한다는 모순"
+        }
+      ]
+    },
+    {
+      "id": "static-problem",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "일반적인 비공개 글은 서버가 로그인 정보와 권한을 확인한 다음, 허용된 사용자에게만 본문을 보낸다. 하지만 이 블로그는 빌드된 HTML·JavaScript·JSON을 CDN이 그대로 전달하는 정적 사이트다. 요청을 검사할 애플리케이션 서버도, 키 입력 횟수를 제한할 데이터베이스도 없다."
+        }
+      ]
+    },
+    {
+      "id": "static-consequence",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "따라서 ‘키가 맞으면 서버가 본문을 보내 준다’는 설계는 사용할 수 없다. 방문자는 페이지를 여는 순간 필요한 정적 자원을 모두 받을 수 있다. 여기서 숨길 수 있는 것은 파일의 존재가 아니라 "
+        },
+        {
+          "text": "파일이 의미하는 내용",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이다."
+        }
+      ]
+    },
+    {
+      "id": "public-private-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "구분"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "정적 파일에 저장되는 형태"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "방문자가 바로 알 수 있는가"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "제목·설명·날짜·태그"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "평문 메타데이터"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "그렇다"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "본문 blocks"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "AES-GCM 암호문"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "키 없이는 어렵다"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "salt·IV·알고리즘 정보"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "평문 암호화 파라미터"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "그렇다"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "threat-model-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "공격자는 구현도 암호문도 알고 있다"
+        }
+      ]
+    },
+    {
+      "id": "threat-model-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "브라우저에 전달되는 복호화 코드는 누구나 읽을 수 있고 암호문도 자유롭게 내려받을 수 있다. 보안이 JavaScript 난독화나 비밀 알고리즘에 기대면 안 된다. 공격자가 암호화 방식, salt, IV, 반복 횟수와 암호문을 모두 알고 있어도 키가 없으면 본문을 알아내기 어려워야 한다."
+        }
+      ]
+    },
+    {
+      "id": "threat-model-context",
+      "type": "context",
+      "title": "이 글에서 말하는 보호",
+      "backgroundColor": "blue",
+      "richText": [
+        {
+          "text": "저장소·CDN·빌드 결과에 본문 평문을 두지 않는 기밀성이다. 사용자별 권한 관리, 열람 기록, 복사 방지나 DRM을 구현한 것은 아니다."
+        }
+      ]
+    },
+    {
+      "id": "pipeline-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "전체 파이프라인: 평문 블록에서 브라우저 DOM까지"
+        }
+      ]
+    },
+    {
+      "id": "pipeline-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 블로그의 본문은 문자열 하나가 아니라 문단·제목·표·수식·이미지를 표현하는 "
+        },
+        {
+          "text": "blocks",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 배열이다. 암호화의 입력은 이 배열을 JSON으로 직렬화한 UTF-8 바이트열이다. 복호화는 정확히 반대 순서로 진행된다."
+        }
+      ]
+    },
+    {
+      "id": "pipeline-code",
+      "type": "code",
+      "language": "text",
+      "code": "작성기\nblocks 배열 + passphrase\n  ↓ JSON.stringify + UTF-8\n평문 바이트 P\n  ↓ PBKDF2(passphrase, salt, 600000)\n256-bit AES key K\n  ↓ AES-GCM(K, IV)\nciphertext + authentication tag\n  ↓ Base64\n정적 JSON의 encryptedBlocks\n\n독자 브라우저\nencryptedBlocks + passphrase\n  ↓ 같은 PBKDF2 파라미터로 K 재생성\nAES-GCM 복호화 및 인증\n  ↓ UTF-8 + JSON.parse\nblocks 배열\n  ↓ 클라이언트 블록 렌더러\n본문 DOM + 목차"
+    },
+    {
+      "id": "pipeline-boundary",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "키를 파일에 저장하지 않는 것이 이 구조의 핵심이다. 정적 파일에는 키를 다시 만들 때 필요한 공개 파라미터와 암호문만 들어간다. 독자가 입력한 문자열이 같을 때만 브라우저에서 같은 키가 재생성된다."
+        }
+      ]
+    },
+    {
+      "id": "kdf-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "문자열을 암호키로 바꾸는 PBKDF2"
+        }
+      ]
+    },
+    {
+      "id": "password-not-key",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "사람이 입력하는 패스프레이즈는 길이도 제각각이고 분포도 균일하지 않다. 반면 AES-256은 정확히 256비트인 키를 기대한다. 문자열을 잘라 붙이거나 SHA-256을 한 번 적용하는 것만으로 길이 문제는 해결할 수 있어도, 사람이 고른 암호가 가진 낮은 엔트로피까지 해결하지는 못한다."
+        }
+      ]
+    },
+    {
+      "id": "offline-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "서버가 없다는 것은 로그인 시도 제한도 없다는 뜻이다. 공격자는 암호문을 내려받은 뒤 자기 컴퓨터에서 후보 키를 무제한으로 시험할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "pbkdf2-definition-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "반복되는 의사난수 함수"
+        }
+      ]
+    },
+    {
+      "id": "pbkdf2-key-equation",
+      "type": "equation",
+      "equation": "K = \\operatorname{PBKDF2}_{\\mathrm{HMAC\\text{-}SHA256}}(P, S, c, 256)"
+    },
+    {
+      "id": "pbkdf2-symbols",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "여기서 "
+        },
+        {
+          "text": "P",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 패스프레이즈, "
+        },
+        {
+          "text": "S",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 랜덤 salt, "
+        },
+        {
+          "text": "c",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 반복 횟수다. 마지막 256은 결과 키의 비트 길이다. 구현에서는 브라우저 Web Crypto API가 제공하는 PBKDF2와 HMAC-SHA-256을 사용하고 반복 횟수를 600,000으로 두었다."
+        }
+      ]
+    },
+    {
+      "id": "pbkdf2-round-equation",
+      "type": "equation",
+      "equation": "U_1 = \\operatorname{PRF}(P, S \\parallel \\operatorname{INT}(i)), \\quad U_j = \\operatorname{PRF}(P, U_{j-1})"
+    },
+    {
+      "id": "pbkdf2-xor-equation",
+      "type": "equation",
+      "equation": "T_i = U_1 \\oplus U_2 \\oplus \\cdots \\oplus U_c"
+    },
+    {
+      "id": "pbkdf2-round-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "PBKDF2는 HMAC을 한 번 호출하고 끝내지 않는다. 이전 출력으로 다음 출력을 계산하는 과정을 "
+        },
+        {
+          "text": "c",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "번 반복한 뒤 모든 결과를 XOR한다. 정당한 사용자도 키를 만들 때 이 비용을 한 번 내지만, 공격자는 후보 패스프레이즈마다 같은 비용을 반복해서 내야 한다. 암호가 강해지는 것이 아니라 "
+        },
+        {
+          "text": "추측 한 번의 가격",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이 올라가는 셈이다."
+        }
+      ]
+    },
+    {
+      "id": "salt-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "salt는 비밀이 아니라 중복을 없애는 값"
+        }
+      ]
+    },
+    {
+      "id": "salt-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "글을 암호화할 때마다 16바이트 랜덤 salt를 새로 만든다. 같은 패스프레이즈를 두 글에 사용해도 salt가 다르면 유도되는 키가 달라진다. 공격자는 특정 패스프레이즈에 대한 계산 결과를 모든 글에 재사용할 수 없고, 미리 만들어 둔 해시 표도 salt별로 다시 계산해야 한다. salt 자체는 키가 아니므로 암호문 옆에 평문으로 저장해도 된다."
+        }
+      ]
+    },
+    {
+      "id": "attack-cost-equation",
+      "type": "equation",
+      "equation": "\\operatorname{Cost}_{\\mathrm{attack}} \\approx N_{\\mathrm{candidates}} \\times c \\times \\operatorname{Cost}_{\\mathrm{HMAC}}"
+    },
+    {
+      "id": "kdf-callout",
+      "type": "callout",
+      "icon": "🧮",
+      "backgroundColor": "blue",
+      "richText": [
+        {
+          "text": "반복 횟수는 약한 패스프레이즈를 강한 랜덤 키로 바꾸지 않는다. ‘password1234’를 고르면 후보 수 N 자체가 작다. KDF와 별개로 길고 예측하기 어려운 패스프레이즈가 필요하다."
+        }
+      ]
+    },
+    {
+      "id": "aes-gcm-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "AES-GCM: 숨기면서 변조도 검출하기"
+        }
+      ]
+    },
+    {
+      "id": "aes-block-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "AES는 128비트 블록을 같은 크기의 다른 블록으로 바꾸는 키 기반 순열이다. 하지만 본문은 128비트보다 훨씬 길고, 단순히 블록마다 AES를 적용하면 반복 패턴이 드러날 수 있다. GCM은 AES를 카운터 모드로 사용해 임의 길이의 데이터를 암호화하고, 별도의 인증 계산으로 변조 여부까지 확인하는 AEAD 방식이다."
+        }
+      ]
+    },
+    {
+      "id": "ctr-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "CTR: AES 출력을 키 스트림으로 사용한다"
+        }
+      ]
+    },
+    {
+      "id": "ctr-equation",
+      "type": "equation",
+      "equation": "C_i = P_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
+    },
+    {
+      "id": "ctr-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "초기 카운터에서 블록 번호를 증가시키고 각각을 AES로 암호화하면 예측할 수 없는 키 스트림이 나온다. 평문 블록과 키 스트림의 XOR가 암호문이다. XOR는 자기 자신이 역연산이므로 같은 키 스트림을 암호문에 다시 XOR하면 평문이 복원된다."
+        }
+      ]
+    },
+    {
+      "id": "ctr-decrypt-equation",
+      "type": "equation",
+      "equation": "P_i = C_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
+    },
+    {
+      "id": "iv-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "IV는 공개해도 되지만 재사용하면 안 된다"
+        }
+      ]
+    },
+    {
+      "id": "iv-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "구현에서는 암호화할 때마다 12바이트, 즉 96비트 IV를 새로 생성한다. IV는 키처럼 숨길 필요가 없지만 같은 키에서 중복되면 CTR의 키 스트림도 중복된다. 같은 키 스트림으로 암호화한 두 암호문을 XOR하면 키 스트림이 사라지고 두 평문의 XOR가 그대로 남는다."
+        }
+      ]
+    },
+    {
+      "id": "iv-reuse-equation",
+      "type": "equation",
+      "equation": "C \\oplus C' = (P \\oplus S) \\oplus (P' \\oplus S) = P \\oplus P'"
+    },
+    {
+      "id": "iv-random-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "따라서 IV는 암호화할 때마다 "
+        },
+        {
+          "text": "crypto.getRandomValues",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "로 새로 만든다. salt도 매번 바뀌어 실제 AES 키까지 달라지지만, IV를 독립적으로 생성한다는 규칙도 그대로 지킨다."
+        }
+      ]
+    },
+    {
+      "id": "ghash-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "GHASH: 암호문을 유한체 위의 다항식으로 본다"
+        }
+      ]
+    },
+    {
+      "id": "ghash-key-equation",
+      "type": "equation",
+      "equation": "H = \\operatorname{AES}_K(0^{128})"
+    },
+    {
+      "id": "ghash-recurrence-equation",
+      "type": "equation",
+      "equation": "X_i = (X_{i-1} \\oplus Y_i) \\cdot H \\quad \\text{in } \\mathrm{GF}(2^{128})"
+    },
+    {
+      "id": "ghash-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "GCM은 128비트 블록을 "
+        },
+        {
+          "text": "GF(2¹²⁸)",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "의 원소로 해석한다. 이 체에서 덧셈은 XOR이고, 곱셈 결과는 정해진 기약다항식으로 나눈 나머지다. 인증할 데이터와 암호문 블록을 순서대로 누적해 GHASH 값을 만들기 때문에 암호문의 한 비트만 달라져도 최종 값이 달라진다."
+        }
+      ]
+    },
+    {
+      "id": "ghash-polynomial-equation",
+      "type": "equation",
+      "equation": "p(x) = x^{128} + x^7 + x^2 + x + 1"
+    },
+    {
+      "id": "tag-equation",
+      "type": "equation",
+      "equation": "T = \\operatorname{AES}_K(J_0) \\oplus \\operatorname{GHASH}_H(A, C)"
+    },
+    {
+      "id": "tag-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "인증 태그 "
+        },
+        {
+          "text": "T",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 올바른 키로 만든 값과 일치해야 한다. 키가 틀렸거나 암호문의 비트가 바뀌면 브라우저는 그럴듯한 쓰레기 평문을 돌려주는 대신 복호화 연산 자체를 실패시킨다. 이 덕분에 UI에서는 ‘키가 틀렸거나 데이터가 손상되었다’는 하나의 안전한 오류로 처리할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "gcm-callout",
+      "type": "callout",
+      "icon": "🛡️",
+      "backgroundColor": "green",
+      "richText": [
+        {
+          "text": "암호화만 하고 인증하지 않으면 공격자가 암호문을 바꿨을 때 조작된 평문이 만들어질 수 있다. AES-GCM을 선택한 이유는 기밀성과 무결성을 하나의 연산으로 다루기 위해서다."
+        }
+      ]
+    },
+    {
+      "id": "format-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "암호 수학을 정적 JSON에 담는 방법"
+        }
+      ]
+    },
+    {
+      "id": "format-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암호화된 글에는 평문 "
+        },
+        {
+          "text": "blocks",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "가 존재하지 않는다. 그 자리에는 복호화에 필요한 공개 파라미터와 Base64 암호문을 담은 "
+        },
+        {
+          "text": "encryptedBlocks",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "가 들어간다. Base64는 보안 기능이 아니라 임의의 바이트를 JSON 문자열로 안전하게 표현하기 위한 인코딩이다."
+        }
+      ]
+    },
+    {
+      "id": "format-code",
+      "type": "code",
+      "language": "json",
+      "code": "{\n  \"version\": 2,\n  \"meta\": {\n    \"title\": \"잠긴 글\",\n    \"status\": [\"published\", \"encrypted\"]\n  },\n  \"page\": {},\n  \"encryptedBlocks\": {\n    \"version\": 1,\n    \"algorithm\": \"AES-GCM\",\n    \"kdf\": {\n      \"name\": \"PBKDF2\",\n      \"hash\": \"SHA-256\",\n      \"iterations\": 600000,\n      \"salt\": \"...Base64...\"\n    },\n    \"iv\": \"...Base64...\",\n    \"ciphertext\": \"...Base64...\"\n  }\n}"
+    },
+    {
+      "id": "format-version",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암호화 컨테이너에도 별도의 "
+        },
+        {
+          "text": "version",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "을 뒀다. 나중에 KDF나 직렬화 방식을 바꾸더라도 기존 암호문을 어떤 규칙으로 읽어야 하는지 판별하기 위해서다. 알고리즘 이름과 반복 횟수를 암호문 옆에 저장한 것도 같은 이유다."
+        }
+      ]
+    },
+    {
+      "id": "schema-invariant",
+      "type": "context",
+      "title": "스키마의 불변 조건",
+      "backgroundColor": "purple",
+      "richText": [
+        {
+          "text": "status에 encrypted가 있으면 encryptedBlocks가 반드시 존재하고 평문 blocks는 없어야 한다. encrypted가 없다면 반대로 blocks가 필요하고 encryptedBlocks는 허용하지 않는다. 빌드 단계에서 이 조건을 검사해 실수로 평문을 배포하는 일을 막았다."
+        }
+      ]
+    },
+    {
+      "id": "editor-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "에디터에서는 상태 전이로 다뤘다"
+        }
+      ]
+    },
+    {
+      "id": "editor-state-code",
+      "type": "code",
+      "language": "text",
+      "code": "일반 문서\n  └─ encrypted 선택\n       ├─ 키 입력 취소 → 일반 문서 유지\n       └─ 키 + 확인 성공 → 보호 모드\n\n보호 모드\n  ├─ JSON 복사/저장 → blocks를 암호화해 encryptedBlocks 출력\n  ├─ 키 변경 → 다음 출력부터 새 키 사용\n  └─ encrypted 제거 → 다음 출력부터 평문 blocks 사용\n\n암호화 JSON 불러오기\n  └─ 키 입력 및 인증 성공 → blocks 복원 → 일반 블록 편집기"
+    },
+    {
+      "id": "editor-export-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "편집 중에는 블록을 계속 수정해야 하므로 브라우저 메모리에는 평문 배열을 유지한다. 실제 AES-GCM 암호화는 상단의 JSON 복사 또는 저장 버튼을 누르는 시점에 수행한다. "
+        },
+        {
+          "text": "encrypted",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 상태를 선택하는 순간 키를 먼저 묻는 것은 상태와 키 설정이 어긋나지 않게 하기 위한 UX다. 키 입력을 취소하면 상태도 추가되지 않는다."
+        }
+      ]
+    },
+    {
+      "id": "editor-local-draft",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "키는 JSON과 localStorage에 저장하지 않고 현재 탭의 메모리에만 둔다. 다만 에디터의 자동 복구용 로컬 초안에는 편집 가능한 평문 블록이 남는다. 즉 이 기능이 보호하는 경계는 작성자의 브라우저 저장 공간이 아니라 "
+        },
+        {
+          "text": "저장소에 올리고 배포하는 JSON",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이다. 작성자 기기까지 보호하려면 로컬 초안 저장 정책도 별도로 바꿔야 한다."
+        }
+      ]
+    },
+    {
+      "id": "static-build-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "Astro 빌드와 브라우저 복호화의 경계"
+        }
+      ]
+    },
+    {
+      "id": "static-build-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "일반 글은 Astro가 빌드할 때 blocks를 읽고 HTML을 완성한다. 암호화 글에서는 빌드 프로세스가 키를 모르므로 같은 방법을 사용할 수 없다. 빌드 결과에는 제목과 메타데이터, 키 입력 폼, encryptedBlocks만 넣고 실제 본문 렌더링을 브라우저로 미뤘다."
+        }
+      ]
+    },
+    {
+      "id": "runtime-code",
+      "type": "code",
+      "language": "ts",
+      "code": "const blocks = await decryptBlocks(payload, passphrase);\nconst tocItems = generateToc(blocks);\n\ndocumentRoot.replaceChildren(\n  renderBlockList(blocks, tocItems),\n);"
+    },
+    {
+      "id": "client-renderer-heading",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "복호화 뒤에는 본문을 다시 렌더링해야 한다"
+        }
+      ]
+    },
+    {
+      "id": "client-renderer-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암호문 안의 blocks는 빌드 시점에 존재하지 않으므로 Astro의 서버 렌더링 컴포넌트가 처리할 수 없다. 문단, 제목, 목록, 토글, 표, 이미지와 KaTeX 수식을 DOM으로 만드는 클라이언트 렌더러를 추가했다. 목차도 복호화 이후 제목 블록을 순회해 생성하고 IntersectionObserver를 다시 연결한다."
+        }
+      ]
+    },
+    {
+      "id": "lazy-load-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 렌더러와 KaTeX는 암호화 글에서만 동적으로 불러온다. 일반 글까지 복호화용 JavaScript 비용을 지불하지 않게 하기 위해서다. 결과적으로 기존 공개 글은 정적 HTML 경로를 그대로 사용하고, encrypted 글만 클라이언트 경로로 갈라진다."
+        }
+      ]
+    },
+    {
+      "id": "limits-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "이 설계가 막을 수 있는 것과 없는 것"
+        }
+      ]
+    },
+    {
+      "id": "limits-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "상황"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "보호 여부"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이유"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "저장소와 CDN에서 본문 검색"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "보호"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "평문 blocks를 배포하지 않음"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "암호문 변조"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "검출"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "GCM 인증 태그가 일치하지 않음"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "짧은 키의 오프라인 추측"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "제한적"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "PBKDF2가 느리게 만들 뿐 시도 제한은 없음"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "제목·태그·날짜 노출"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "보호하지 않음"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "의도적으로 공개한 메타데이터"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "복호화 후 복사·스크린샷"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "보호하지 않음"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "독자 브라우저에는 결국 평문 DOM이 생김"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "사이트 JavaScript 자체의 변조"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "보호하지 않음"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "입력 키를 훔치는 코드로 교체할 수 있음"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "entropy-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "패스프레이즈 후보 공간의 유효 엔트로피가 "
+        },
+        {
+          "text": "h",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "비트라면 평균적으로 필요한 추측 수는 대략 2⁽ʰ⁻¹⁾에 비례한다. PBKDF2는 각 추측의 비용을 키우지만 지수의 크기 h를 늘려 주지는 않는다. 사전에 있는 짧은 단어보다 여러 개의 무관한 단어 또는 비밀번호 관리자가 만든 랜덤 값을 써야 하는 이유다."
+        }
+      ]
+    },
+    {
+      "id": "security-callout",
+      "type": "callout",
+      "icon": "⚠️",
+      "backgroundColor": "yellow",
+      "richText": [
+        {
+          "text": "이 기능은 소수에게 키를 공유하는 개인 문서에 적합하다. 유료 콘텐츠, 사용자별 권한, 키 폐기와 감사 로그가 필요하다면 서버 인증과 권한 시스템을 사용해야 한다."
+        }
+      ]
+    },
+    {
+      "id": "verification-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "암호화 기능은 무엇을 테스트해야 하나"
+        }
+      ]
+    },
+    {
+      "id": "verification-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "화면에서 자물쇠가 보이는 것만으로는 본문이 보호됐다고 말할 수 없다. 이번 구현에서는 데이터가 경계를 넘는 각 단계에 맞춰 다음 조건을 확인했다."
+        }
+      ]
+    },
+    {
+      "id": "verification-1",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "임의의 blocks를 암호화한 뒤 같은 키로 복호화하면 원래 배열과 정확히 일치한다."
+        }
+      ]
+    },
+    {
+      "id": "verification-2",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "잘못된 키를 넣으면 JSON 파싱 이전에 AES-GCM 인증이 실패한다."
+        }
+      ]
+    },
+    {
+      "id": "verification-3",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "내보낸 encryptedBlocks 문자열과 정적 HTML에서 테스트 본문의 평문을 검색해도 발견되지 않는다."
+        }
+      ]
+    },
+    {
+      "id": "verification-4",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "암호화 글 JSON으로 실제 정적 라우트를 빌드하고 키 입력 폼과 암호문만 포함되는지 확인한다."
+        }
+      ]
+    },
+    {
+      "id": "verification-5",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "일반 글은 기존 Astro 정적 렌더링을 유지하고 복호화용 클라이언트 번들을 필요할 때만 불러온다."
+        }
+      ]
+    },
+    {
+      "id": "closing-heading",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "서버가 없어서 불가능한 것이 아니라 경계가 달라진다"
+        }
+      ]
+    },
+    {
+      "id": "closing-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "정적 사이트에서는 서버가 사용자를 식별하거나 본문 전송을 거부할 수 없다. 대신 배포되는 데이터 자체를 암호문으로 만들 수 있다. PBKDF2는 사람이 입력한 패스프레이즈로부터 계산 비용이 있는 키를 만들고, AES-GCM은 본문을 숨기면서 잘못된 키와 변조를 함께 검출한다. Astro는 공개 메타데이터와 잠금 화면을 만들고, 마지막 복원과 렌더링은 독자의 브라우저가 담당한다."
+        }
+      ]
+    },
+    {
+      "id": "closing-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "정적 사이트의 제약은 암호화를 막지 않았다. 단지 신뢰해야 할 서버 대신, 공개된 암호문과 사용자가 가진 키 사이에 보안 경계를 다시 그리게 했다."
+        }
+      ]
+    }
+  ]
+}

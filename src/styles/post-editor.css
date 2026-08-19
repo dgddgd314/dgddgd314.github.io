@@ -1398,3 +1398,84 @@
 .status-picker__menu button:hover,
 .status-picker__menu button.is-selected { color: var(--editor-blue); background: var(--color-paper-blue); }
 .status-picker__menu button.is-selected::after { content: "?"; float: right; }
+
+.editor-encryption-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--editor-blue) 28%, var(--editor-line));
+  border-radius: 7px;
+  padding: 9px;
+  color: var(--editor-soft);
+  background: var(--color-paper-blue);
+}
+
+.editor-encryption-summary[hidden] { display: none; }
+.editor-encryption-summary > span { font-size: 1rem; }
+.editor-encryption-summary > div { display: grid; gap: 2px; min-width: 0; }
+.editor-encryption-summary strong { color: var(--editor-ink); font-size: 0.76rem; }
+.editor-encryption-summary small { font-size: 0.68rem; line-height: 1.35; }
+.editor-encryption-summary button {
+  border: 0;
+  padding: 4px;
+  color: var(--editor-blue);
+  background: transparent;
+  font: inherit;
+  font-size: 0.69rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.editor-encryption-dialog {
+  width: min(430px, calc(100vw - 28px));
+  border: 1px solid var(--editor-line);
+  border-radius: 12px;
+  padding: 0;
+  color: var(--editor-ink);
+  background: var(--editor-panel);
+  box-shadow: 0 24px 80px rgba(30, 38, 48, 0.24);
+}
+
+.editor-encryption-dialog::backdrop { background: rgba(30, 38, 48, 0.42); backdrop-filter: blur(2px); }
+.editor-encryption-dialog form { display: grid; gap: 14px; padding: 24px; }
+.editor-encryption-dialog__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--color-paper-blue);
+  font-size: 1.25rem;
+}
+.editor-encryption-dialog h2 { margin: 0; font-size: 1.08rem; }
+.editor-encryption-dialog p { margin: 0; color: var(--editor-soft); font-size: 0.78rem; line-height: 1.55; }
+.editor-encryption-dialog label { display: grid; gap: 6px; }
+.editor-encryption-dialog label > span { color: var(--editor-soft); font-size: 0.74rem; font-weight: 720; }
+.editor-encryption-dialog input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--editor-line);
+  border-radius: 7px;
+  padding: 0 10px;
+  color: var(--editor-ink);
+  background: var(--editor-panel);
+  font: inherit;
+}
+.editor-encryption-dialog input:focus { border-color: var(--editor-blue); outline: 3px solid color-mix(in srgb, var(--editor-blue) 14%, transparent); }
+.editor-encryption-dialog .editor-encryption-dialog__notice { padding: 9px 10px; border-radius: 6px; background: var(--color-paper-soft); }
+.editor-encryption-dialog .editor-encryption-dialog__error { color: #b42318; }
+.editor-encryption-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.editor-encryption-dialog__actions button {
+  min-height: 34px;
+  border: 1px solid var(--editor-line);
+  border-radius: 6px;
+  padding: 0 12px;
+  color: var(--editor-soft);
+  background: var(--editor-panel);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 720;
+  cursor: pointer;
+}
+.editor-encryption-dialog__actions button.is-primary { border-color: var(--editor-blue); color: #fff; background: var(--editor-blue); }

@@ -7,14 +7,17 @@ import BlockRenderer from "../components/blocks/BlockRenderer.astro";
 import type { Block } from "../lib/blocks";
 import { toEmbeddableImageUrl } from "../lib/image-url";
 import type { TocItem } from "../lib/toc";
+import type { EncryptedBlocks } from "../lib/encrypted-blocks";
 import "../styles/blocks.css";
 
 export interface Props extends BlogSchema {
   blocks?: Block[];
   tocItems?: TocItem[];
+  encryptedBlocks?: EncryptedBlocks;
 }
 
-const { title, description, pubDate, updatedDate, status = [], tags = [], page, blocks = [], tocItems = [] } = Astro.props;
+const { title, description, pubDate, updatedDate, status = [], tags = [], page, blocks = [], tocItems = [], encryptedBlocks } = Astro.props;
+const isEncrypted = status.includes("encrypted") && Boolean(encryptedBlocks);
 const pageIcon = page?.icon;
 const pageCover = page?.cover;
 dayjs.extend(localizedFormat);
@@ -105,14 +108,41 @@ const numberedListStart = (items: Block[], index: number) => {
       <div class="block-workspace">
         <div class="block-content-column">
           <div class="block-shell">
-            <div class="block-document">
-              {blocks.length > 0 ? blocks.map((block, index) => <BlockRenderer block={block} tocItems={tocItems} numberedListStart={numberedListStart(blocks, index)} />) : <slot />}
+            <div class="block-document" data-encrypted-document={isEncrypted ? "true" : undefined}>
+              {isEncrypted ? (
+                <>
+                  <form class="encrypted-document-lock" data-encrypted-form>
+                    <span class="encrypted-document-lock__icon" aria-hidden="true">🔐</span>
+                    <div class="encrypted-document-lock__copy">
+                      <h2>암호화된 본문</h2>
+                      <p>이 글의 본문을 보려면 공유받은 키를 입력하세요. 키는 브라우저 밖으로 전송되지 않습니다.</p>
+                    </div>
+                    <label class="encrypted-document-lock__field">
+                      <span>암호 키</span>
+                      <input type="password" data-encrypted-key autocomplete="current-password" required />
+                    </label>
+                    <button type="submit" data-encrypted-submit>본문 열기</button>
+                    <p class="encrypted-document-lock__error" data-encrypted-error role="alert" hidden></p>
+                  </form>
+                  <div data-encrypted-content></div>
+                  <script
+                    type="application/json"
+                    data-encrypted-payload
+                    is:inline
+                    set:text={JSON.stringify(encryptedBlocks)}
+                  />
+                </>
+              ) : (
+                blocks.length > 0
+                  ? blocks.map((block, index) => <BlockRenderer block={block} tocItems={tocItems} numberedListStart={numberedListStart(blocks, index)} />)
+                  : <slot />
+              )}
             </div>
           </div>
         </div>
 
-        {tocItems.length > 0 && (
-          <aside class="block-outline block-bento__card" aria-label="Outline">
+        {(tocItems.length > 0 || isEncrypted) && (
+          <aside class="block-outline block-bento__card" aria-label="Outline" data-encrypted-outline={isEncrypted ? "true" : undefined} hidden={isEncrypted}>
             <span class="block-bento__index">Outline</span>
             <nav>
               {tocItems.map((item) => (
@@ -128,6 +158,10 @@ const numberedListStart = (items: Block[], index: number) => {
   </div>
 
   <script>
+    if (document.querySelector("[data-encrypted-document]")) {
+      void import("../scripts/encrypted-post").then(({ initEncryptedPost }) => initEncryptedPost());
+    }
+
     const headings = Array.from(document.querySelectorAll("[data-heading-block='true']"));
     const tocLinks = new Map(
       Array.from(document.querySelectorAll("[data-toc-link]")).map((link) => [

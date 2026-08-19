@@ -38,7 +38,7 @@
 ## 게시 상태와 노출 위치
 
 - `meta.status`는 `published`, `draft`, `deprecated`, `encrypted` 중 필요한 값을 배열로 넣는다.
-- 공개 여부는 오직 `published` 포함 여부로 결정한다. `encrypted`는 현재 메타데이터일 뿐 공개 여부를 바꾸지 않는다.
+- 공개 여부는 오직 `published` 포함 여부로 결정한다. `encrypted`가 있으면 메타데이터는 공개하고 본문 `blocks`만 암호화한다.
 - `published`와 `draft`는 동시에 넣지 않는다.
 - `meta.placement`는 `main`, `notice` 중 필요한 값을 배열로 넣는다.
 - `main`은 메인 목록·태그·카테고리·최근 글·네트워크·RSS에 노출한다.
@@ -46,6 +46,14 @@
 - `main`과 `notice`를 함께 넣으면 양쪽에 노출한다.
 - `published`이면서 `placement`가 빈 배열이면 상세 주소로만 접근할 수 있는 비목록 글이 된다.
 - 작성 중인 기본 문서는 `status: ["draft"]`를 사용한다. 발행할 때 `draft`를 제거하고 `published`를 선택한다.
+
+### 암호화 본문
+
+- 에디터에서 `encrypted`를 선택하면 암호 키와 확인 키를 먼저 입력한다. 취소하면 상태도 추가되지 않는다.
+- JSON 복사·저장 시 평문 `blocks`는 제외되고 AES-GCM 암호문인 `encryptedBlocks`만 포함된다.
+- 암호 키는 JSON이나 브라우저 저장소에 저장되지 않는다. 암호화된 JSON을 다시 불러올 때 키를 입력해야 한다.
+- 잠금 해제 후 `encrypted`를 제거하면 다음 JSON은 다시 일반 `blocks` 배열을 포함한다.
+- 제목, 설명, 날짜, 태그, status, placement, page 아이콘과 커버는 암호화하지 않는다.
 
 ## 공통 규칙
 
