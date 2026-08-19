@@ -7,7 +7,12 @@
     "pubDate": "2026-07-30",
     "category": "",
     "tags": ["editor", "commands", "json"],
-    "badge": "guide"
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ]
   },
   "page": {},
   "blocks": [

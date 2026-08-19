@@ -5,9 +5,10 @@ import PostLayout from "../../layouts/PostLayout.astro";
 import createSlug from "../../lib/createSlug";
 import type { Block } from "../../lib/blocks";
 import { generateToc } from "../../lib/toc";
+import { isPublished } from "../../lib/blog-publication";
 
 export async function getStaticPaths() {
-  const postEntries = await getCollection("blog");
+  const postEntries = (await getCollection("blog")).filter(isPublished);
   return postEntries.map((entry) => ({
     params: { slug: entry.data.slug || createSlug(entry.data.title, entry.id) },
     props: { entry },

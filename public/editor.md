@@ -22,7 +22,8 @@
     "pubDate": "2026-08-04",
     "category": "engineering",
     "tags": "astro, editor",
-    "status": ["draft"]
+    "status": ["draft"],
+    "placement": ["main"]
   },
   "page": {
     "icon": "📝",
@@ -33,6 +34,18 @@
 ```
 
 `page.icon`과 `page.cover`는 생략할 수 있다. 커버는 `type: "color"` 또는 `type: "image"`이며, 이미지일 때 `value`에는 이미지 URL을 넣는다. `position`은 0~100이다.
+
+## 게시 상태와 노출 위치
+
+- `meta.status`는 `published`, `draft`, `deprecated`, `encrypted` 중 필요한 값을 배열로 넣는다.
+- 공개 여부는 오직 `published` 포함 여부로 결정한다. `encrypted`는 현재 메타데이터일 뿐 공개 여부를 바꾸지 않는다.
+- `published`와 `draft`는 동시에 넣지 않는다.
+- `meta.placement`는 `main`, `notice` 중 필요한 값을 배열로 넣는다.
+- `main`은 메인 목록·태그·카테고리·최근 글·네트워크·RSS에 노출한다.
+- `notice`는 메인 화면의 공지사항에 노출한다.
+- `main`과 `notice`를 함께 넣으면 양쪽에 노출한다.
+- `published`이면서 `placement`가 빈 배열이면 상세 주소로만 접근할 수 있는 비목록 글이 된다.
+- 작성 중인 기본 문서는 `status: ["draft"]`를 사용한다. 발행할 때 `draft`를 제거하고 `published`를 선택한다.
 
 ## 공통 규칙
 
@@ -105,6 +118,8 @@
 
 - `meta.title`, `meta.slug`, `meta.description`, `meta.pubDate`를 채운다.
 - `slug`는 영문 소문자·숫자·하이픈 중심으로 쓴다.
+- `meta.status`에는 게시 상태를, `meta.placement`에는 노출 위치를 배열로 지정한다.
+- 공개 글은 `published`를 포함하고, 원하는 위치에 따라 `main` 또는 `notice`를 지정한다.
 - 블록 ID 중복, 알 수 없는 `type`, 잘못된 날짜 형식은 피한다.
 - 코드 블록에는 설명 없이 긴 비밀값·토큰·개인정보를 넣지 않는다.
 - 이미지·북마크는 실제로 접근 가능한 URL일 때만 사용한다.

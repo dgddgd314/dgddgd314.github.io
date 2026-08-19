@@ -54,12 +54,22 @@ const siteOrigin = Astro.site?.origin ?? "";
             <div class="status-picker" data-status-picker>
               <button type="button" class="status-picker__trigger" data-status-trigger aria-expanded="false">&#xC0C1;&#xD0DC; &#xC120;&#xD0DD;</button>
               <div class="status-picker__chips" data-status-chips aria-live="polite"></div>
-              <input type="text" data-status-input placeholder="&#xC9C1;&#xC811; &#xC785;&#xB825; &#xD6C4; Enter" aria-label="&#xC0C1;&#xD0DC; &#xCD94;&#xAC00;" />
               <div class="status-picker__menu" data-status-menu hidden>
-                <button type="button" data-status-option="done" aria-pressed="false">done</button>
+                <button type="button" data-status-option="published" aria-pressed="false">published</button>
                 <button type="button" data-status-option="encrypted" aria-pressed="false">encrypted</button>
                 <button type="button" data-status-option="draft" aria-pressed="false">draft</button>
                 <button type="button" data-status-option="deprecated" aria-pressed="false">deprecated</button>
+              </div>
+            </div>
+          </label>
+          <label>
+            <span>&#xB178;&#xCD9C; &#xC704;&#xCE58;</span>
+            <div class="status-picker" data-placement-picker>
+              <button type="button" class="status-picker__trigger" data-placement-trigger aria-expanded="false">&#xB178;&#xCD9C; &#xC704;&#xCE58; &#xC120;&#xD0DD;</button>
+              <div class="status-picker__chips" data-placement-chips aria-live="polite"></div>
+              <div class="status-picker__menu" data-placement-menu hidden>
+                <button type="button" data-placement-option="main" aria-pressed="false">main</button>
+                <button type="button" data-placement-option="notice" aria-pressed="false">notice</button>
               </div>
             </div>
           </label>

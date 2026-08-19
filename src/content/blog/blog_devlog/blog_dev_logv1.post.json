@@ -6,7 +6,12 @@
     "pubDate": "2026-08-05",
     "category": "blog_dev",
     "tags": "astro,blog,editor,google-drive",
-    "badge": "done",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ],
     "title": "[개발일지] 블로그를 새로 만들었습니다 (v1)"
   },
   "page": {

@@ -24,7 +24,8 @@ Posts are JSON documents in `src/content/blog/`. The content collection reads ev
     "pubDate": "2026-07-31",
     "category": "engineering",
     "tags": "astro, notes",
-    "status": ["done", "note"]
+    "status": ["published"],
+    "placement": ["main"]
   },
   "page": {},
   "blocks": []
@@ -32,5 +33,13 @@ Posts are JSON documents in `src/content/blog/`. The content collection reads ev
 ```
 
 `meta.category` is used when provided. Otherwise the folder path beneath `src/content/blog/` becomes the category, such as `engineering/post.json` to `engineering`.
+
+Publication is controlled by `meta.status` and `meta.placement`:
+
+- Only posts whose `status` contains `published` receive a public detail route.
+- `placement: ["main"]` includes a published post in the main archive, tags, categories, recent posts, network view, and RSS.
+- `placement: ["notice"]` includes a published post in the notice panel.
+- A post may use both placements. A published post with no placement remains public but unlisted.
+- `encrypted` is metadata only for now and does not change publication behavior.
 
 The editor exports this same JSON document. Save it beneath `src/content/blog/`, then run the Astro development server or build to include the post.

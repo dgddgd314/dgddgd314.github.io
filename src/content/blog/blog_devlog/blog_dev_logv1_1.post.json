@@ -8,7 +8,10 @@
     "tags": "astro,blog,editor",
     "title": "[개발일지] 블로그 에디터 업데이트 (v1.1)",
     "status": [
-      "done"
+      "published"
+    ],
+    "placement": [
+      "main"
     ]
   },
   "page": {
@@ -249,7 +252,7 @@
           {
             "richText": [
               {
-                "text": "done",
+                "text": "published",
                 "annotations": {
                   "code": true
                 }

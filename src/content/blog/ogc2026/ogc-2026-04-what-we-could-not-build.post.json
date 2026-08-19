@@ -6,7 +6,12 @@
     "pubDate": "2026-08-11",
     "category": "ogc2026",
     "tags": "ogc2026, optimization, alns, machine-learning",
-    "badge": "done",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ],
     "title": "[OGC2026] layout을 고치고 싶었는데 bay만 흔들고 있었다 (4)"
   },
   "page": {

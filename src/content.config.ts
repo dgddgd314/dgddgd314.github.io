@@ -2,13 +2,22 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
+const statusValueSchema = z.enum(["published", "draft", "deprecated", "encrypted"]);
+const placementValueSchema = z.enum(["main", "notice"]);
+
 const statusSchema = z
-  .union([z.array(z.string()), z.string()])
-  .transform((value) => (Array.isArray(value) ? value : value.split(","))
-    .map((status) => status.trim())
-    .filter(Boolean))
+  .array(statusValueSchema)
   .refine((items) => new Set(items).size === items.length, {
     message: "status values must be unique",
+  })
+  .refine((items) => !(items.includes("published") && items.includes("draft")), {
+    message: "published and draft cannot be selected together",
+  });
+
+const placementSchema = z
+  .array(placementValueSchema)
+  .refine((items) => new Set(items).size === items.length, {
+    message: "placement values must be unique",
   });
 
 const blogMetaSchema = z.object({
@@ -18,8 +27,8 @@ const blogMetaSchema = z.object({
   pubDate: z.coerce.date(),
   updatedDate: z.coerce.date().optional(),
   heroImage: z.string().optional(),
-  status: statusSchema.optional(),
-  badge: z.string().optional(), // Legacy field, accepted for existing posts.
+  status: statusSchema.default([]),
+  placement: placementSchema.default([]),
   category: z.string().optional(),
   tags: z
     .union([z.array(z.string()), z.string()])
@@ -30,10 +39,7 @@ const blogMetaSchema = z.object({
       message: "tags must be unique",
     })
     .optional(),
-}).transform(({ badge, status, ...meta }) => ({
-  ...meta,
-  status: status ?? (badge?.trim() ? [badge.trim()] : []),
-}));
+});
 
 const pageCoverSchema = z.discriminatedUnion("type", [
   z.object({

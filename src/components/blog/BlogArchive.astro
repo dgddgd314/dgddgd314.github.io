@@ -28,6 +28,7 @@ type Props = {
     };
   };
   allPosts: BlogPost[];
+  noticePosts: BlogPost[];
   tagCounts: Counts;
   categoryCounts: Counts;
   initialTag?: string;
@@ -37,6 +38,7 @@ type Props = {
 const {
   page,
   allPosts,
+  noticePosts = [],
   tagCounts = {},
   categoryCounts = {},
   initialTag = "",
@@ -315,9 +317,26 @@ const networkLinks = Array.from(edgeMap.values());
         <section class="sidebar-panel">
           <div class="sidebar-panel__head">
             <h2>&#xACF5;&#xC9C0;&#xC0AC;&#xD56D;</h2>
-            <span>0</span>
+            <span>{noticePosts.length}</span>
           </div>
-          <p>&#xACF5;&#xC9C0;&#xC0AC;&#xD56D;&#xC774; &#xC5C6;&#xC2B5;&#xB2C8;&#xB2E4;.</p>
+          {noticePosts.length > 0 ? (
+            <div class="recent-list notice-list">
+              {noticePosts.map((post: BlogPost, index: number) => {
+                const url = "/blog/" + toPostKey(post);
+                return (
+                  <a href={url} class="recent-post notice-post">
+                    <em>{String(index + 1).padStart(2, "0")}</em>
+                    <span>
+                      <strong>{post.data.title}</strong>
+                      <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
+            <p>&#xACF5;&#xC9C0;&#xC0AC;&#xD56D;&#xC774; &#xC5C6;&#xC2B5;&#xB2C8;&#xB2E4;.</p>
+          )}
         </section>
 
         <section class="sidebar-panel">

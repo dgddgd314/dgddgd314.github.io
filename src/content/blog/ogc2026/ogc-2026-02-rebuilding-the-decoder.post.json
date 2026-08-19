@@ -6,7 +6,12 @@
     "pubDate": "2026-08-08",
     "category": "ogc2026",
     "tags": "ogc2026, optimization, geometry",
-    "badge": "done",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ],
     "title": "[OGC2026] 폴리곤 packing에서 full scaning으로  (2)"
   },
   "page": {

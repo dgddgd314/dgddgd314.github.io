@@ -6,7 +6,12 @@
     "pubDate": "2026-08-06",
     "category": "blog_dev",
     "tags": "google-drive,google,image-upload,astro,storage",
-    "badge": "done",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ],
     "title": "Google Drive 연동으로 이미지 업로드하기 (v1)"
   },
   "page": {
