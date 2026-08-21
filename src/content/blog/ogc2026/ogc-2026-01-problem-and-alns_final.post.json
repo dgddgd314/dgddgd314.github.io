@@ -6,7 +6,12 @@
     "pubDate": "2026-08-07",
     "category": "ogc2026",
     "tags": "ogc2026, optimization, alns, scheduling",
-    "badge": "done",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ],
     "title": "[OGC2026] 결정변수를 나누면 문제도 나뉠 줄 알았다 (1)"
   },
   "page": {

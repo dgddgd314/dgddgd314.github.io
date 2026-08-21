@@ -2,13 +2,22 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 
+const statusValueSchema = z.enum(["published", "draft", "deprecated", "encrypted"]);
+const placementValueSchema = z.enum(["main", "notice"]);
+
 const statusSchema = z
-  .union([z.array(z.string()), z.string()])
-  .transform((value) => (Array.isArray(value) ? value : value.split(","))
-    .map((status) => status.trim())
-    .filter(Boolean))
+  .array(statusValueSchema)
   .refine((items) => new Set(items).size === items.length, {
     message: "status values must be unique",
+  })
+  .refine((items) => !(items.includes("published") && items.includes("draft")), {
+    message: "published and draft cannot be selected together",
+  });
+
+const placementSchema = z
+  .array(placementValueSchema)
+  .refine((items) => new Set(items).size === items.length, {
+    message: "placement values must be unique",
   });
 
 const blogMetaSchema = z.object({
@@ -18,8 +27,8 @@ const blogMetaSchema = z.object({
   pubDate: z.coerce.date(),
   updatedDate: z.coerce.date().optional(),
   heroImage: z.string().optional(),
-  status: statusSchema.optional(),
-  badge: z.string().optional(), // Legacy field, accepted for existing posts.
+  status: statusSchema.default([]),
+  placement: placementSchema.default([]),
   category: z.string().optional(),
   tags: z
     .union([z.array(z.string()), z.string()])
@@ -30,10 +39,7 @@ const blogMetaSchema = z.object({
       message: "tags must be unique",
     })
     .optional(),
-}).transform(({ badge, status, ...meta }) => ({
-  ...meta,
-  status: status ?? (badge?.trim() ? [badge.trim()] : []),
-}));
+});
 
 const pageCoverSchema = z.discriminatedUnion("type", [
   z.object({
@@ -51,6 +57,19 @@ const pageCoverSchema = z.discriminatedUnion("type", [
 const pageAppearanceSchema = z.object({
   icon: z.string().trim().min(1).optional(),
   cover: pageCoverSchema.optional(),
+});
+
+const encryptedBlocksSchema = z.object({
+  version: z.literal(1),
+  algorithm: z.literal("AES-GCM"),
+  kdf: z.object({
+    name: z.literal("PBKDF2"),
+    hash: z.literal("SHA-256"),
+    iterations: z.number().int().min(100_000),
+    salt: z.string().min(1),
+  }),
+  iv: z.string().min(1),
+  ciphertext: z.string().min(1),
 });
 
 type HeroImageCandidate = { src: string };
@@ -72,9 +91,40 @@ const blogSchema = z.object({
   version: z.literal(2),
   meta: blogMetaSchema,
   page: pageAppearanceSchema.optional(),
-  blocks: z.array(z.unknown()),
-}).superRefine(({ blocks }, context) => {
-  const heroImages = collectHeroImages(blocks);
+  blocks: z.array(z.unknown()).optional(),
+  encryptedBlocks: encryptedBlocksSchema.optional(),
+}).superRefine(({ meta, blocks, encryptedBlocks }, context) => {
+  const isEncrypted = meta.status.includes("encrypted");
+  if (isEncrypted && !encryptedBlocks) {
+    context.addIssue({
+      code: "custom",
+      path: ["encryptedBlocks"],
+      message: "encrypted status requires encryptedBlocks",
+    });
+  }
+  if (isEncrypted && blocks !== undefined) {
+    context.addIssue({
+      code: "custom",
+      path: ["blocks"],
+      message: "encrypted posts must not contain plaintext blocks",
+    });
+  }
+  if (!isEncrypted && !blocks) {
+    context.addIssue({
+      code: "custom",
+      path: ["blocks"],
+      message: "unencrypted posts require blocks",
+    });
+  }
+  if (!isEncrypted && encryptedBlocks) {
+    context.addIssue({
+      code: "custom",
+      path: ["encryptedBlocks"],
+      message: "encryptedBlocks requires encrypted status",
+    });
+  }
+
+  const heroImages = collectHeroImages(blocks ?? []);
   if (heroImages.length > 1) {
     context.addIssue({
       code: "custom",
@@ -89,13 +139,15 @@ const blogSchema = z.object({
       message: "\uB300\uD45C \uC774\uBBF8\uC9C0 \uBE14\uB85D\uC5D0\uB294 src\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.",
     });
   }
-}).transform(({ meta, page, blocks }) => {
-  const blockHeroImage = collectHeroImages(blocks)[0]?.src.trim();
+}).transform(({ meta, page, blocks, encryptedBlocks }) => {
+  const normalizedBlocks = blocks ?? [];
+  const blockHeroImage = collectHeroImages(normalizedBlocks)[0]?.src.trim();
   return {
     ...meta,
     heroImage: blockHeroImage || meta.heroImage,
     page,
-    blocks,
+    blocks: normalizedBlocks,
+    encryptedBlocks,
   };
 });
 

@@ -6,7 +6,12 @@
     "pubDate": "2026-08-10",
     "category": "ogc2026",
     "tags": "ogc2026, optimization, alns",
-    "badge": "done",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ],
     "title": "[OGC2026] 더 좋은 전역 배정을 찾고도 버린 이유 (3)"
   },
   "page": {

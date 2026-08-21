@@ -2,6 +2,11 @@ import katex from "katex";
 import type { RichText, TextAnnotation } from "../lib/blocks";
 import { BLOCK_COLOR_PALETTE, type BlockColorOption } from "../lib/color-palette";
 import {
+  decryptBlocks,
+  encryptBlocks,
+  type EncryptedBlocks,
+} from "../lib/encrypted-blocks";
+import {
   applyInlineHref,
   applyInlineTextColor,
   blockPlainText,
@@ -200,15 +205,36 @@ export function initPostEditor(): void {
   const statusPicker = root.querySelector<HTMLElement>("[data-status-picker]");
   const statusTrigger = root.querySelector<HTMLButtonElement>("[data-status-trigger]");
   const statusChips = root.querySelector<HTMLElement>("[data-status-chips]");
-  const statusInput = root.querySelector<HTMLInputElement>("[data-status-input]");
   const statusMenu = root.querySelector<HTMLElement>("[data-status-menu]");
+  const placementPicker = root.querySelector<HTMLElement>("[data-placement-picker]");
+  const placementTrigger = root.querySelector<HTMLButtonElement>("[data-placement-trigger]");
+  const placementChips = root.querySelector<HTMLElement>("[data-placement-chips]");
+  const placementMenu = root.querySelector<HTMLElement>("[data-placement-menu]");
+  const encryptionSummary = root.querySelector<HTMLElement>("[data-encryption-summary]");
+  const encryptionSummaryText = root.querySelector<HTMLElement>("[data-encryption-summary-text]");
+  const encryptionChangeKey = root.querySelector<HTMLButtonElement>("[data-encryption-change-key]");
+  const encryptionDialog = root.querySelector<HTMLDialogElement>("[data-encryption-dialog]");
+  const encryptionForm = root.querySelector<HTMLFormElement>("[data-encryption-form]");
+  const encryptionTitle = root.querySelector<HTMLElement>("[data-encryption-title]");
+  const encryptionDescription = root.querySelector<HTMLElement>("[data-encryption-description]");
+  const encryptionKeyInput = root.querySelector<HTMLInputElement>("[data-encryption-key]");
+  const encryptionKeyConfirm = root.querySelector<HTMLInputElement>("[data-encryption-key-confirm]");
+  const encryptionConfirmWrap = root.querySelector<HTMLElement>("[data-encryption-confirm-wrap]");
+  const encryptionNotice = root.querySelector<HTMLElement>("[data-encryption-notice]");
+  const encryptionError = root.querySelector<HTMLElement>("[data-encryption-error]");
+  const encryptionConfirm = root.querySelector<HTMLButtonElement>("[data-encryption-confirm]");
+  const encryptionCancel = root.querySelector<HTMLButtonElement>("[data-encryption-cancel]");
 
   const today = new Date().toISOString().slice(0, 10);
   let blocks: EditorBlock[] = [];
   let pageAppearance: EditorPageAppearance = {};
   let emojiData: EmojiRecord[] | null = null;
   let statuses: string[] = [];
+  let encryptionPassphrase: string | null = null;
+  let encryptionDialogMode: "set" | "unlock" = "set";
+  let resolveEncryptionDialog: ((value: string | null) => void) | null = null;
   let emojiGroup = 0;
+  let placements: string[] = [];
   let emojiTarget: EmojiTarget = { mode: "", blockId: "" };
   let selectedId = "";
   const selectedBlockIds = new Set<string>();
@@ -240,6 +266,7 @@ export function initPostEditor(): void {
         category: "engineering",
         tags: "astro, notion, editor",
         status: ["draft"],
+        placement: ["main"],
       },
       page: {
         icon: "🧠",
@@ -267,15 +294,84 @@ export function initPostEditor(): void {
     };
   }
 
-  function normalizeStatuses(value: unknown): string[] {
+  function normalizeOptions(value: unknown, allowed: readonly string[]): string[] {
     const values = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
-    return [...new Set(values.map((item) => String(item).trim()).filter(Boolean))];
+    return [...new Set(values.map((item) => String(item).trim()).filter((item) => allowed.includes(item)))];
+  }
+
+  function normalizeStatuses(value: unknown): string[] {
+    const normalized = normalizeOptions(value, ["published", "draft", "deprecated", "encrypted"]);
+    return normalized.includes("published") ? normalized.filter((status) => status !== "draft") : normalized;
+  }
+
+  function normalizePlacements(value: unknown): string[] {
+    return normalizeOptions(value, ["main", "notice"]);
+  }
+
+  function finishEncryptionDialog(value: string | null): void {
+    const resolve = resolveEncryptionDialog;
+    resolveEncryptionDialog = null;
+    if (encryptionDialog?.open) encryptionDialog.close();
+    resolve?.(value);
+  }
+
+  function openEncryptionDialog(mode: "set" | "unlock"): Promise<string | null> {
+    if (
+      !encryptionDialog
+      || !encryptionKeyInput
+      || !encryptionKeyConfirm
+      || !encryptionConfirmWrap
+      || !encryptionError
+      || !encryptionConfirm
+    ) {
+      return Promise.resolve(null);
+    }
+    if (resolveEncryptionDialog) finishEncryptionDialog(null);
+    encryptionDialogMode = mode;
+    encryptionKeyInput.value = "";
+    encryptionKeyConfirm.value = "";
+    encryptionError.hidden = true;
+    encryptionConfirmWrap.hidden = mode === "unlock";
+    if (encryptionTitle) encryptionTitle.textContent = mode === "unlock" ? "암호화된 본문 열기" : "본문 암호화 설정";
+    if (encryptionDescription) {
+      encryptionDescription.textContent = mode === "unlock"
+        ? "편집하려면 이 문서에 사용한 암호 키를 입력하세요."
+        : "제목, 설명, 태그와 날짜는 공개되고 본문 블록만 암호화됩니다.";
+    }
+    if (encryptionNotice) {
+      encryptionNotice.textContent = mode === "unlock"
+        ? "키는 현재 편집 세션 동안만 메모리에 유지됩니다."
+        : "12자 이상의 키를 사용하세요. 키는 파일이나 브라우저 저장소에 저장되지 않습니다.";
+    }
+    encryptionConfirm.textContent = mode === "unlock" ? "잠금 해제" : "본문 암호화 사용";
+    return new Promise((resolve) => {
+      resolveEncryptionDialog = resolve;
+      encryptionDialog.showModal();
+      window.requestAnimationFrame(() => encryptionKeyInput.focus());
+    });
+  }
+
+  function renderEncryptionSummary(): void {
+    if (!encryptionSummary) return;
+    const enabled = statuses.includes("encrypted");
+    encryptionSummary.hidden = !enabled;
+    if (encryptionSummaryText) {
+      encryptionSummaryText.textContent = encryptionPassphrase
+        ? "키 설정됨 · 복사하거나 저장할 때 본문 암호화"
+        : "내보내기 전에 암호 키 설정 필요";
+    }
   }
 
   function setStatusMenu(open: boolean): void {
     if (!statusMenu || !statusTrigger) return;
     statusMenu.hidden = !open;
     statusTrigger.setAttribute("aria-expanded", String(open));
+  }
+
+  function setPlacementMenu(open: boolean): void {
+    if (!placementMenu || !placementTrigger) return;
+    placementMenu.hidden = !open;
+    placementTrigger.setAttribute("aria-expanded", String(open));
   }
 
   function renderStatusPicker(): void {
@@ -295,12 +391,33 @@ export function initPostEditor(): void {
       option.setAttribute("aria-pressed", String(selected));
       option.classList.toggle("is-selected", selected);
     });
+    renderEncryptionSummary();
   }
 
+
+  function renderPlacementPicker(): void {
+    if (!placementChips || !placementTrigger) return;
+    placementTrigger.textContent = placements.length ? `\uB178\uCD9C \uC704\uCE58 ${placements.length}\uAC1C \uC120\uD0DD\uB428` : "\uB178\uCD9C \uC704\uCE58 \uC120\uD0DD";
+    placementChips.replaceChildren(...placements.map((placement) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "status-picker__chip";
+      chip.dataset.placementRemove = placement;
+      chip.setAttribute("aria-label", `${placement} \uC81C\uAC70`);
+      chip.textContent = `${placement} x`;
+      return chip;
+    }));
+    root.querySelectorAll<HTMLButtonElement>("[data-placement-option]").forEach((option) => {
+      const selected = placements.includes(option.dataset.placementOption ?? "");
+      option.setAttribute("aria-pressed", String(selected));
+      option.classList.toggle("is-selected", selected);
+    });
+  }
   function getMeta(): EditorMeta {
     return {
       ...Object.fromEntries(metaInputs.map((input) => [input.dataset.meta ?? "", input.value.trim()])),
       status: [...statuses],
+      placement: [...placements],
     } as EditorMeta;
   }
 
@@ -310,7 +427,9 @@ export function initPostEditor(): void {
       input.value = typeof value === "string" ? value : "";
     });
     if (meta.status !== undefined) statuses = normalizeStatuses(meta.status);
+    if (meta.placement !== undefined) placements = normalizePlacements(meta.placement);
     renderStatusPicker();
+    renderPlacementPicker();
   }
 
   function slugify(value: string): string {
@@ -718,7 +837,8 @@ export function initPostEditor(): void {
         pubDate: String(rawMeta.pubDate ?? today),
         category: String(rawMeta.category ?? ""),
         tags: String(rawMeta.tags ?? ""),
-        status: normalizeStatuses(rawMeta.status ?? rawMeta.badge),
+        status: normalizeStatuses(rawMeta.status),
+        placement: normalizePlacements(rawMeta.placement),
       },
       page: normalizePageAppearance(raw.page),
       blocks: storedBlocks.length ? storedBlocks : fallback.blocks,
@@ -2231,6 +2351,62 @@ export function initPostEditor(): void {
     return JSON.stringify(getDocument(), null, 2);
   }
 
+  async function getExportJson(): Promise<string | null> {
+    const document = getDocument();
+    if (!document.meta.status.includes("encrypted")) return JSON.stringify(document, null, 2);
+    let passphrase = encryptionPassphrase;
+    if (!passphrase) {
+      passphrase = await openEncryptionDialog("set");
+      if (!passphrase) return null;
+      encryptionPassphrase = passphrase;
+      renderEncryptionSummary();
+    }
+    const encryptedBlocks = await encryptBlocks(document.blocks, passphrase);
+    const { blocks: _plaintextBlocks, ...metadata } = document;
+    return JSON.stringify({ ...metadata, encryptedBlocks }, null, 2);
+  }
+
+  function encryptedPayloadFrom(raw: Record<string, unknown>): EncryptedBlocks | null {
+    const payload = raw.encryptedBlocks;
+    if (!payload || typeof payload !== "object") return null;
+    return payload as EncryptedBlocks;
+  }
+
+  async function materializeImportedDocument(rawValue: unknown): Promise<{
+    document: EditorDocument;
+    passphrase: string | null;
+  }> {
+    if (!rawValue || typeof rawValue !== "object") throw new Error("Unsupported document format");
+    const raw = rawValue as Record<string, unknown>;
+    if (raw.version !== 2) throw new Error("Unsupported document format");
+    if (Array.isArray(raw.blocks)) {
+      return { document: normalizeStoredDocument(raw), passphrase: null };
+    }
+    const payload = encryptedPayloadFrom(raw);
+    if (!payload) throw new Error("Unsupported document format");
+    const meta = raw.meta && typeof raw.meta === "object" ? raw.meta as Record<string, unknown> : {};
+    if (!Array.isArray(meta.status) || !meta.status.includes("encrypted")) {
+      throw new Error("Encrypted payload requires encrypted status");
+    }
+    const passphrase = await openEncryptionDialog("unlock");
+    if (!passphrase) throw new Error("IMPORT_CANCELLED");
+    const decrypted = await decryptBlocks(payload, passphrase);
+    return {
+      document: normalizeStoredDocument({ ...raw, blocks: decrypted }),
+      passphrase,
+    };
+  }
+
+  function applyMaterializedDocument(document: EditorDocument, passphrase: string | null): void {
+    encryptionPassphrase = passphrase;
+    setMeta(document.meta);
+    pageAppearance = structuredClone(document.page);
+    blocks = structuredClone(document.blocks);
+    selectedBlockIds.clear();
+    selectedId = blocks[0]?.id ?? "";
+    render();
+  }
+
   function syncOutput(): void {
     const meta = getMeta();
     const title = meta.title || "제목 없음";
@@ -2242,21 +2418,13 @@ export function initPostEditor(): void {
     if (jsonEditor && document.activeElement !== jsonEditor) jsonEditor.value = json;
     if (jsonSize) jsonSize.textContent = `${json.length} chars`;
   }
-  function applyJsonEditor(): void {
+  async function applyJsonEditor(): Promise<void> {
     if (!jsonEditor) return;
     try {
       const raw: unknown = JSON.parse(jsonEditor.value);
-      if (!raw || typeof raw !== "object" || (raw as Record<string, unknown>).version !== 2 || !Array.isArray((raw as Record<string, unknown>).blocks)) {
-        throw new Error("Invalid Post JSON v2 document.");
-      }
-      const document = normalizeStoredDocument(raw);
-      setMeta(document.meta);
-      pageAppearance = structuredClone(document.page);
-      blocks = structuredClone(document.blocks);
-      selectedBlockIds.clear();
-      selectedId = blocks[0]?.id ?? "";
+      const materialized = await materializeImportedDocument(raw);
+      applyMaterializedDocument(materialized.document, materialized.passphrase);
       jsonEditor.classList.remove("is-invalid");
-      render();
       scheduleSave();
     } catch {
       jsonEditor.classList.add("is-invalid");
@@ -2296,22 +2464,22 @@ export function initPostEditor(): void {
   }
 
   async function importJsonFile(file: File): Promise<void> {
+    let wasEncrypted = false;
     try {
       const raw: unknown = JSON.parse(await file.text());
-      if (!raw || typeof raw !== "object" || (raw as Record<string, unknown>).version !== 2 || !Array.isArray((raw as Record<string, unknown>).blocks)) {
-        throw new Error("Unsupported document format");
-      }
-      const document = normalizeStoredDocument(raw);
-      setMeta(document.meta);
-      pageAppearance = structuredClone(document.page);
-      blocks = structuredClone(document.blocks);
-      selectedBlockIds.clear();
-      selectedId = blocks[0]?.id ?? "";
-      render();
+      wasEncrypted = Boolean(raw && typeof raw === "object" && encryptedPayloadFrom(raw as Record<string, unknown>));
+      const materialized = await materializeImportedDocument(raw);
+      applyMaterializedDocument(materialized.document, materialized.passphrase);
       scheduleSave();
       showToast(`${file.name} 불러옴`);
-    } catch {
-      showToast("Post JSON v2 파일만 불러올 수 있습니다.");
+    } catch (error) {
+      if (error instanceof Error && error.message === "IMPORT_CANCELLED") {
+        showToast("불러오기를 취소했습니다.");
+      } else if (wasEncrypted) {
+        showToast("키가 올바르지 않거나 암호문이 손상되었습니다.");
+      } else {
+        showToast("Post JSON v2 파일만 불러올 수 있습니다.");
+      }
     } finally {
       if (jsonImport) jsonImport.value = "";
     }
@@ -2365,7 +2533,7 @@ export function initPostEditor(): void {
 
   jsonEditor?.addEventListener("input", () => {
     window.clearTimeout(jsonInputTimer);
-    jsonInputTimer = window.setTimeout(applyJsonEditor, 350);
+    jsonInputTimer = window.setTimeout(() => void applyJsonEditor(), 350);
   });
   metaInputs.forEach((input) => {
     input.addEventListener("input", () => {
@@ -2374,14 +2542,84 @@ export function initPostEditor(): void {
     });
   });
 
-  root.querySelectorAll<HTMLButtonElement>("[data-page-action]").forEach((button) => {
+  encryptionForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!encryptionKeyInput || !encryptionKeyConfirm || !encryptionError) return;
+    const passphrase = encryptionKeyInput.value;
+    if (!passphrase) {
+      encryptionError.textContent = "암호 키를 입력하세요.";
+      encryptionError.hidden = false;
+      return;
+    }
+    if (encryptionDialogMode === "set" && passphrase.length < 12) {
+      encryptionError.textContent = "암호 키는 12자 이상으로 입력하세요.";
+      encryptionError.hidden = false;
+      return;
+    }
+    if (encryptionDialogMode === "set" && passphrase !== encryptionKeyConfirm.value) {
+      encryptionError.textContent = "두 암호 키가 일치하지 않습니다.";
+      encryptionError.hidden = false;
+      return;
+    }
+    finishEncryptionDialog(passphrase);
+  });
+
+  encryptionCancel?.addEventListener("click", () => finishEncryptionDialog(null));
+  encryptionDialog?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    finishEncryptionDialog(null);
+  });
+  encryptionChangeKey?.addEventListener("click", async () => {
+    const passphrase = await openEncryptionDialog("set");
+    if (!passphrase) return;
+    encryptionPassphrase = passphrase;
+    renderEncryptionSummary();
+    showToast("새 암호 키가 설정되었습니다.");
+  });
+
+  async function enableEncryptedStatus(): Promise<void> {
+    const passphrase = await openEncryptionDialog("set");
+    if (!passphrase) return;
+    encryptionPassphrase = passphrase;
+    statuses = [...statuses.filter((status) => status !== "encrypted"), "encrypted"];
+    renderStatusPicker();
+    syncOutput();
+    scheduleSave();
+  }
+
+  function disableEncryptedStatus(): void {
+    const confirmed = window.confirm(
+      "본문 암호화를 해제할까요? 다음 JSON 복사 또는 저장 시 blocks가 평문으로 포함됩니다.",
+    );
+    if (!confirmed) return;
+    statuses = statuses.filter((status) => status !== "encrypted");
+    encryptionPassphrase = null;
+    renderStatusPicker();
+    syncOutput();
+    scheduleSave();
+  }
+
   statusTrigger?.addEventListener("click", () => {
+    setPlacementMenu(false);
     setStatusMenu(statusMenu?.hidden ?? true);
   });
   root.querySelectorAll<HTMLButtonElement>("[data-status-option]").forEach((option) => {
-    option.addEventListener("click", () => {
+    option.addEventListener("click", async () => {
       const value = option.dataset.statusOption ?? "";
-      statuses = statuses.includes(value) ? statuses.filter((status) => status !== value) : [...statuses, value];
+      if (!value) return;
+      if (value === "encrypted") {
+        setStatusMenu(false);
+        if (statuses.includes("encrypted")) disableEncryptedStatus();
+        else await enableEncryptedStatus();
+        return;
+      }
+      if (statuses.includes(value)) {
+        statuses = statuses.filter((status) => status !== value);
+      } else {
+        if (value === "published") statuses = statuses.filter((status) => status !== "draft");
+        if (value === "draft") statuses = statuses.filter((status) => status !== "published");
+        statuses = [...statuses, value];
+      }
       renderStatusPicker();
       syncOutput();
       scheduleSave();
@@ -2390,22 +2628,39 @@ export function initPostEditor(): void {
   statusChips?.addEventListener("click", (event) => {
     const button = (event.target as Element).closest<HTMLButtonElement>("[data-status-remove]");
     if (!button) return;
+    if (button.dataset.statusRemove === "encrypted") {
+      disableEncryptedStatus();
+      return;
+    }
     statuses = statuses.filter((status) => status !== button.dataset.statusRemove);
     renderStatusPicker();
     syncOutput();
     scheduleSave();
   });
-  statusInput?.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== ",") return;
-    event.preventDefault();
-    const next = normalizeStatuses(statusInput.value);
-    if (!next.length) return;
-    statuses = normalizeStatuses([...statuses, ...next]);
-    statusInput.value = "";
-    renderStatusPicker();
+
+  placementTrigger?.addEventListener("click", () => {
+    setStatusMenu(false);
+    setPlacementMenu(placementMenu?.hidden ?? true);
+  });
+  root.querySelectorAll<HTMLButtonElement>("[data-placement-option]").forEach((option) => {
+    option.addEventListener("click", () => {
+      const value = option.dataset.placementOption ?? "";
+      if (!value) return;
+      placements = placements.includes(value) ? placements.filter((placement) => placement !== value) : [...placements, value];
+      renderPlacementPicker();
+      syncOutput();
+      scheduleSave();
+    });
+  });
+  placementChips?.addEventListener("click", (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>("[data-placement-remove]");
+    if (!button) return;
+    placements = placements.filter((placement) => placement !== button.dataset.placementRemove);
+    renderPlacementPicker();
     syncOutput();
     scheduleSave();
   });
+  root.querySelectorAll<HTMLButtonElement>("[data-page-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.dataset.pageAction;
       if (action === "add-icon") void openEmojiMenu("page", "", button);
@@ -2443,15 +2698,29 @@ export function initPostEditor(): void {
     button.addEventListener("click", async () => {
       const meta = getMeta();
       const slug = meta.slug || slugify(meta.title || "untitled");
-      const json = getJson();
-      if (button.dataset.action === "load-json") {
+      const action = button.dataset.action;
+      if (action === "load-json") {
         jsonImport?.click();
         return;
       }
-      if (button.dataset.action === "copy-json") await copyText(json, "JSON");
-      if (button.dataset.action === "save-json") await saveJson(json, `${slug}.post.json`);
-      if (button.dataset.action === "reset-sample") {
+      if (action === "copy-json" || action === "save-json") {
+        button.disabled = true;
+        try {
+          if (statuses.includes("encrypted")) showToast("본문 암호화 중…");
+          const json = await getExportJson();
+          if (!json) return;
+          if (action === "copy-json") await copyText(json, "JSON");
+          else await saveJson(json, `${slug}.post.json`);
+        } catch {
+          showToast("JSON을 암호화하거나 저장하지 못했습니다.");
+        } finally {
+          button.disabled = false;
+        }
+        return;
+      }
+      if (action === "reset-sample") {
         const sample = sampleDocument();
+        encryptionPassphrase = null;
         setMeta(sample.meta);
         pageAppearance = structuredClone(sample.page);
         blocks = structuredClone(sample.blocks);
@@ -2459,7 +2728,8 @@ export function initPostEditor(): void {
         render();
         scheduleSave();
       }
-      if (button.dataset.action === "clear-document") {
+      if (action === "clear-document") {
+        encryptionPassphrase = null;
         setMeta({
           title: "",
           slug: "",
@@ -2468,6 +2738,7 @@ export function initPostEditor(): void {
           category: "",
           tags: "",
           status: [],
+          placement: [],
         });
         pageAppearance = {};
         blocks = [createEditorBlock("paragraph")];
@@ -2510,15 +2781,18 @@ export function initPostEditor(): void {
   document.addEventListener("pointerdown", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (inlineToolbar.contains(target) || colorMenu.contains(target) || slashMenu.contains(target) || emojiMenu.contains(target) || coverMenu.contains(target) || blockContextMenu?.contains(target) || statusPicker?.contains(target)) return;
+    if (inlineToolbar.contains(target) || colorMenu.contains(target) || slashMenu.contains(target) || emojiMenu.contains(target) || coverMenu.contains(target) || blockContextMenu?.contains(target) || statusPicker?.contains(target) || placementPicker?.contains(target)) return;
     if (!target.closest("[data-rich-root]")) hideInlineToolbar();
     hideColorMenu();
     hideEmojiMenu();
     hideCoverMenu();
     hideBlockContextMenu();
+    setStatusMenu(false);
+    setPlacementMenu(false);
   });
   window.addEventListener("beforeunload", persist);
-    setStatusMenu(false);
+  setStatusMenu(false);
+  setPlacementMenu(false);
 
   const state = loadDocument();
   setMeta({ ...state.meta, pubDate: state.meta.pubDate || today });

@@ -5,6 +5,39 @@
   themes: all;
   logs: false;
 }
+/*
+ * Keep Astro's document-per-page navigation, while letting supporting browsers
+ * animate same-origin page changes. Browsers without View Transitions ignore
+ * this at-rule and continue with a normal document navigation.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes page-transition-out {
+  to { opacity: 0; }
+}
+
+@keyframes page-transition-in {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: page-transition-out 140ms ease-out both;
+  }
+
+  ::view-transition-new(root) {
+    animation: page-transition-in 220ms ease-out both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
 
 .time-line-container > div:last-child .education__time > .education__line {
   display: none;
@@ -68,4 +101,39 @@ body {
 .theme-toggle__control:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--color-blue) 38%, transparent);
   outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .theme-toggle {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    min-height: 52px;
+    padding: 4px;
+  }
+
+  .theme-toggle [data-theme-label] {
+    display: none;
+  }
+
+  .theme-toggle__control {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+  }
+
+  .theme-toggle__control::before {
+    content: attr(data-theme-toggle-button);
+    position: absolute;
+    left: 2px;
+    top: 10px;
+    width: 40px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--color-blue);
+  }
+
+  .theme-toggle__thumb {
+    top: 14px;
+    left: 6px;
+  }
 }

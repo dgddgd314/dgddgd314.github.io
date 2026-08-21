@@ -54,12 +54,30 @@ const siteOrigin = Astro.site?.origin ?? "";
             <div class="status-picker" data-status-picker>
               <button type="button" class="status-picker__trigger" data-status-trigger aria-expanded="false">&#xC0C1;&#xD0DC; &#xC120;&#xD0DD;</button>
               <div class="status-picker__chips" data-status-chips aria-live="polite"></div>
-              <input type="text" data-status-input placeholder="&#xC9C1;&#xC811; &#xC785;&#xB825; &#xD6C4; Enter" aria-label="&#xC0C1;&#xD0DC; &#xCD94;&#xAC00;" />
               <div class="status-picker__menu" data-status-menu hidden>
-                <button type="button" data-status-option="done" aria-pressed="false">done</button>
+                <button type="button" data-status-option="published" aria-pressed="false">published</button>
                 <button type="button" data-status-option="encrypted" aria-pressed="false">encrypted</button>
                 <button type="button" data-status-option="draft" aria-pressed="false">draft</button>
                 <button type="button" data-status-option="deprecated" aria-pressed="false">deprecated</button>
+              </div>
+            </div>
+            <div class="editor-encryption-summary" data-encryption-summary hidden>
+              <span aria-hidden="true">🔐</span>
+              <div>
+                <strong>본문 보호 활성화</strong>
+                <small data-encryption-summary-text></small>
+              </div>
+              <button type="button" data-encryption-change-key>키 변경</button>
+            </div>
+          </label>
+          <label>
+            <span>&#xB178;&#xCD9C; &#xC704;&#xCE58;</span>
+            <div class="status-picker" data-placement-picker>
+              <button type="button" class="status-picker__trigger" data-placement-trigger aria-expanded="false">&#xB178;&#xCD9C; &#xC704;&#xCE58; &#xC120;&#xD0DD;</button>
+              <div class="status-picker__chips" data-placement-chips aria-live="polite"></div>
+              <div class="status-picker__menu" data-placement-menu hidden>
+                <button type="button" data-placement-option="main" aria-pressed="false">main</button>
+                <button type="button" data-placement-option="notice" aria-pressed="false">notice</button>
               </div>
             </div>
           </label>
@@ -154,6 +172,31 @@ const siteOrigin = Astro.site?.origin ?? "";
     <div class="emoji-popover" data-emoji-menu hidden></div>
     <div class="cover-menu" data-cover-menu hidden></div>
     <div class="block-context-menu" data-block-context-menu hidden></div>
+    <dialog class="editor-encryption-dialog" data-encryption-dialog>
+      <form data-encryption-form>
+        <div class="editor-encryption-dialog__icon" aria-hidden="true">🔐</div>
+        <h2 data-encryption-title>본문 암호화 설정</h2>
+        <p data-encryption-description>
+          제목, 설명, 태그와 날짜는 공개되고 본문 블록만 암호화됩니다.
+        </p>
+        <label>
+          <span>암호 키</span>
+          <input type="password" data-encryption-key autocomplete="new-password" required />
+        </label>
+        <label data-encryption-confirm-wrap>
+          <span>키 다시 입력</span>
+          <input type="password" data-encryption-key-confirm autocomplete="new-password" />
+        </label>
+        <p class="editor-encryption-dialog__notice" data-encryption-notice>
+          키는 파일이나 브라우저 저장소에 저장되지 않습니다. 잃어버리면 본문을 복구할 수 없습니다.
+        </p>
+        <p class="editor-encryption-dialog__error" data-encryption-error role="alert" hidden></p>
+        <div class="editor-encryption-dialog__actions">
+          <button type="button" data-encryption-cancel>취소</button>
+          <button type="submit" class="is-primary" data-encryption-confirm>본문 암호화 사용</button>
+        </div>
+      </form>
+    </dialog>
     <div class="editor-toast" data-toast hidden></div>
   </div>
 

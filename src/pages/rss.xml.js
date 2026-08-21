@@ -2,9 +2,10 @@ import rss from "@astrojs/rss";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../config";
 import { getCollection } from "astro:content";
 import createSlug from "../lib/createSlug";
+import { isMainPost, sortPostsByDate } from "../lib/blog-publication";
 
 export async function GET(context) {
-  const blog = await getCollection("blog");
+  const blog = sortPostsByDate(await getCollection("blog")).filter(isMainPost);
   return rss({
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,

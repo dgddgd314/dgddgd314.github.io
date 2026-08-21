@@ -7,7 +7,12 @@
     "pubDate": "2026-07-29",
     "category": "",
     "tags": ["editor", "latex", "table"],
-    "badge": "guide"
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ]
   },
   "page": {},
   "blocks": [

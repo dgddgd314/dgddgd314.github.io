@@ -55,6 +55,7 @@ export type EditorMeta = {
   category: string;
   tags: string;
   status: string[];
+  placement: string[];
 };
 
 export type EditorPageAppearance = {

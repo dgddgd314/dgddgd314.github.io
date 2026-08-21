@@ -8,7 +8,10 @@
     "tags": "google,google-search-console,astro",
     "title": "Google에 색인시키기: Search Console 등록부터 첫 색인 요청까지",
     "status": [
-      "done"
+      "published"
+    ],
+    "placement": [
+      "main"
     ]
   },
   "page": {

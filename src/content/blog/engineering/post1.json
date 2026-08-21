@@ -7,7 +7,12 @@
     "pubDate": "2026-07-31",
     "category": "",
     "tags": ["notion", "blocks", "editor"],
-    "badge": "guide"
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main"
+    ]
   },
   "page": {},
   "blocks": [

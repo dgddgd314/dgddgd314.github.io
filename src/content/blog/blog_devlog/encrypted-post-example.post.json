@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "encrypted-post-example",
+    "description": "암호화 확인용 예시 포스팅",
+    "pubDate": "2026-08-21",
+    "category": "",
+    "tags": "",
+    "title": "암호화 예시 포스팅",
+    "status": [
+      "published",
+      "encrypted"
+    ],
+    "placement": []
+  },
+  "page": {},
+  "encryptedBlocks": {
+    "version": 1,
+    "algorithm": "AES-GCM",
+    "kdf": {
+      "name": "PBKDF2",
+      "hash": "SHA-256",
+      "iterations": 600000,
+      "salt": "9dJ3gak4Y0m3lvy3OIBQaQ=="
+    },
+    "iv": "DPcGt+uh5ZOy8sKu",
+    "ciphertext": "pT2bvaV0aJhuAMWq8pqmjIbj9nnxc7S3JYILHgC4XvRCWtcowdNqe94A9Fav+QaqZX50tOi7+cRtWh3D8CartQexqsVxq4uzPBQXLZJqf/FI25YiTVjSclXQlWWZF8gyIE6dZ6QTfw7ptVKHCCNv/iDgBhHKqszaAXtB42+Rd29mo0M3onXD9gjBpF6CrHdJL5k5iSJXQDMEc+bxpgMvXXWmKn06blDHTCkXv4I1dm5Txd/6nYS1OMJCGIyXhK9uV456rOKMrUnm4rEl0AkB8xsaM2qJ6It44zGa3t9DA2wp1KZpJ33lAD9D8bdmLS5S8IodWrCHSycakd0xGk82jNzB9Zl5fvJ7vVotB1BwRAkq0JoSWsMSeVKEt6Jpc2qDgzEQcG5eucV+chEt2ETSRaLEgj2dWcCE5DrlOLjMyJN1Z76R5oBruTXEbuWp8vSA3IDliKTgK1ugOnL2ONvwxbk+2eQj5X04uTHliIZNZo/6/D4ip+TpJnfkRbBGe6LXCsGU1zBiOGdFGEOMf1TUibTKXsJ+b6G4xfyglBKh0nWbnmwbb59od5zZKk94niQ+YW+DkflL5zIlvfmhhvsa9XcXTDd6lzzE7Dr927mK8YiPgXXAHkdg+Q99ooIZaBJ20h9Jtq6T2WPBKl/C9xgj8LkSYXfrXQVUJZQC9gf7DLG9MX1jZRE06DA="
+  }
+}
