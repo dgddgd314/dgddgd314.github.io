@@ -833,7 +833,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "1. blocks를 암호화할 바이트로 바꾼다"
+          "text": "1. blocks를 암호화할 바이트로 변경"
         }
       ],
       "level": 2
@@ -869,7 +869,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "2. 패스프레이즈로 AES 키를 만든다"
+          "text": "2. 패스프레이즈로 AES 키를 생성"
         }
       ],
       "level": 2
@@ -948,8 +948,8 @@
         }
       ]
     },
-    {
-      "id": "pbkdf2-definition-heading",
+  {
+    "id": "pbkdf2-definition-heading",
       "type": "heading",
       "richText": [
         {
@@ -1071,10 +1071,134 @@
       "type": "heading",
       "richText": [
         {
-          "text": "3. AES-GCM으로 본문을 잠그고 봉인한다"
+          "text": "3. AES-GCM으로 본문을 잠그고 봉인"
         }
       ],
       "level": 2
+    },
+    {
+      "id": "aes-gcm-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "AES-GCM",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "은 하나의 긴 알고리즘 이름처럼 보이지만, 실제로는 AES와 GCM을 합쳐 부르는 말이다. AES는 데이터를 다른 모습으로 바꾸는 핵심 암호이고,"
+        },
+        {
+          "text": " GCM은 그 AES를 긴 데이터에 어떻게 적용하며 변조 여부는 어떻게 확인할지를 정한 사용 규칙",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이다. 비유하면 AES가 자물쇠의 잠금 장치라면 GCM은 그 장치로 긴 상자를 잠그고 훼손 방지 봉인까지 붙이는 방법이다."
+        }
+      ]
+    },
+    {
+      "id": "aes-definition-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "AES는 16바이트를 다른 16바이트로 바꾸는 암호"
+        }
+      ],
+      "level": 3
+    },
+    {
+      "id": "aes-block-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "AES는 128비트, 즉 16바이트짜리 입력 블록 하나와 비밀 키를 받아 같은 크기의 전혀 다른 블록으로 바꾼다. 올바른 키가 있으면 이 변환을 거꾸로 수행해 원래 블록을 복원할 수 있지만, 키가 없으면 현실적인 시간 안에 원문을 알아내기 어렵다. 여기서 AES-256의 256은 한 번에 처리하는 블록 크기가 아니라 키의 길이가 256비트라는 뜻이다. AES의 블록 크기는 AES-128·AES-192·AES-256 모두 128비트로 같다."
+        }
+      ]
+    },
+    {
+      "id": "gcm-definition-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "GCM은 AES로 긴 본문을 처리하고 봉인하는 규칙"
+        }
+      ],
+      "level": 3
+    },
+    {
+      "id": "gcm-definition-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "블로그 본문은 당연히 16바이트보다 길다. (즉 한 번의 AES 변환으로는 블로그 본문 전체를 바꿀 수 없다.) "
+        }
+      ]
+    },
+    {
+      "id": "block-mt35kgaj-d4s7s9",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "AES라는 핵심 변환만 정해 놓아서는 긴 본문을 어떤 순서로 처리할지, 같은 본문을 다시 저장했을 때도 같은 암호문이 나와도 되는지, 암호문이 중간에 바뀌지는 않았는지를 알 수 없다. GCM(Galois/Counter Mode)은 이 나머지 규칙을 담당한다. 내부적으로는 AES를 이용해 본문 길이만큼의 키 스트림을 만드는 "
+        },
+        {
+          "text": "CTR",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 방식으로 내용을 숨기고, "
+        },
+        {
+          "text": "GHASH",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "라는 계산으로 암호문 전체의 인증 태그를 만든다. CTR과 GHASH의 계산은 잠시 뒤에 각각 살펴본다."
+        }
+      ]
+    },
+    {
+      "id": "aes-gcm-input-output",
+      "type": "code",
+      "language": "text",
+      "code": "입력\n본문 바이트 P + AES 키 K + IV\n        ↓\n     AES-GCM\n        ↓\n출력\n암호문 C + 인증 태그 T"
+    },
+    {
+      "id": "aes-gcm-result-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암호문은 키가 없는 사람에게 본문을 숨기는 역할을 하고, 인증 태그는 올바른 키로 만든 암호문이 그대로 유지되었는지(혹은 다른 말로 정말로 그 키가 타당한지)를 확인하는 역할을 한다. "
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mt35oxhn-hub1aa",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "인증 태그가 없다면 예를 들어서 어떤 키를 입력했는데 (정말 낮은 확률이지만) 말이 되지만 틀린 본문을 return 할 수도 있게 된다. "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mt35nznx-dsitwf",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "아무튼 AES-GCM 방법은 복호화할 때 태그 검증까지 성공해야만 평문을 돌려준다. 이처럼 암호화와 무결성 검증을 한 번에 제공하는 방식을 AEAD라 한다."
+        }
+      ]
     },
     {
       "id": "iv-simple-heading",
@@ -1091,48 +1215,105 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "IV(initialization vector)는 AES-GCM을 시작할 때 함께 넣는 12바이트 값이다. 같은 AES 키와 같은 본문을 다시 암호화하더라도 IV가 달라지면 암호문도 달라진다. IV는 비밀이 아니므로 암호문 옆에 저장하지만, 같은 AES 키에서 같은 IV를 재사용해서는 안 된다. 그래서 저장할 때마다 브라우저의 난수 생성기로 새로 만든다."
+          "text": "IV",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "(initialization vector)는 AES-GCM을 시작할 때 함께 넣는 12바이트 값이다. "
+        },
+        {
+          "text": "같은 AES 키와 같은 본문을 다시 암호화하더라도 IV가 달라지면 암호문도 달라진다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " IV는 비밀이 아니므로 암호문 옆에 저장하지만, 같은 AES 키에서 같은 IV를 재사용해서는 안 된다. 그래서 암호문을 저장할 때마다 난수 생성기로 새로 만든다."
         }
       ]
     },
-    {
-      "id": "aes-block-copy",
-      "type": "paragraph",
-      "richText": [
-        {
-          "text": "AES 자체는 128비트 블록 하나를 같은 크기의 다른 블록으로 바꾸는 키 기반 변환이다. 하지만 블로그 본문은 한 블록보다 훨씬 길고, 단순히 조각마다 AES를 적용하면 반복 패턴이 드러날 수 있다. GCM은 AES를 카운터 모드로 사용해 임의 길이 데이터를 암호화하고, 별도의 인증 계산으로 변조 여부까지 확인하는 AEAD 방식이다. 여기서 AEAD는 ‘내용을 숨기는 일’과 ‘내용이 바뀌지 않았음을 확인하는 일’을 함께 수행하는 암호화 방식을 뜻한다."
-        }
-      ]
-    },
-    {
-      "id": "ctr-heading",
-      "type": "heading",
-      "richText": [
-        {
-          "text": "CTR: AES 출력으로 본문을 가린다"
-        }
-      ],
-      "level": 3
-    },
-    {
-      "id": "ctr-equation",
-      "type": "equation",
-      "equation": "C_i = P_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
-    },
-    {
-      "id": "ctr-copy",
-      "type": "paragraph",
-      "richText": [
-        {
-          "text": "초기 카운터에서 블록 번호를 증가시키고 각각을 AES로 암호화하면 예측할 수 없는 키 스트림이 나온다. 평문 블록과 키 스트림의 XOR가 암호문이다. XOR는 자기 자신이 역연산이므로 같은 키 스트림을 암호문에 다시 XOR하면 평문이 복원된다."
-        }
-      ]
-    },
-    {
-      "id": "ctr-decrypt-equation",
-      "type": "equation",
-      "equation": "P_i = C_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
-    },
+  {
+    "id": "ctr-heading",
+    "type": "heading",
+    "richText": [
+      {
+        "text": "CTR: 번호표를 암호화해 본문용 가림막을 만든다"
+      }
+    ],
+    "level": 3
+  },
+  {
+    "id": "ctr-copy",
+    "type": "paragraph",
+    "richText": [
+      {
+        "text": "CTR은 Counter Mode, 즉 카운터 모드의 약자다. 여기서 카운터는 어려운 암호 용어가 아니라 본문 조각마다 붙이는 번호표라고 생각하면 된다. 본문을 16바이트씩 P₁, P₂, P₃로 나눈 뒤 첫 조각에는 첫 번째 번호표, 다음 조각에는 그보다 1 큰 번호표를 사용한다. 서로 다른 번호표를 사용하므로 각 조각에 서로 다른 가림막을 만들 수 있다."
+      }
+    ]
+  },
+  {
+    "id": "ctr-initial-copy",
+    "type": "paragraph",
+    "richText": [
+      {
+        "text": "다만 GCM의 번호표는 화면에서 보는 1, 2, 3 같은 짧은 숫자가 아니라 16바이트 값이다. 먼저 IV로부터 시작 번호표 J₀를 만든다. 이것이 수식에 나오는 ‘초기 카운터’다. 초기 카운터는 첫 번째 본문 조각에 바로 사용하는 값이 아니라 번호를 세기 위한 기준점이며, 첫 조각에는 J₀의 마지막 부분을 1 증가시킨 값을 사용한다. 두 번째 조각에서는 다시 1을 증가시키는 식으로 이어진다."
+      }
+    ]
+  },
+  {
+    "id": "ctr-flow-code",
+    "type": "code",
+    "language": "text",
+    "code": "IV\n  → 시작 번호표 J₀ 생성\n\n본문 조각       P₁          P₂          P₃\n번호표          J₀+1        J₀+2        J₀+3\n                  ↓ AES       ↓ AES       ↓ AES\n가림막          S₁          S₂          S₃\n                  ↓ XOR       ↓ XOR       ↓ XOR\n암호문 조각     C₁          C₂          C₃"
+  },
+  {
+    "id": "ctr-mask-copy",
+    "type": "paragraph",
+    "richText": [
+      {
+        "text": "중요한 점은 AES에 본문 조각을 직접 넣는 것이 아니라 번호표를 넣는다는 것이다. AES 키 K로 각 번호표를 암호화하면 키 없이는 예측하기 어려운 16바이트 값 Sᵢ가 나온다. 이 S₁, S₂, S₃를 이어 붙인 것을 키 스트림이라고 하며, 각 Sᵢ가 같은 위치의 본문 조각을 가리는 가림막 역할을 한다."
+      }
+    ]
+  },
+  {
+    "id": "ctr-xor-copy",
+    "type": "paragraph",
+    "richText": [
+      {
+        "text": "본문 조각 Pᵢ와 가림막 Sᵢ는 XOR라는 연산으로 합친다. XOR는 두 비트가 같으면 0, 다르면 1을 만드는 단순한 연산이다. 같은 값으로 XOR를 두 번 하면 처음 값으로 돌아오는 성질이 있어서 암호화와 복호화에 같은 가림막을 사용할 수 있다."
+      }
+    ]
+  },
+  {
+    "id": "ctr-equation",
+    "type": "equation",
+    "equation": "C_i = P_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
+  },
+  {
+    "id": "ctr-symbols-copy",
+    "type": "paragraph",
+    "richText": [
+      {
+        "text": "이제 수식을 읽을 수 있다. Pᵢ는 i번째 평문 조각, Cᵢ는 i번째 암호문 조각, K는 AES 키다. J₀는 IV로부터 만든 시작 번호표이고, inc₃₂(J₀, i)는 J₀의 마지막 32비트 부분을 i만큼 증가시킨 번호표를 뜻한다. AESₖ(번호표)가 가림막 Sᵢ를 만들고, ⊕는 XOR를 뜻한다."
+      }
+    ]
+  },
+  {
+    "id": "ctr-decrypt-equation",
+    "type": "equation",
+    "equation": "P_i = C_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
+  },
+  {
+    "id": "ctr-decrypt-copy",
+    "type": "paragraph",
+    "richText": [
+      {
+        "text": "복호화할 때는 저장된 IV와 독자가 다시 만든 AES 키로 같은 번호표와 같은 가림막을 재생성한다. 암호문 Cᵢ에 그 가림막을 다시 XOR하면 Sᵢ가 서로 지워지면서 원래 본문 Pᵢ가 나온다. 따라서 가림막 자체를 파일에 저장할 필요는 없다."
+      }
+    ]
+  },
     {
       "id": "iv-heading",
       "type": "heading",
