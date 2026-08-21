@@ -2,13 +2,16 @@
   "version": 2,
   "meta": {
     "slug": "client-side-encrypted-posts-static-site",
-    "description": "서버 없는 정적 블로그에서 PBKDF2로 키를 유도하고 AES-GCM으로 본문 블록만 암호화한 과정을 수학적 배경과 함께 정리했다.",
+    "description": "서버 없는 정적 블로그에서 PBKDF2로 키를 유도하고 AES-GCM으로 본문 블록만 암호화한 과정을 수학적 배경과 함께 정리.",
     "pubDate": "2026-08-19",
     "category": "blog_dev",
-    "tags": "cryptography,web-crypto,astro,static-site,editor",
+    "tags": "cryptography,astro,editor",
     "title": "서버 없이 비밀 글을 배포하는 법: PBKDF2와 AES-GCM으로 암호화하기",
     "status": [
-      "draft"
+      "published"
+    ],
+    "placement": [
+      "main"
     ]
   },
   "page": {
@@ -38,7 +41,7 @@
           }
         },
         {
-          "text": "가 있었다. 이전에는 이름만 있고 동작은 없는 상태였는데, 블로그를 v1.2로 올리면서 드디어 진짜 기능으로 구현했다. 제목·날짜·태그는 누구나 볼 수 있지만 본문은 공유받은 키를 입력해야만 열리는 글이다."
+          "text": "가 있었다. 이전에는 이름만 있고 동작은 없는 상태였는데, 블로그를 v1.2로 올리면서 드디어 진짜 기능으로 구현했다. 제목·날짜·태그는 누구나 볼 수 있지만 본문은 공유받은 키를 입력해야만 열리는 글이다.\n"
         }
       ]
     },
@@ -47,7 +50,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "보통 웹사이트라면 비밀번호 입력창 하나 만들고 서버에서 확인하면 끝날 것처럼 보인다. 문제는 이 블로그에 그 확인을 해 줄 서버가 없다는 점이다. 이 단순하지만 치명적인 차이 때문에 수학 공부를 해야 한다...."
+          "text": "보통 웹사이트라면 비밀번호 입력창 하나 만들고 서버에서 확인하면 끝날 것처럼 보인다. 문제는 이 블로그에 그 확인을 해 줄 서버가 없다는 점이다. 이 단순하지만 치명적인 차이 때문에 수학 공부를 해야 한다..."
         }
       ]
     },
@@ -444,7 +447,7 @@
           }
         },
         {
-          "text": "은 본문을 알아볼 수 없는 암호문으로 바꾸고, 암호문이 훼손되지 않았는지 확인할 인증 태그(authentication tag)도 함께 만든다. 인증 태그는 잠긴 상자에 붙이는 훼손 방지 봉인과 비슷하다. 추후 복호화 과정에서 키를 입력했을 때 인증 태그가 해당 키가 적절한지를 판단한다."
+          "text": "은 본문을 알아볼 수 없는 암호문으로 바꾸고, 암호문이 훼손되지 않았는지 확인할 인증 태그(authentication tag)도 함께 만든다. 인증 태그는 잠긴 상자에 붙이는 훼손 방지 봉인과 비슷하다. 복호화할 때는 현재 AES 키·IV·암호문으로 계산한 태그가 저장된 태그와 일치하는지 확인한다. 잘못된 패스프레이즈는 다른 AES 키를 만들기 때문에 결과적으로 이 검증을 통과하지 못한다."
         }
       ]
     },
@@ -810,14 +813,14 @@
       ]
     },
     {
-      "id": "crypto-bridge-heading",
+      "id": "block-mt39q475-9fy7hh",
       "type": "heading",
       "richText": [
         {
           "text": "각 단계를 자세하게 살펴보자"
         }
       ],
-      "level": 1
+      "level": 2
     },
     {
       "id": "details-intro",
@@ -829,14 +832,14 @@
       ]
     },
     {
-      "id": "encrypted-target-heading",
+      "id": "block-mt39qekm-fsbu8u",
       "type": "heading",
       "richText": [
         {
-          "text": "1. blocks를 암호화할 바이트로 변경"
+          "text": "1. 블록을 암호화할 바이트로 변경"
         }
       ],
-      "level": 2
+      "level": 1
     },
     {
       "id": "encrypted-target-copy",
@@ -848,10 +851,10 @@
       ]
     },
     {
-      "id": "encrypted-target-code",
-      "type": "code",
-      "language": "text",
-      "code": "암호화 전 Post JSON\n├─ meta                 공개: 글 제목, 설명, 날짜, 태그, status\n├─ page                 공개: 아이콘과 커버\n└─ blocks               평문 본문\n\n암호화 후 Post JSON\n├─ meta                 그대로 공개\n├─ page                 그대로 공개\n└─ encryptedBlocks      salt, IV, 암호문과 알고리즘 정보\n\n평문 blocks는 암호화 후 JSON에서 완전히 제거된다."
+      "id": "block-mt38wpd5-313rv6",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1AsvIsryxaGoj-S5Xrv6yP3ljmMPdiZOU=w2000",
+      "alt": "블록의 암호화 바이트 선정"
     },
     {
       "id": "encrypted-image-caveat",
@@ -865,24 +868,24 @@
       "title": "이미지 파일은 별개의 문제"
     },
     {
-      "id": "kdf-heading",
+      "id": "block-mt39qtkj-ap86c1",
       "type": "heading",
       "richText": [
         {
           "text": "2. 패스프레이즈로 AES 키를 생성"
         }
       ],
-      "level": 2
+      "level": 1
     },
     {
-      "id": "derived-key-simple-heading",
+      "id": "block-mt39r8pf-zj1ncs",
       "type": "heading",
       "richText": [
         {
-          "text": "AES 키는 무엇인가"
+          "text": "AES 키란?"
         }
       ],
-      "level": 3
+      "level": 2
     },
     {
       "id": "derived-key-simple-copy",
@@ -921,14 +924,14 @@
       ]
     },
     {
-      "id": "salt-simple-heading",
+      "id": "block-mt39rhnx-l6c1v7",
       "type": "heading",
       "richText": [
         {
-          "text": "salt는 키를 만들 때 함께 넣는 공개 난수다"
+          "text": "salt는 키를 만들 때 함께 넣는 공개 난수"
         }
       ],
-      "level": 3
+      "level": 2
     },
     {
       "id": "salt-simple-copy",
@@ -948,15 +951,15 @@
         }
       ]
     },
-  {
-    "id": "pbkdf2-definition-heading",
+    {
+      "id": "block-mt39s1qe-iasxgs",
       "type": "heading",
       "richText": [
         {
           "text": "PBKDF2가 추측 비용을 높이는 방식"
         }
       ],
-      "level": 3
+      "level": 2
     },
     {
       "id": "pbkdf2-key-equation",
@@ -1038,7 +1041,7 @@
           }
         },
         {
-          "text": "이 올라가는 셈이다. 글 하나를 보기 위해 다양한 패스프레이즈를 대입해야 하는 공격자는 어마어마한 연산량을 필요로 한다."
+          "text": "이 올라가는 셈이다. 이 구현에서는 후보 하나마다 HMAC-SHA-256을 600,000회 계산해야 하기 때문에, 연산 자원이 어지간히 높지 않다면 뚫기 어렵다. "
         }
       ]
     },
@@ -1057,7 +1060,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "글을 암호화할 때마다 16바이트 랜덤 salt를 새로 만든다. 같은 패스프레이즈를 두 글에 사용해도 salt가 다르면 유도되는 키가 달라진다. salt 자체는 키가 아니므로 (물론  키라고 주장할 수 있지만, 패스프레이즈로도 충분하므로) 암호문 옆에 평문으로 저장해도 된다."
+          "text": "글을 암호화할 때마다 16바이트 랜덤 salt를 새로 만든다. 같은 패스프레이즈를 두 글에 사용해도 salt가 다르면 유도되는 AES 키가 달라진다. salt는 비밀값이나 암호키가 아니라 PBKDF2에 함께 넣는 공개 파라미터다. 복호화할 때 같은 AES 키를 다시 유도할 수 있도록 반복 횟수와 함께 암호문 옆에 저장한다."
         }
       ]
     },
@@ -1067,14 +1070,14 @@
       "equation": "\\operatorname{Cost}_{\\mathrm{attack}} \\approx N_{\\mathrm{candidates}} \\times c \\times \\operatorname{Cost}_{\\mathrm{HMAC}}"
     },
     {
-      "id": "aes-gcm-heading",
+      "id": "block-mt39sdgx-lihsuf",
       "type": "heading",
       "richText": [
         {
-          "text": "3. AES-GCM으로 본문을 잠그고 봉인"
+          "text": "3-1. AES-GCM으로 본문을 암호화하기"
         }
       ],
-      "level": 2
+      "level": 1
     },
     {
       "id": "aes-gcm-intro",
@@ -1101,33 +1104,55 @@
       ]
     },
     {
-      "id": "aes-definition-heading",
+      "id": "block-mt39sovy-5s21wp",
       "type": "heading",
       "richText": [
         {
-          "text": "AES는 16바이트를 다른 16바이트로 바꾸는 암호"
+          "text": "AES는 16바이트를 다른 16바이트로 변경하는 암호"
         }
       ],
-      "level": 3
+      "level": 2
     },
     {
       "id": "aes-block-copy",
       "type": "paragraph",
       "richText": [
         {
-          "text": "AES는 128비트, 즉 16바이트짜리 입력 블록 하나와 비밀 키를 받아 같은 크기의 전혀 다른 블록으로 바꾼다. 올바른 키가 있으면 이 변환을 거꾸로 수행해 원래 블록을 복원할 수 있지만, 키가 없으면 현실적인 시간 안에 원문을 알아내기 어렵다. 여기서 AES-256의 256은 한 번에 처리하는 블록 크기가 아니라 키의 길이가 256비트라는 뜻이다. AES의 블록 크기는 AES-128·AES-192·AES-256 모두 128비트로 같다."
+          "text": "AES는 128비트, 즉 "
+        },
+        {
+          "text": "16바이트짜리 입력 블록 하나와 비밀 키(=AES 키, ",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "기억하시죠?",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://dgddgd314.github.io/blog/client-side-encrypted-posts-static-site#kdf-heading"
+        },
+        {
+          "text": ")를 받아 같은 크기의 전혀 다른 블록으로 바꾼다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 올바른 키가 있으면 이 변환을 거꾸로 수행해 원래 블록을 복원할 수 있지만, 키가 없으면 현실적인 시간 안에 원문을 알아내기 어렵다. 여기서 AES-256의 256은 한 번에 처리하는 블록 크기가 아니라 키의 길이가 256비트라는 뜻이다. AES의 블록 크기는 AES-128·AES-192·AES-256 모두 128비트로 같다."
         }
       ]
     },
     {
-      "id": "gcm-definition-heading",
+      "id": "block-mt39szcl-uclbj6",
       "type": "heading",
       "richText": [
         {
           "text": "GCM은 AES로 긴 본문을 처리하고 봉인하는 규칙"
         }
       ],
-      "level": 3
+      "level": 2
     },
     {
       "id": "gcm-definition-copy",
@@ -1176,7 +1201,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "암호문은 키가 없는 사람에게 본문을 숨기는 역할을 하고, 인증 태그는 올바른 키로 만든 암호문이 그대로 유지되었는지(혹은 다른 말로 정말로 그 키가 타당한지)를 확인하는 역할을 한다. "
+          "text": "암호문은 키가 없는 사람에게 본문을 숨기는 역할을 하고, 인증 태그는 현재 AES 키·IV·암호문 조합이 암호화할 때의 조합과 일치하는지 검증한다. 잘못된 패스프레이즈를 넣으면 다른 AES 키가 만들어지므로 태그 검증에 실패한다."
         }
       ],
       "children": [
@@ -1185,7 +1210,7 @@
           "type": "paragraph",
           "richText": [
             {
-              "text": "인증 태그가 없다면 예를 들어서 어떤 키를 입력했는데 (정말 낮은 확률이지만) 말이 되지만 틀린 본문을 return 할 수도 있게 된다. "
+              "text": "인증이 없는 암호화는 복호화 결과가 올바른지 확인할 방법이 없다. 특히 누군가 암호문을 변경하면 조작된 평문을 그대로 처리할 수도 있다. AES-GCM은 태그가 일치하지 않으면 평문을 반환하지 않고 복호화 자체를 실패시킨다."
             }
           ]
         }
@@ -1201,125 +1226,185 @@
       ]
     },
     {
-      "id": "iv-simple-heading",
+      "id": "block-mt39ti7y-pxwnze",
       "type": "heading",
       "richText": [
         {
-          "text": "IV는 암호화를 매번 다르게 시작하게 한다"
+          "text": "CTR: 카운터로부터 키스트림을 생성"
         }
       ],
-      "level": 3
+      "level": 2
     },
     {
-      "id": "iv-simple-copy",
+      "id": "ctr-copy",
       "type": "paragraph",
       "richText": [
         {
-          "text": "IV",
-          "annotations": {
-            "code": true
-          }
+          "text": "CTR은 Counter Mode, 즉 카운터 모드의 약자다. 본문을 16바이트씩 P₁, P₂, P₃로 나눈 뒤 각 위치에 서로 다른 16바이트 카운터 블록을 대응시킨다. 카운터 블록은 앞 블록의 마지막 32비트에 1을 더하는 방식으로 순서대로 생성된다. 이 값들을 AES에 입력하면 본문의 각 조각에 사용할 서로 다른 키스트림 블록을 얻을 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "ctr-initial-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "카운터 블록은 화면에서 보는 1, 2, 3 같은 짧은 정수가 아니라 AES의 입력 크기에 맞춘 16바이트 값이다. "
         },
         {
-          "text": "(initialization vector)는 AES-GCM을 시작할 때 함께 넣는 12바이트 값이다. "
-        },
-        {
-          "text": "같은 AES 키와 같은 본문을 다시 암호화하더라도 IV가 달라지면 암호문도 달라진다.",
+          "text": "GCM은 공개값인 IV로부터 카운터 기준 블록 J₀를 만든다.",
           "annotations": {
             "bold": true
           }
         },
         {
-          "text": " IV는 비밀이 아니므로 암호문 옆에 저장하지만, 같은 AES 키에서 같은 IV를 재사용해서는 안 된다. 그래서 암호문을 저장할 때마다 난수 생성기로 새로 만든다."
+          "text": " "
         }
       ]
     },
-  {
-    "id": "ctr-heading",
-    "type": "heading",
-    "richText": [
-      {
-        "text": "CTR: 번호표를 암호화해 본문용 가림막을 만든다"
-      }
-    ],
-    "level": 3
-  },
-  {
-    "id": "ctr-copy",
-    "type": "paragraph",
-    "richText": [
-      {
-        "text": "CTR은 Counter Mode, 즉 카운터 모드의 약자다. 여기서 카운터는 어려운 암호 용어가 아니라 본문 조각마다 붙이는 번호표라고 생각하면 된다. 본문을 16바이트씩 P₁, P₂, P₃로 나눈 뒤 첫 조각에는 첫 번째 번호표, 다음 조각에는 그보다 1 큰 번호표를 사용한다. 서로 다른 번호표를 사용하므로 각 조각에 서로 다른 가림막을 만들 수 있다."
-      }
-    ]
-  },
-  {
-    "id": "ctr-initial-copy",
-    "type": "paragraph",
-    "richText": [
-      {
-        "text": "다만 GCM의 번호표는 화면에서 보는 1, 2, 3 같은 짧은 숫자가 아니라 16바이트 값이다. 먼저 IV로부터 시작 번호표 J₀를 만든다. 이것이 수식에 나오는 ‘초기 카운터’다. 초기 카운터는 첫 번째 본문 조각에 바로 사용하는 값이 아니라 번호를 세기 위한 기준점이며, 첫 조각에는 J₀의 마지막 부분을 1 증가시킨 값을 사용한다. 두 번째 조각에서는 다시 1을 증가시키는 식으로 이어진다."
-      }
-    ]
-  },
-  {
-    "id": "ctr-flow-code",
-    "type": "code",
-    "language": "text",
-    "code": "IV\n  → 시작 번호표 J₀ 생성\n\n본문 조각       P₁          P₂          P₃\n번호표          J₀+1        J₀+2        J₀+3\n                  ↓ AES       ↓ AES       ↓ AES\n가림막          S₁          S₂          S₃\n                  ↓ XOR       ↓ XOR       ↓ XOR\n암호문 조각     C₁          C₂          C₃"
-  },
-  {
-    "id": "ctr-mask-copy",
-    "type": "paragraph",
-    "richText": [
-      {
-        "text": "중요한 점은 AES에 본문 조각을 직접 넣는 것이 아니라 번호표를 넣는다는 것이다. AES 키 K로 각 번호표를 암호화하면 키 없이는 예측하기 어려운 16바이트 값 Sᵢ가 나온다. 이 S₁, S₂, S₃를 이어 붙인 것을 키 스트림이라고 하며, 각 Sᵢ가 같은 위치의 본문 조각을 가리는 가림막 역할을 한다."
-      }
-    ]
-  },
-  {
-    "id": "ctr-xor-copy",
-    "type": "paragraph",
-    "richText": [
-      {
-        "text": "본문 조각 Pᵢ와 가림막 Sᵢ는 XOR라는 연산으로 합친다. XOR는 두 비트가 같으면 0, 다르면 1을 만드는 단순한 연산이다. 같은 값으로 XOR를 두 번 하면 처음 값으로 돌아오는 성질이 있어서 암호화와 복호화에 같은 가림막을 사용할 수 있다."
-      }
-    ]
-  },
-  {
-    "id": "ctr-equation",
-    "type": "equation",
-    "equation": "C_i = P_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
-  },
-  {
-    "id": "ctr-symbols-copy",
-    "type": "paragraph",
-    "richText": [
-      {
-        "text": "이제 수식을 읽을 수 있다. Pᵢ는 i번째 평문 조각, Cᵢ는 i번째 암호문 조각, K는 AES 키다. J₀는 IV로부터 만든 시작 번호표이고, inc₃₂(J₀, i)는 J₀의 마지막 32비트 부분을 i만큼 증가시킨 번호표를 뜻한다. AESₖ(번호표)가 가림막 Sᵢ를 만들고, ⊕는 XOR를 뜻한다."
-      }
-    ]
-  },
-  {
-    "id": "ctr-decrypt-equation",
-    "type": "equation",
-    "equation": "P_i = C_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
-  },
-  {
-    "id": "ctr-decrypt-copy",
-    "type": "paragraph",
-    "richText": [
-      {
-        "text": "복호화할 때는 저장된 IV와 독자가 다시 만든 AES 키로 같은 번호표와 같은 가림막을 재생성한다. 암호문 Cᵢ에 그 가림막을 다시 XOR하면 Sᵢ가 서로 지워지면서 원래 본문 Pᵢ가 나온다. 따라서 가림막 자체를 파일에 저장할 필요는 없다."
-      }
-    ]
-  },
+    {
+      "id": "block-mt393ijb-xoigbr",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "GCM이 IV로부터 카운터 기준 블록 J₀를 만드는 자세한 과정"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mt393k1t-0cd3d1",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "IV",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "(initialization vector)는 AES-GCM에 함께 넣는 공개 값이다.  "
+            },
+            {
+              "text": "이 구현처럼 IV가 표준 길이인 12바이트라면, GCM은 그 뒤에 정해진 4바이트 값 ",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": "00 00 00 01",
+              "annotations": {
+                "bold": true,
+                "code": true
+              }
+            },
+            {
+              "text": "을 붙여 J₀를 만든다. ",
+              "annotations": {
+                "bold": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mt393hth-86a0yy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "J₀ 자체는 평문에 사용하는 첫 카운터 블록이 아니라 번호를 세기 위한 기준점이다."
+        },
+        {
+          "text": " 첫 번째 평문 블록에는 J₀의 마지막 32비트를 1 증가시킨 값을 사용하고, 두 번째 평문 블록에는 2 증가시킨 값을 사용하는 식으로 이어진다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ctr-mask-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "중요한 점은 AES에 평문 블록을 직접 입력하지 않는다는 것이다. AES 키 K로 i번째 카운터 블록을 암호화하면 키를 모르는 입장에서는 무작위 바이트열처럼 보이는 16바이트 출력 Sᵢ가 나온다. 이를 "
+        },
+        {
+          "text": "i번째 키스트림 블록",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이라고 하며, S₁, S₂, S₃를 순서대로 연결한 전체 바이트열을 키스트림이라고 한다."
+        }
+      ]
+    },
+    {
+      "id": "ctr-xor-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암호문 블록 Cᵢ는 평문 블록 Pᵢ와 같은 위치의 키스트림 블록 Sᵢ를 XOR해 생성",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "한다. XOR는 두 비트가 같으면 0, 다르면 1을 만드는 연산이다. "
+        },
+        {
+          "text": "같은 값으로 XOR를 두 번 하면 처음 값으로 돌아오는 성질",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이 있으므로 암호화와 복호화에 동일한 키스트림을 사용할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "ctr-equation",
+      "type": "equation",
+      "equation": "C_i = P_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
+    },
+    {
+      "id": "ctr-symbols-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "Pᵢ는 i번째 평문 블록, Cᵢ는 i번째 암호문 블록, K는 AES 키다. J₀는 IV로부터 만든 카운터 기준 블록이고, inc₃₂(J₀, i)는 J₀의 마지막 32비트를 i만큼 증가시킨 카운터 블록을 뜻한다. AESₖ(카운터 블록)의 출력이 키스트림 블록 Sᵢ가 되며, ⊕는 XOR를 뜻한다."
+        }
+      ]
+    },
+    {
+      "id": "ctr-decrypt-equation",
+      "type": "equation",
+      "equation": "P_i = C_i \\oplus \\operatorname{AES}_K(\\operatorname{inc}_{32}(J_0, i))"
+    },
+    {
+      "id": "ctr-decrypt-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "복호화할 때는 저장된 IV와 독자가 다시 만든 AES 키로 동일한 카운터 블록과 키스트림을 재생성한다. 암호문 블록 Cᵢ에 키스트림 블록 Sᵢ를 다시 XOR하면 원래 평문 블록 Pᵢ가 복원된다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mt38n9i8-inct3b",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1fZRSMLJREUaHbXtgSvQsHCKbKsSZTteS=w2000",
+      "alt": "AES 및 본문, IV를 이용하여 키스트림을 만들고 암호화하는 과정",
+      "displayWidth": 743
+    },
     {
       "id": "iv-heading",
       "type": "heading",
       "richText": [
         {
-          "text": "IV를 재사용하면 두 평문의 관계가 드러난다"
+          "text": "같은 AES 키와 IV를 다시 쓰면 키스트림도 재사용된다"
         }
       ],
       "level": 3
@@ -1329,7 +1414,22 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "구현에서는 암호화할 때마다 12바이트, 즉 96비트 IV를 새로 생성한다. IV는 키처럼 숨길 필요가 없지만 같은 키에서 중복되면 CTR의 키 스트림도 중복된다. 같은 키 스트림으로 암호화한 두 암호문을 XOR하면 키 스트림이 사라지고 두 평문의 XOR가 그대로 남는다."
+          "text": "이제 IV 재사용이 왜 위험한지 순서대로 따라가 보자. AES는 같은 키로 같은 입력을 암호화하면 항상 같은 출력을 만든다. 따라서 AES 키 K와 IV가 모두 같으면 J₀가 같고, J₀에서 파생되는 카운터 블록도 같으며, 각 카운터 블록을 AES에 입력해 얻는 키스트림 블록 S₁, S₂, S₃도 전부 같아진다. 서로 다른 평문을 동일한 키스트림 S로 암호화하게 되는 것이다."
+        }
+      ]
+    },
+    {
+      "id": "iv-reuse-flow-code",
+      "type": "code",
+      "language": "text",
+      "code": "첫 번째 암호화: 같은 키 K + 같은 IV → 같은 J₀ → 같은 카운터 블록 → 키스트림 S\n두 번째 암호화: 같은 키 K + 같은 IV → 같은 J₀ → 같은 카운터 블록 → 키스트림 S\n\n첫 번째 평문 P  XOR S → 암호문 C\n두 번째 평문 P′ XOR S → 암호문 C′"
+    },
+    {
+      "id": "iv-reuse-xor-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "암호문 C와 C′는 정적 파일에 공개되어 있으므로 공격자는 둘을 서로 XOR할 수 있다. 이 과정에서 두 번 사용된 키스트림 S도 서로 XOR된다. 어떤 값이든 자기 자신과 XOR하면 0이 되므로 키스트림 항은 상쇄되고, 아래처럼 두 평문의 차이인 P XOR P′만 남는다."
         }
       ]
     },
@@ -1337,6 +1437,29 @@
       "id": "iv-reuse-equation",
       "type": "equation",
       "equation": "C \\oplus C' = (P \\oplus S) \\oplus (P' \\oplus S) = P \\oplus P'"
+    },
+    {
+      "id": "iv-reuse-meaning-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "P XOR P′가 곧바로 두 본문의 글자를 전부 보여 주는 것은 아니다. 하지만 어느 위치의 비트가 같고 다른지는 드러난다. 같은 위치의 평문 조각이 완전히 같다면 XOR 결과가 모두 0이 되므로 반복된 부분도 알아볼 수 있다. JSON처럼 괄호, 따옴표, 필드 이름과 시작 형태가 예측 가능한 데이터에서는 이런 관계만으로도 추측할 단서가 많아진다."
+        }
+      ]
+    },
+    {
+      "id": "iv-reuse-known-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "더 큰 문제는 두 평문 중 하나의 일부를 알고 있거나 정확히 추측할 수 있을 때다. 공격자는 알려진 평문 P와 그 암호문 C를 XOR해 해당 구간의 키스트림 S를 계산할 수 있다. 이 키스트림을 두 번째 암호문 C′에 XOR하면 같은 위치의 두 번째 평문 P′가 그대로 복원된다. AES 키 자체를 알아낸 것은 아니지만, 키스트림이 재사용된 구간의 내용은 읽을 수 있게 된다."
+        }
+      ]
+    },
+    {
+      "id": "iv-known-equation",
+      "type": "equation",
+      "equation": "S = C \\oplus P, \\qquad P' = C' \\oplus S = C' \\oplus C \\oplus P"
     },
     {
       "id": "iv-random-copy",
@@ -1352,19 +1475,28 @@
           }
         },
         {
-          "text": "로 새로 만든다. salt도 매번 바뀌어 실제 AES 키까지 달라지지만, IV를 독립적으로 생성한다는 규칙도 그대로 지킨다."
+          "text": "로 12바이트 IV를 새로 만든다. 정확한 금지 조건은 ‘같은 AES 키에서 같은 IV를 다시 사용하는 것’이다. 다른 AES 키라면 같은 IV가 같은 키 스트림을 만들지는 않지만, 구현에서는 이런 조건을 따로 추적하는 대신 암호화할 때마다 IV를 새로 생성한다. salt도 매번 바뀌어 AES 키까지 달라지지만 IV 역시 독립적으로 새로 만드는 이유다. GCM의 인증 태그 안전성도 IV가 같은 키에서 반복되지 않는다는 조건에 의존하므로, IV 재사용 금지는 단순히 암호문의 패턴만 감추기 위한 규칙이 아니다."
         }
       ]
     },
     {
-      "id": "ghash-heading",
+      "id": "block-mt3aeob3-6ddf10",
       "type": "heading",
       "richText": [
         {
-          "text": "GHASH: 암호문 변경을 검출한다"
+          "text": "3-2. GHASH: 암호문을 인증용 값으로 누적"
         }
       ],
-      "level": 3
+      "level": 1
+    },
+    {
+      "id": "ghash-intro-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "CTR은 본문을 암호문으로 바꾸지만, 암호문이 중간에 변경되었는지는 판단하지 않는다. GHASH는 이 빈틈을 메우기 위해 암호문과 추가 인증 데이터를 128비트 블록 단위로 누적해 하나의 128비트 값을 만드는 계산이다. SHA-256처럼 데이터만 같으면 누구나 같은 값을 얻는 독립적인 해시와도 다르다. GHASH는 AES 키에서 파생한 H를 계산에 사용하므로 같은 암호문이라도 AES 키가 달라지면 누적 결과도 달라진다."
+        }
+      ]
     },
     {
       "id": "ghash-key-equation",
@@ -1372,25 +1504,64 @@
       "equation": "H = \\operatorname{AES}_K(0^{128})"
     },
     {
-      "id": "ghash-recurrence-equation",
-      "type": "equation",
-      "equation": "X_i = (X_{i-1} \\oplus Y_i) \\cdot H \\quad \\text{in } \\mathrm{GF}(2^{128})"
-    },
-    {
-      "id": "ghash-copy",
+      "id": "ghash-key-copy",
       "type": "paragraph",
       "richText": [
         {
-          "text": "GCM은 128비트 블록을 "
-        },
+          "text": "0¹²⁸은 0으로만 채운 128비트, 즉 16바이트 블록이다. 이 블록을 AES 키 K로 한 번 암호화한 결과가 H다. H는 인증 태그 자체가 아니라 이후의 모든 블록을 섞을 때 반복해서 사용하는 곱셈값이다. 패스프레이즈가 달라지면 AES 키 K가 달라지고, 따라서 H도 달라진다. H는 JSON에 따로 저장하지 않고 암호화와 복호화 때 각각 AES 키로부터 계산한다."
+        }
+      ]
+    },
+    {
+      "id": "ghash-input-copy",
+      "type": "paragraph",
+      "richText": [
         {
-          "text": "GF(2¹²⁸)",
-          "annotations": {
-            "bold": true
-          }
-        },
+          "text": "GHASH에 곧바로 암호문만 넣는 것은 아니다. 먼저 추가 인증 데이터 A와 암호문 C를 각각 128비트 경계에 맞도록 0으로 채우고, 마지막에 A와 C의 원래 비트 길이를 64비트씩 기록한 블록을 붙인다. 이렇게 준비된 전체 바이트열을 앞에서부터 128비트씩 나눈 것이 다음 식의 Y₁, Y₂, …, Yₘ이다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt38t15s-h40ucc",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/13VYhf1iKqgubpZsWpKZkXsN-984_QFKJ=w2000",
+      "alt": "GHASH의 입력 구성"
+    },
+    {
+      "id": "ghash-aad-copy",
+      "type": "paragraph",
+      "richText": [
         {
-          "text": "의 원소로 해석한다. 이 체에서 덧셈은 XOR이고, 곱셈 결과는 정해진 기약다항식으로 나눈 나머지다. 인증할 데이터와 암호문 블록을 순서대로 누적해 GHASH 값을 만들기 때문에 암호문의 한 비트만 달라져도 최종 값이 달라진다."
+          "text": "여기서 A는 AAD(Additional Authenticated Data), 즉 암호화하지는 않지만 변경 여부는 함께 검증하고 싶은 데이터다. 예를 들어 제목을 공개한 채 인증 범위에 포함할 수 있다. 다만 현재 구현은 Web Crypto API에 additionalData를 넘기지 않으므로 A는 빈 값이다. "
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mt37t3id-73zmiv",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "따라서 제목·태그·status·날짜는 공개될 뿐 아니라 이 인증 태그의 검증 범위에도 들어가지 않고, GHASH가 실제로 누적하는 내용은 암호문 C와 길이 블록이다. 나중에 공개 메타데이터의 변조까지 검출하려면 메타데이터를 일정한 형식으로 직렬화해 암호화와 복호화 양쪽에 같은 AAD로 전달해야 한다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ghash-length-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "끝에 길이를 붙이는 이유는 0 채움만으로 사라질 수 있는 경계를 보존하기 위해서다. 원래 데이터의 끝에 있던 0과 블록 크기를 맞추려고 덧붙인 0은 비트열만 보고 구분할 수 없다. A와 C의 길이를 함께 누적하면 어디까지가 실제 데이터였고 A와 C의 경계가 어디였는지까지 인증값에 반영된다."
+        }
+      ]
+    },
+    {
+      "id": "ghash-field-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이제 128비트 블록끼리 더하고 곱할 규칙이 필요하다. GHASH는 블록의 각 비트를 계수가 0 또는 1인 다항식의 계수로 보고, 모든 계산을 GF(2¹²⁸)라는 유한체 안에서 수행한다. 계수를 2로 나눈 나머지로 계산하므로 덧셈과 뺄셈은 모두 XOR가 된다. 곱셈은 두 다항식을 곱한 다음 아래의 고정된 다항식 p(x)로 나눈 나머지를 취한다. 보통의 정수 곱셈과 달리 결과를 다시 128비트 안에 넣는 규칙인 셈이다."
         }
       ]
     },
@@ -1398,6 +1569,60 @@
       "id": "ghash-polynomial-equation",
       "type": "equation",
       "equation": "p(x) = x^{128} + x^7 + x^2 + x + 1"
+    },
+    {
+      "id": "ghash-recurrence-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "실제 누적은 X₀을 0으로 두고 다음 식을 Y 블록의 수만큼 반복한다. 현재까지의 누적값 Xᵢ₋₁과 새 블록 Yᵢ를 XOR한 뒤 H를 곱하고, 방금 설명한 p(x)로 나눈 나머지를 취한 값이 다음 누적값 Xᵢ다. 각 단계의 결과는 항상 128비트로 유지된다."
+        }
+      ]
+    },
+    {
+      "id": "ghash-recurrence-equation",
+      "type": "equation",
+      "equation": "X_i = (X_{i-1} \\oplus Y_i) \\cdot H \\quad \\text{in } \\mathrm{GF}(2^{128})"
+    },
+    {
+      "id": "block-mt39jnz3-fcdzsj",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1Y5LQbZ1CETAJAwwGK49TOLJLePauy2Kp=w2000",
+      "alt": "GHASH 누적 쉽게 설명",
+      "displayWidth": 659
+    },
+    {
+      "id": "ghash-expanded-equation",
+      "type": "equation",
+      "equation": "X_m = Y_1 H^m \\oplus Y_2 H^{m-1} \\oplus \\cdots \\oplus Y_m H"
+    },
+    {
+      "id": "ghash-order-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "반복식을 펼치면 첫 번째 블록에는 H가 m번, 마지막 블록에는 H가 한 번 곱해진 형태가 된다. 그래서 블록의 내용뿐 아니라 순서와 위치도 최종값에 반영된다. 한 블록의 한 비트를 바꾸면 그 차이 역시 남은 단계마다 H와 곱해져 전파된다. 여러 변경이 우연히 서로 상쇄되어 같은 GHASH 결과를 만들 가능성 자체는 있으므로 GHASH만을 일반 해시처럼 사용해서는 안 된다. GCM은 이어지는 AES 계산과 인증 태그 검증까지 결합해, AES 키를 모르는 사람이 변경된 암호문에 맞는 태그를 만들어 내기 어렵게 한다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt3afq5e-cy0vmt",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "GHASH 결과에서 인증태그를 생성"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "tag-construction-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "모든 블록을 누적한 Xₘ이 GHASH 결과다. GCM은 이 값을 그대로 태그로 내보내지 않고, AES 키 K로 카운터 기준 블록 J₀를 암호화한 값과 XOR한다. 앞서 CTR에서 첫 평문 블록에 inc₃₂(J₀)를 사용했던 것과 달리, J₀ 자체는 여기에서 인증 태그를 만들 때 사용된다. 이 구현은 태그를 줄이지 않고 128비트 전체를 사용하므로 식을 다음처럼 쓸 수 있다."
+        }
+      ]
     },
     {
       "id": "tag-equation",
@@ -1409,7 +1634,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "인증 태그 T는 올바른 AES 키와 훼손되지 않은 암호문으로 계산한 값과 일치해야 한다. 패스프레이즈가 틀려 다른 AES 키가 만들어졌거나 암호문의 한 비트가 바뀌면 브라우저는 그럴듯한 쓰레기 평문을 반환하지 않고 복호화 자체를 실패시킨다. 이 검사가 있으므로 입력 문자열을 별도의 저장된 정답과 비교할 필요가 없다."
+          "text": "독자가 패스프레이즈를 입력하면 브라우저는 다시 만든 AES 키와 전달받은 IV·암호문으로 H, J₀, GHASH 결과, 인증 태그 T′를 같은 순서로 계산한다. T′가 암호문 뒤에 저장된 T와 일치할 때만 Web Crypto API가 복호화한 본문을 반환한다. 패스프레이즈가 틀리면 K와 H가 달라지고, IV·암호문·태그 중 하나가 바뀌어도 계산 결과가 맞지 않아 복호화가 실패한다. 그러므로 패스프레이즈의 정답이나 그 해시를 따로 저장해 비교할 필요는 없다."
         }
       ]
     },
@@ -1425,14 +1650,14 @@
       "icon": "🛡️"
     },
     {
-      "id": "format-heading",
+      "id": "block-mt39uc8m-70mceu",
       "type": "heading",
       "richText": [
         {
-          "text": "4. 결과를 정적 JSON에 담는다"
+          "text": "4. 결과를 정적 JSON으로 내보내기"
         }
       ],
-      "level": 2
+      "level": 1
     },
     {
       "id": "format-copy",
@@ -1458,6 +1683,15 @@
         },
         {
           "text": "가 들어간다. Base64는 보안 기능이 아니라 임의의 바이트를 JSON 문자열로 안전하게 표현하기 위한 인코딩이다."
+        }
+      ]
+    },
+    {
+      "id": "format-tag-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 구현은 tagLength를 따로 지정하지 않아 Web Crypto API의 기본값인 128비트 인증 태그를 사용한다. crypto.subtle.encrypt가 반환하는 값은 암호문 C 뒤에 인증 태그 T를 붙인 C || T 형태이고, 위 JSON의 ciphertext에는 이 전체 바이트열을 Base64로 변환해 저장한다."
         }
       ]
     },
@@ -1511,7 +1745,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "에디터: 상태 변경과 저장 시점을 연결한다"
+          "text": "에디터: 상태 변경과 저장 시점을 연결"
         }
       ],
       "level": 2
@@ -1541,6 +1775,15 @@
       ]
     },
     {
+      "id": "editor-passphrase-policy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "편집기에서는 너무 짧은 입력을 막기 위해 패스프레이즈를 최소 12자로 제한했다. 이는 실수를 줄이기 위한 UI의 최소 조건이지, 12자만 넘으면 강한 패스프레이즈가 된다는 뜻은 아니다. 사전에 있는 단어 하나보다 서로 무관한 여러 단어를 길게 조합하는 편이 낫다."
+        }
+      ]
+    },
+    {
       "id": "editor-local-draft",
       "type": "paragraph",
       "richText": [
@@ -1563,7 +1806,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "Astro: 빌드와 브라우저 복호화의 경계를 나눈다"
+          "text": "Astro: 빌드와 브라우저 복호화의 경계를 구분"
         }
       ],
       "level": 2
@@ -1588,7 +1831,7 @@
       "type": "heading",
       "richText": [
         {
-          "text": "클라이언트: 복호화한 blocks를 다시 렌더링한다"
+          "text": "클라이언트: 복호화한 blocks를 다시 렌더링"
         }
       ],
       "level": 2
@@ -1874,75 +2117,11 @@
       ]
     },
     {
-      "id": "verification-heading",
-      "type": "heading",
-      "richText": [
-        {
-          "text": "암호화 기능은 무엇을 테스트해야 하나"
-        }
-      ],
-      "level": 1
-    },
-    {
-      "id": "verification-intro",
-      "type": "paragraph",
-      "richText": [
-        {
-          "text": "화면에서 자물쇠가 보이는 것만으로는 본문이 보호됐다고 말할 수 없다. 이번 구현에서는 데이터가 경계를 넘는 각 단계에 맞춰 다음 조건을 확인했다."
-        }
-      ]
-    },
-    {
-      "id": "verification-1",
-      "type": "numbered_list",
-      "richText": [
-        {
-          "text": "임의의 blocks를 암호화한 뒤 같은 키로 복호화하면 원래 배열과 정확히 일치한다."
-        }
-      ]
-    },
-    {
-      "id": "verification-2",
-      "type": "numbered_list",
-      "richText": [
-        {
-          "text": "잘못된 키를 넣으면 JSON 파싱 이전에 AES-GCM 인증이 실패한다."
-        }
-      ]
-    },
-    {
-      "id": "verification-3",
-      "type": "numbered_list",
-      "richText": [
-        {
-          "text": "내보낸 encryptedBlocks 문자열과 정적 HTML에서 테스트 본문의 평문을 검색해도 발견되지 않는다."
-        }
-      ]
-    },
-    {
-      "id": "verification-4",
-      "type": "numbered_list",
-      "richText": [
-        {
-          "text": "암호화 글 JSON으로 실제 정적 라우트를 빌드하고 키 입력 폼과 암호문만 포함되는지 확인한다."
-        }
-      ]
-    },
-    {
-      "id": "verification-5",
-      "type": "numbered_list",
-      "richText": [
-        {
-          "text": "일반 글은 기존 Astro 정적 렌더링을 유지하고 복호화용 클라이언트 번들을 필요할 때만 불러온다."
-        }
-      ]
-    },
-    {
       "id": "closing-heading",
       "type": "heading",
       "richText": [
         {
-          "text": "서버가 없어서 불가능한 것이 아니라 경계가 달라진다"
+          "text": "재미있어서 배우는 현대암호학"
         }
       ],
       "level": 1
@@ -1952,16 +2131,48 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "정적 사이트에서는 서버가 사용자를 식별하거나 본문 전송을 거부할 수 없다. 대신 배포되는 데이터 자체를 암호문으로 만들 수 있다. PBKDF2는 사람이 입력한 패스프레이즈로부터 계산 비용이 있는 키를 만들고, AES-GCM은 본문을 숨기면서 잘못된 키와 변조를 함께 검출한다. Astro는 공개 메타데이터와 잠금 화면을 만들고, 마지막 복원과 렌더링은 독자의 브라우저가 담당한다."
+          "text": "정적 사이트에서는 서버가 사용자를 식별하거나 본문 전송을 거부할 수 없다. 대신 배포되는 데이터 자체를 암호문으로 만들 수 있다. PBKDF2는 사람이 입력한 패스프레이즈로부터 계산 비용이 있는 키를 만들고, AES-GCM은 본문을 숨기면서 잘못된 키와 변조를 함께 검출한다. Astro는 공개 메타데이터와 잠금 화면을 만들고, 마지막 복원과 렌더링은 독자의 브라우저가 담당한다. 그림으로 정리해보면 다음과 같다-"
         }
       ]
     },
     {
-      "id": "closing-quote",
-      "type": "quote",
+      "id": "block-mt3b6385-16zsjg",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1jecXmVqQTF67JJNxvuWdug2bgFp4EcfC=w2000",
+      "alt": "정적 사이트 암호화를 위한 전체 모사도",
+      "isHeroImage": true
+    },
+    {
+      "id": "block-mt3816jl-52maep",
+      "type": "paragraph",
       "richText": [
         {
-          "text": "정적 사이트의 제약은 암호화를 막지 않았다. 단지 신뢰해야 할 서버 대신, 공개된 암호문과 사용자가 가진 키 사이에 보안 경계를 다시 그리게 했다."
+          "text": "만들었으니 자랑을 해야 겠지. "
+        },
+        {
+          "text": "다음 포스트",
+          "href": "http://dgddgd314.github.io/blog/encrypted-post-example"
+        },
+        {
+          "text": "를 확인해보자! 키는 "
+        },
+        {
+          "text": "EncryptedPost123",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "이다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt3bcexm-msbnk4",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "사실 어쩌면 수학적 뒷배경이나 구현 등은 알 필요가 없을지 모른다. 그렇지만 작성한 코드의 로직이 궁금하기도 했고, 머리 좋은 사람들이 발전시켜놓은 알고리즘들을 볼 때 느낄 수 있는 쾌락이라는 것이 있어서 이렇게 추가적으로 조사를 해 보았던 거 같다. XOR의 특징을 이용한 영리한 알고리즘인 거 같고, 추후 더 좋은 보안성을 가진 알고리즘이나 이미지의 암호화 등 변경점이 생긴다면 새로운 글로 찾아오도록 하겠다!"
         }
       ]
     }

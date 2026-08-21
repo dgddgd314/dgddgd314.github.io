@@ -129,7 +129,7 @@ const numberedListStart = (items: Block[], index: number) => {
                     type="application/json"
                     data-encrypted-payload
                     is:inline
-                    set:text={JSON.stringify(encryptedBlocks)}
+                    set:html={JSON.stringify(encryptedBlocks).replaceAll("<", "\\u003c")}
                   />
                 </>
               ) : (
