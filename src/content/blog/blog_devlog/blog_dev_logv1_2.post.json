@@ -1,0 +1,736 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "blog_dev_log_v1_2",
+    "description": "암호화된 글, 게시 상태·노출 위치 기반의 콘텐츠 관리, 모바일 페이지 전환을 도입한 블로그 v1.2 개발 기록.",
+    "pubDate": "2026-08-23",
+    "category": "blog_dev",
+    "tags": "astro,blog,editor,ui-ux",
+    "title": "[개발일지] 블로그 업데이트 (v1.2)",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main",
+      "notice"
+    ]
+  },
+  "page": {
+    "icon": "🛠️",
+    "cover": {
+      "type": "color",
+      "value": "#eef4ff",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "v1.1에서 "
+        },
+        {
+          "text": "다음 업데이트로 적어 두었던",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://dgddgd314.github.io/blog/blog_dev_log_v1_1#block-mst3dbrr-hhntw8"
+        },
+        {
+          "text": " 암호화, 모바일 지원, 글 상태 관리 기능을 이번에 실제로 구현했다. "
+        }
+      ]
+    },
+    {
+      "id": "editor-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "에디터에서 달라진 점"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "ime-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[bug fix] 이모지 검색창에서 한글 입력이 깨지던 문제 수정"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "ime-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이모지 검색창에 한글을 입력하면 조합 중인 글자가 끊기면서 자모 단위로 남는 문제가 있었다. 검색어가 바뀔 때마다 검색창 전체를 다시 만들던 동작이 한글 IME의 조합 상태를 끊고 있었기 때문이다. 이제 검색창은 유지하고 결과 목록만 갱신하며, 한글 조합 중에는 검색을 미뤘다가 조합이 끝난 뒤 완성된 검색어로 결과를 갱신한다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt5g18a3-t4q5b4",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1F4TecbhVYEmQSOCdwT-k6lbqVci4wZC7=w2000",
+      "alt": ""
+    },
+    {
+      "id": "ime-reference",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "문제를 찾아가는 과정과 IME 조합이 깨지는 이유는 다음 포스팅에 정리해 두었다: "
+        },
+        {
+          "text": "⌨️ㅇㅗㅏㅇㄱㅗㅏㄴ: Vibe Coding은 왜 한글 입력을 깨뜨릴까",
+          "annotations": {
+            "bold": true,
+            "underline": true
+          },
+          "href": "https://dgddgd314.github.io/blog/hangul-ime-vibe-coding/",
+          "textColor": "rgb(35, 131, 226)"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mt5g69pr-qkefi9",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "바이브 코딩에 도움되는 내용이 많으니 참고하면 좋을 것 같다. "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "metadata-picker-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 게시 상태·노출 위치 다중 선택"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "metadata-picker-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존에는 상태를 직접 입력했지만, 이제는 상태와 노출 위치를 각각 드롭다운에서 여러 개 선택할 수 있다. 선택한 값은 칩으로 표시되며 JSON 불러오기, 자동 저장, 복사, 파일 내보내기에도 같은 구조로 반영된다."
+        }
+      ]
+    },
+    {
+      "id": "metadata-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "구분"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "값"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "의미"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "status",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "published",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "공개된 글"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "status",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "draft",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "작성 중인 비공개 초안"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "status",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "deprecated / encrypted",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "과거 기록 표시 / 암호 키가 필요한 글"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "placement",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "main",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "메인 목록에 노출"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "placement",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "notice",
+                "annotations": {
+                  "code": true
+                }
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "공지사항에 노출"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "block-mt5g9wtu-wy3ojx",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "draft",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 내가 github에 업로드하더라도, "
+        },
+        {
+          "text": "github pages에서 해당 글을 렌더링하지 않는다.",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " (정확하게는 오직 "
+        },
+        {
+          "text": "published",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "가 선택되었을 때만 렌더링하고 github pages를 통해 접속 가능하다.)"
+        }
+      ]
+    },
+    {
+      "id": "block-mt5ga2o5-oyqgsy",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "encrypted",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 선택 시 글이 암호화되며, github pages를 통해 접속 시 클라이언트에서 키를 입력하여 복호화한다."
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mt5gbpdv-g2cs05",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "마찬가지로 "
+            },
+            {
+              "text": "published",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "가 동시에 선택되어야 github pages에 올라간다, "
+            },
+            {
+              "text": "encrypted",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "만 선택할 경우 암호화만 할 뿐 페이지 렌더링조차 하지 않는다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mt5gbn1n-md79sc",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "deprecated",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "는 별도의 역할은 없으며, 다만 오래되어서 틀린 내용이 있을 수 있음을 유저에게 알리는 역할이다. "
+        },
+        {
+          "text": "추후 업데이트 될 수 있다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-mt5gedo8-cf4yya",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "published",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "가 선택되어 렌더링할 경우, placement에서 해당 글의 접속 방법을 정할 수 있다. 예시로 다음의 경우:"
+        }
+      ]
+    },
+    {
+      "id": "block-mt5g9qnq-mzstqo",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1ckwgH6DSDLAtnimBCFG5IRssWdY3G4gF=w2000",
+      "alt": "",
+      "displayWidth": 261
+    },
+    {
+      "id": "block-mt5ggvqq-ls0r5n",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "main",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "과 "
+        },
+        {
+          "text": "notice",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "에 모두 게시되며, "
+        },
+        {
+          "text": "반대로 하나도 선택하지 않을 경우 오직 링크로만 접속 가능하다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-mt5ghohi-ss4ouo",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "예시로 "
+        },
+        {
+          "text": "다음 글",
+          "href": "https://dgddgd314.github.io/blog/encrypted-post-example/"
+        },
+        {
+          "text": "은 오직 링크로만 접속 가능하며, 암호화 되어있다. 키 값은 "
+        },
+        {
+          "text": " ",
+          "backgroundColor": "default"
+        },
+        {
+          "text": "EncryptedPost123",
+          "annotations": {
+            "code": true
+          },
+          "textColor": "rgb(235, 87, 87)",
+          "backgroundColor": "rgba(135, 131, 120, 0.15)"
+        },
+        {
+          "text": "이다.",
+          "backgroundColor": "default"
+        }
+      ]
+    },
+    {
+      "id": "encryption-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] encrypted 글의 클라이언트 사이드 암호화"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "encryption-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "encrypted 상태를 선택하면 에디터가 본문 블록을 암호화해 저장한다. 공개된 페이지에는 제목·설명·날짜 같은 메타데이터만 보이고, 본문을 읽으려면 공유받은 암호 키를 브라우저에서 입력해야 한다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mt5gocd3-ci2g69",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1RFaDtao_wB_2jPUMCupE71CU-B_YHTPW=w2000",
+      "alt": "",
+      "isHeroImage": true
+    },
+    {
+      "id": "encryption-reference",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 글에서 조금 더 자세히 적었다: "
+        },
+        {
+          "text": "🔐서버 없이 비밀 글을 배포하는 법: PBKDF2와 AES-GCM으로 암호화하기",
+          "annotations": {
+            "bold": true,
+            "underline": true
+          },
+          "href": "https://dgddgd314.github.io/blog/client-side-encrypted-posts-static-site/"
+        }
+      ]
+    },
+    {
+      "id": "publication-subheading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[refactor] status·placement 기반 게시·공지 시스템"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "publication-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "예전 badge는 글의 성격과 노출 위치를 함께 표현해야 해서 게시 규칙이 모호했다. 이제는 "
+        },
+        {
+          "text": "published",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": " 여부로 공개 여부를 먼저 결정하고, 공개된 글의 placement에 따라 어디에 보여 줄지를 따로 판단한다. 그래서 draft 글은 상세 페이지를 포함한 공개 경로에서 생성되지 않으며, 메인 목록·최근 글·태그·카테고리·네트워크·RSS에서도 함께 제외된다."
+        }
+      ]
+    },
+    {
+      "id": "notice-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "notice를 가진 공개 글은 블로그 화면의 공지사항 영역에서 실제 게시물 데이터로 표시된다. 기존의 비어 있던 정적 공지사항 영역도 이제 글 데이터와 연결됐고, main과 notice를 동시에 지정하면 한 글을 두 위치에서 확인할 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt5oyba7-00mso7",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1-_r8RHsr2bcurAfAjRAcL42zPkTx7iEL=w2000",
+      "alt": "",
+      "displayWidth": 739
+    },
+    {
+      "id": "ux-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "모바일 UI/UX 개선"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "routing-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[UI/UX] 클라이언트 사이드 라우팅 제거 및 네이티브 페이지 전환 도입"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "routing-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "v1.2에서는 모바일에서도 제대로 읽고 이동할 수 있도록 UI를 새로 손봤다. 기존 모바일 UI가 정말 처참했는데... 일단 이렇게 개선되었다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt5pdl5e-9lxekb",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1Ccw5sjwNlT6Rxu36n7F5_gpcYAcgJg1g=w2000",
+      "alt": "",
+      "displayWidth": 470
+    },
+    {
+      "id": "block-mt5p5ejy-5r5waa",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "블로그 목록은 한 줄 카드 구조로 변경, 데스크톱의 사이드바 및 검색창, 탭의 재배치"
+        }
+      ]
+    },
+    {
+      "id": "block-mt5pezh6-s94lkw",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "버튼과 태그·페이지 이동 요소는 터치하기 쉬운 크기로 조정"
+        }
+      ]
+    },
+    {
+      "id": "block-mt5pf3u2-owrbhd",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "본문은 한 줄 레이아웃으로 전환, 긴 제목·코드 블록·표가 화면 밖으로 밀려나지 않도록 처리"
+        }
+      ]
+    },
+    {
+      "id": "block-mt5pe4h8-yzbvih",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그런데 모바일 환경에서 이 새 UI를 테스트하는 과정에서, 페이지를 이동한 뒤 이전 화면의 UI와 스타일이 다시 나타나는 버그를 발견했다."
+        }
+      ],
+      "children": [
+        {
+          "id": "mobile-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "원인은 Astro의 클라이언트 라우팅이었다. "
+            },
+            {
+              "text": "SPA",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": "처럼 문서 일부만 교체하는 방식이 모바일에서 이전 상태를 남기고 있었기 때문에, 클라이언트 사이드 라우팅을 제거하고 일반적인 문서 이동으로 다시 구현했다. 대신 기능을 지원하는 브라우저에서는 네이티브 View Transition을 사용해 페이지를 정상적으로 초기화하면서도 전환이 너무 갑작스럽지 않도록 했다. "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "block-mt5pj82s-zdwpsy",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "v1.3에서 해볼 것"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "block-mt5pkcu4-bb6txt",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[bug fix] 표 입력 버그"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-mt5pmaf1-duo9gl",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "표 입력에 버그가 있다. 3 x 3 표가 아닌 표에서 행이나 열을 추가할 때, 심지어 단순히 엔터만 치더라도 기존 데이터가 초기화되는 버그이다. 원인 파악중에 있다. 기타 에디터 버그는 계속 수정중이다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt5pp1sh-lwie69",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 네트워크 기능"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-mt5psixv-4d4v1p",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "네트워크 기능이 지금 단순하게 "
+        },
+        {
+          "text": "n",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "각형 형태인데, networkx 등의 라이브러리를 이용하여 이를 반응형으로 변경할 예정이다. 아마 제일 메이저하고 visual한 패치가 될 것 같다."
+        }
+      ]
+    },
+    {
+      "id": "block-mt5ptug7-brrtqk",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "\n"
+        }
+      ]
+    }
+  ]
+}
