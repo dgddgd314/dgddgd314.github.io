@@ -4,7 +4,7 @@
     "slug": "client-side-encrypted-posts-static-site",
     "description": "서버 없는 정적 블로그에서 PBKDF2로 키를 유도하고 AES-GCM으로 본문 블록만 암호화한 과정을 수학적 배경과 함께 정리.",
     "pubDate": "2026-08-19",
-    "category": "blog_dev",
+    "category": "개발/블로그",
     "tags": "cryptography,astro,editor",
     "title": "서버 없이 비밀 글을 배포하는 법: PBKDF2와 AES-GCM으로 암호화하기",
     "status": [

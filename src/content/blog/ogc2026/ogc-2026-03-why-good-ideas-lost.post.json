@@ -4,7 +4,7 @@
     "slug": "ogc-2026-03-why-good-ideas-lost",
     "description": "decoder가 좋아진 뒤에도 예전 proxy score를 믿었던 실수, 더 좋은 전역 배정을 찾고도 최종 코드에서는 버린 이유에 대한 회고.",
     "pubDate": "2026-08-10",
-    "category": "ogc2026",
+    "category": "프로젝트/OGC 2026",
     "tags": "ogc2026, optimization, alns",
     "status": [
       "published"

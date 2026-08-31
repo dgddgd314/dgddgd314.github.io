@@ -1,0 +1,615 @@
+{
+  "version": 2,
+  "meta": {
+    "title": "집중력 결핍 시대, 공부도 쇼츠처럼",
+    "slug": "study-like-shorts-in-the-attention-deficit-era",
+    "description": "매일 아침 Gmail로 도착하는 작은 언어 학습 자동화를 통해, 공부의 시작 마찰을 낮추고 개인화된 학습 습관을 만드는 방법을 생각해본다.",
+    "pubDate": "2026-08-31",
+    "category": "개발/블로그",
+    "tags": "ai, automation, language-learning, productivity, chatgpt-work",
+    "status": [
+      "draft"
+    ],
+    "placement": [
+      "main"
+    ]
+  },
+  "page": {
+    "icon": "📬",
+    "cover": {
+      "type": "color",
+      "value": "#edf4ff",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "opening-attention",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "요즘 공부의 가장 큰 병목은 콘텐츠가 아니라 "
+        },
+        {
+          "text": "관심",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이다."
+        }
+      ]
+    },
+    {
+      "id": "opening-friction",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "좋은 강의도, 잘 정리된 노트도, 훌륭한 문제집도 이미 넘친다. 부족한 것은 ‘오늘 내가 그것을 펼칠 확률’이다. 우리는 공부할 시간이 없어서가 아니라, 시작하기 직전의 마찰을 넘지 못해서 자주 멈춘다. 유튜브 쇼츠는 그 마찰을 거의 0으로 만들었다. 앱을 열 필요도 없고, 검색할 필요도 없고, 의지를 다질 필요도 없다. 화면을 켜는 순간 다음 콘텐츠가 도착한다."
+        }
+      ]
+    },
+    {
+      "id": "opening-question",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "그렇다면 공부도 비슷하게 만들 수 있지 않을까."
+        }
+      ]
+    },
+    {
+      "id": "opening-program",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "내가 만든 아주 작은 프로그램은 매일 아침 9시, 내 Gmail로 언어 학습 메일 하나를 보낸다. 메일에는 영어 단어 세 개, 현지에서 쓰는 자연스러운 영어 표현 하나, 쉬운 스페인어 단어 하나, 그리고 5분 안에 끝낼 수 있는 복습 팁이 들어 있다. 영어 단어 세 개 중 두 개는 NEW TEPS 400점대 수준으로, 하나는 살짝 더 어려운 수준으로 섞는다. 너무 쉽지만은 않되, 아침에 열어 보자마자 지치지도 않는 밀도다."
+        }
+      ]
+    },
+    {
+      "id": "opening-thesis",
+      "type": "callout",
+      "icon": "💡",
+      "backgroundColor": "blue",
+      "richText": [
+        {
+          "text": "핵심은 ‘공부하라’는 알림이 아니라, "
+        },
+        {
+          "text": "이미 시작 가능한 공부 한 조각을 눈앞에 가져다두는 것",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이다."
+        }
+      ]
+    },
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "friction-title",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "불쾌하지 않지만, 피하기도 어려운 공부"
+        }
+      ]
+    },
+    {
+      "id": "friction-notification",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "알림은 대개 무시된다. 특히 ‘영어 공부하기’ 같은 알림은 사용자의 할 일 목록에 또 하나의 죄책감으로 쌓이기 쉽다. 반면 메일은 조금 다르다. 업무와 학교, 일정과 소식이 모이는 곳이고, 우리는 어쨌든 매일 이메일을 확인한다."
+        }
+      ]
+    },
+    {
+      "id": "friction-design-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "여기에는 약간의 설계가 있다."
+        }
+      ]
+    },
+    {
+      "id": "friction-list-app",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "사용자가 새로운 앱을 열 필요가 없다."
+        }
+      ]
+    },
+    {
+      "id": "friction-list-curriculum",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "긴 커리큘럼을 선택할 필요가 없다."
+        }
+      ]
+    },
+    {
+      "id": "friction-list-decision",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "오늘 무엇을 공부할지 결정할 필요가 없다."
+        }
+      ]
+    },
+    {
+      "id": "friction-list-unit",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "다만 받은편지함에 도착한 작은 학습 단위를 3분에서 5분 동안 읽으면 된다."
+        }
+      ]
+    },
+    {
+      "id": "friction-balance",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이건 강제성과 자율성 사이의 애매한 지점에 있다. 강제로 화면을 점유하지는 않지만, 사용자가 이미 가는 길목에 놓인다. 불쾌하게 방해하지 않으면서도 완전히 잊히지는 않는다."
+        }
+      ]
+    },
+    {
+      "id": "friction-infrastructure",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "현대의 산만함에 맞서기 위해 꼭 더 자극적인 학습 앱이 필요한 것은 아닐지도 모른다. 때로는 가장 평범한 인프라 위에 아주 작고 정확한 루틴을 올리는 편이 더 강하다.",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "workflow-title",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "이 작업은 실제로 어떻게 굴러갈까"
+        }
+      ]
+    },
+    {
+      "id": "workflow-overview",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "겉으로 보면 단순하다. 매일 9시에 이메일 한 통을 보내는 자동화다. 하지만 그 안에는 작게나마 하나의 서비스 구조가 들어 있다."
+        }
+      ]
+    },
+    {
+      "id": "workflow-detail",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "먼저 예약 작업이 정해진 시간에 실행된다. 실행된 AI는 이전에 보낸 학습 메일을 #언어공부 라벨로 검색한다. 이미 사용한 영어 단어, 영어 표현, 스페인어 단어를 확인한 뒤 오늘 사용할 새 항목을 고른다. 이어서 각 단어의 뜻·품사·예문·해석·혼동 포인트를 포함한 메일을 작성하고, 내 Gmail 계정으로 발송한다. 마지막으로 방금 보낸 메일에도 같은 라벨을 붙인다."
+        }
+      ]
+    },
+    {
+      "id": "workflow-flow",
+      "type": "code",
+      "language": "text",
+      "code": "매일 오전 9시\n  → 이전 #언어공부 메일 검색\n  → 중복 없는 학습 항목 선정\n  → 오늘의 학습 메일 작성·발송\n  → #언어공부 라벨 적용\n  → 다음 날의 검색 기록으로 사용"
+    },
+    {
+      "id": "workflow-memory",
+      "type": "callout",
+      "icon": "🧠",
+      "richText": [
+        {
+          "text": "이 라벨은 단순한 폴더가 아니다. 다음 날의 AI가 ‘어제까지 무엇을 했는지’ 찾아볼 수 있게 하는, 아주 가벼운 기억 장치다."
+        }
+      ]
+    },
+    {
+      "id": "workflow-no-server",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "흥미로운 점은 이 흐름을 위해 내가 서버를 직접 세팅하거나, 크론탭을 관리하거나, 내 노트북을 밤새 켜둘 필요가 없었다는 것이다. ChatGPT Work의 자동화와 연결된 Gmail 권한을 이용하면, 자연어로 적은 요구사항이 일정 실행·콘텐츠 생성·메일 발송·기록이라는 실제 워크플로로 이어진다."
+        }
+      ]
+    },
+    {
+      "id": "workflow-vibe-coding-title",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "코드를 묻는 경험에서, 작동하는 습관을 만드는 경험으로"
+        }
+      ]
+    },
+    {
+      "id": "workflow-vibe-coding",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "예전의 ‘AI에게 코드를 물어보는 경험’과는 조금 다르다. 이제는 ‘매일 아침 내게 부담 없는 영어 공부를 보내줘. 중복은 피하고, 난이도는 이렇게 섞어줘’라고 말하면 AI가 그 요구를 작업의 뼈대로 바꾼다."
+        }
+      ]
+    },
+    {
+      "id": "workflow-vibe-coding-definition",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이것이 내가 생각하는 vibe coding의 꽤 흥미로운 지점이다. 코드를 한 줄도 쓰지 않는다는 뜻이 아니다. 오히려 "
+        },
+        {
+          "text": "사용자의 막연한 의도에서 실행 가능한 규칙을 뽑아내고, 필요한 도구와 상태를 연결해 실제로 작동하게 만드는 일",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "에 가깝다."
+        }
+      ]
+    },
+    {
+      "id": "prototype-title",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "하지만 이것은 아직 ‘서비스’라기보다 잘 만든 개인 자동화다"
+        }
+      ]
+    },
+    {
+      "id": "prototype-overview",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 프로토타입은 개인에게는 충분히 유용하다. 그러나 누군가에게 판매하거나 많은 사용자를 받는 제품으로 만들려면, 지금의 흐름을 몇 개의 독립된 층으로 나눠야 한다."
+        }
+      ]
+    },
+    {
+      "id": "prototype-layers-table",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "층"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "지금의 방식"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "제품으로 만들 때 필요한 것"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "사용자 설정"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "자연어 요청"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "난이도·관심사·발송 시간·채널을 고르는 UI"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "실행"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "예약 자동화"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "사용자별 스케줄러, 재시도, 실패 알림"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "콘텐츠 생성"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "AI가 즉석 작성"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "학습 목표·레벨·품질 기준을 가진 생성 파이프라인"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "기억"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "Gmail 라벨과 과거 메일"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "사용자별 단어 이력, 숙련도, 복습 간격을 담은 데이터베이스"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "발송"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "Gmail 연결"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "이메일·카카오톡·Slack·앱 푸시 같은 채널 어댑터"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "신뢰"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "개인용 권한"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "OAuth 보안, 개인정보 처리, 로그, 중복 발송 방지"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "prototype-duplicate-title",
+      "type": "heading",
+      "level": 2,
+      "richText": [
+        {
+          "text": "제품이 되는 순간, 기억은 데이터가 된다"
+        }
+      ]
+    },
+    {
+      "id": "prototype-duplicate",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "특히 ‘중복 없는 콘텐츠’는 제품이 되는 순간 훨씬 더 진지한 문제가 된다. 지금은 과거 메일을 읽어 기억을 복원해도 된다. 하지만 사용자가 수천 명이라면 각자의 단어 이력, 틀린 문제, 선호 주제, 마지막 복습 날짜를 구조화된 데이터로 관리해야 한다."
+        }
+      ]
+    },
+    {
+      "id": "prototype-learning-state",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그때부터 서비스는 매일 콘텐츠를 보내는 도구가 아니라, "
+        },
+        {
+          "text": "개인의 학습 상태를 조금씩 업데이트하는 시스템",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이 된다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-title",
+      "type": "heading",
+      "level": 1,
+      "richText": [
+        {
+          "text": "확장 가능성: 공부를 ‘도착하게’ 만드는 인프라"
+        }
+      ]
+    },
+    {
+      "id": "expansion-intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이 방식은 언어 공부에만 쓰이지 않는다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-certification",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "자격증 준비생에게는 매일 한 문제와 오답 포인트를 보낼 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-developer",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "개발자에게는 업무 맥락에 맞는 기술 개념 하나를 보낼 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-researcher",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "연구자에게는 읽어야 할 논문 한 편의 핵심을 보낼 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-team",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "팀에게는 어제의 결정과 오늘의 질문 하나를 보낼 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-small-unit",
+      "type": "callout",
+      "icon": "📦",
+      "backgroundColor": "green",
+      "richText": [
+        {
+          "text": "중요한 것은 콘텐츠의 양이 아니라, 적절한 순간에 도착하는 작은 단위다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-storage",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "우리는 이미 너무 많은 것을 저장한다. 북마크, 저장한 영상, 메모 앱, 읽기 목록, 강의 구매 내역. 문제는 저장한 지식이 필요할 때 다시 우리에게 돌아오지 않는다는 것이다."
+        }
+      ]
+    },
+    {
+      "id": "expansion-delivery",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "앞으로의 개인화 도구는 정보를 더 많이 쌓게 하는 데서 끝나면 안 된다. 사용자의 상황을 이해하고, 부담 없는 크기로 잘라, 이미 존재하는 생활의 흐름 속에 다시 배달해야 한다."
+        }
+      ]
+    },
+    {
+      "id": "closing-productivity",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "아마 현대 사회의 생산성은 더 많은 시간을 짜내는 기술이 아니라, "
+        },
+        {
+          "text": "희소한 관심을 덜 낭비하는 기술",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "에 가까워질 것이다. AI가 대단한 이유는 답을 잘 만들기 때문만이 아니다. 사람의 아주 사소한 의도를, 매일 실제로 작동하는 습관의 형태로 바꿀 수 있기 때문이다."
+        }
+      ]
+    },
+    {
+      "id": "closing-small-exposure",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "오늘 아침 받은 단어 세 개가 인생을 바꾸지는 않을 것이다. 하지만 그 세 개가 매일 도착하고, 읽히고, 조금씩 쌓인다면 이야기는 달라진다."
+        }
+      ]
+    },
+    {
+      "id": "closing-quote",
+      "type": "quote",
+      "richText": [
+        {
+          "text": "거대한 계획보다 작은 노출. 완벽한 의지보다 낮은 마찰. 어쩌면 집중력 결핍 시대의 공부는, 그렇게 시작될 수 있다."
+        }
+      ]
+    }
+  ]
+}
