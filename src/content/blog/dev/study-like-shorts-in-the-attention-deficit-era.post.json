@@ -5,10 +5,10 @@
     "description": "매일 아침 도착하는 언어 학습 자동화에서 출발해, GPT가 답변 도구를 넘어 사람의 관심과 다음 행동, 성취의 관성을 설계하는 환경으로 변하는 과정을 생각해본다.",
     "pubDate": "2026-09-01",
     "category": "개발",
-    "tags": "ai, automation, productivity, vibe-coding, chatgpt-work",
+    "tags": "ai, IE, productivity, vibe-coding, chatgpt-work",
     "title": "유일한 병목은 관심일지도 모른다",
     "status": [
-      "draft"
+      "published"
     ],
     "placement": [
       "main"
@@ -71,7 +71,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "예전에는 ChatGPT에게 “이 단어의 뜻이 뭐야?”라고 물었다. 이제는 “내가 아침에 지치지 않을 정도의 학습을 매일 이어가게 해줘”라고 말한다. 그리고 GPT는 답변을 주는 데서 멈추지 않는다. 일정에 맞춰 실행되고, 연결된 Gmail을 사용해 메일을 보내고, 이전 기록을 읽고, 중복을 피하고, 결과를 다시 기록한다."
+          "text": "예전에는 ChatGPT에게 “이 단어의 뜻이 뭐야?”라고 물었다. 이제는 “내가 아침에 지치지 않을 정도의 학습을 매일 이어가게 해줘”라고 말한다. 그리고 GPT는 답변을 주는 데서 멈추지 않는다. 일정에 맞춰 실행되고, 연결된 Gmail을 사용해 메일을 보낸다."
         }
       ]
     },
@@ -267,44 +267,6 @@
       ]
     },
     {
-      "id": "block-mti5jvui-ov3yit",
-      "type": "toggle",
-      "richText": [
-        {
-          "text": "반론과 미처 하지 못한 이야기들"
-        }
-      ],
-      "children": [
-        {
-          "id": "block-mti5jxhb-6yibae",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "이런 식의 학습 방법이 성취하는 바를 이룰 수 있도록 돕지만 집중력을 낮출 수 있다는 것을 인지하고 있다. 많은 시험은 결국 집중력 싸움일지 모른다. 수능이나 LEET처럼 제한된 시간 안에 많은 것을 꺼내 보여야 하는 시험에서는, 아는 것만큼이나 끝까지 집중력을 잃지 않는 일이 중요하다. 그 사실을 부정할 생각은 없다."
-            }
-          ]
-        },
-        {
-          "id": "block-mti5o92m-brwulp",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "그런데 어른이 되어보니—정말 어른이 되었는지는 별개의 문제지만—공부는 생각보다 재미있는 일이다. 누가 시키지 않아도 궁금한 것을 찾아보고, 어제 이해하지 못했던 문장이 오늘은 조금 읽히는 순간을 맞이하는 것- 그건 시험공부와는 조금 다른 종류의 기쁨이다.\n"
-            }
-          ]
-        },
-        {
-          "id": "block-mti5p3pu-kf5s4y",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "취미로 무언가를 공부할 때는 엄청난 집중력보다 하루하루 다시 책을 펴는 마음이 더 오래 남고, 결국 더 높이 갔던 것 같다. 결국 공부를 오래 데리고 가는 사람은 매일 완벽하게 집중하는 사람이 아니라, 집중이 잘되지 않는 날에도 공부와 완전히 멀어지지 않는 사람이라고 생각한다."
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "block-mti5qvdz-qnl4fw",
       "type": "heading",
       "richText": [
@@ -386,6 +348,101 @@
       "richText": [
         {
           "text": "내가 만든 메일에는 캐릭터도, 경험치도, 리그도 없다. 하지만 오늘 할 일을 고르지 않아도 되고, 이전 기록을 직접 찾지 않아도 되며, 아주 작은 학습 단위가 먼저 도착한다는 점에서는 같은 문제를 건드린다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mti6bla7-qet57u",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "\"시작이 반이다\"와 작동 흥분 이론 (Work Excitement Theory)"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-mti6dhwk-0alfzl",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "‘시작이 반이다’라는 말은 보통 의지를 북돋는 격언처럼 들린다. 하지만 반복해야 하는 일에서는 꽤 문자 그대로의 설명이기도 하다. 책을 펼치기 전에는 공부 전체의 무게를 상상해 짓눌리지만, 첫 문제를 풀고 나면 생각할 것은 다음 한 문제뿐이다. 운동복을 입기 전에는 한 시간의 운동을 견뎌야 하지만, 일단 밖에 나가면 다음 행동은 몇 걸음만 걷는 것이다. "
+        }
+      ]
+    },
+    {
+      "id": "work-excitement-theory-disclaimer",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이는 에밀 크레펠린의 ‘작동 흥분 이론(Work Excitement Theory, 또는 원어로 "
+        },
+        {
+          "text": "Anregung",
+          "annotations": {
+            "italic": true
+          }
+        },
+        {
+          "text": ")’이라는 이름으로도 널리 알려져 있다. (사실 한국인한테만 유명한 거 같다.) 의욕이 나지 않아도 어떤 일을 일단 시작하면 뇌가 자극을 받아 점점 더 몰두하게 된다는 정신의학 이론이다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mtibefh3-81tmgn",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그렇기 때문에 어떤 task에 나의 관심을 기울인 뒤, 즉 임무를 시작한 뒤에는 그 일을 유지하는 것이 더 편하다. '숏폼식 공부법'이 말로만 '숏폼'일 뿐이지, 그 일을 지속할 마중물이 될 확률 역시 무시할 수 없다."
+        }
+      ]
+    },
+    {
+      "id": "work-excitement-automation",
+      "type": "callout",
+      "backgroundColor": "yellow",
+      "richText": [
+        {
+          "text": "좋은 자동화는 사람의 모든 노력을 없애는 것이 아니라, 행동이 스스로 다음 행동을 부르는 지점까지 사람을 데려다주는 장치일 수 있다."
+        }
+      ],
+      "icon": "▶️"
+    },
+    {
+      "id": "block-mti5jvui-ov3yit",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "반론과 미처 하지 못한 이야기들"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-mti5jxhb-6yibae",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "이런 식의 학습 방법이 성취하는 바를 이룰 수 있도록 돕지만 집중력을 낮출 수 있다는 것을 인지하고 있다. 많은 시험은 결국 집중력 싸움일지 모른다. 수능이나 LEET처럼 제한된 시간 안에 많은 것을 꺼내 보여야 하는 시험에서는, 아는 것만큼이나 끝까지 집중력을 잃지 않는 일이 중요하다. 그 사실을 부정할 생각은 없다."
+            }
+          ]
+        },
+        {
+          "id": "block-mti5o92m-brwulp",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "그런데 어른이 되어보니—정말 어른이 되었는지는 별개의 문제지만—공부는 생각보다 재미있는 일이다. 누가 시키지 않아도 궁금한 것을 찾아보고, 어제 이해하지 못했던 문장이 오늘은 조금 읽히는 순간을 맞이하는 것- 그건 시험공부와는 조금 다른 종류의 기쁨이다.\n"
+            }
+          ]
+        },
+        {
+          "id": "block-mti5p3pu-kf5s4y",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "취미로 무언가를 공부할 때는 엄청난 집중력보다 하루하루 다시 책을 펴는 마음이 더 오래 남고, 결국 더 높이 갔던 것 같다. 결국 공부를 오래 데리고 가는 사람은 매일 완벽하게 집중하는 사람이 아니라, 집중이 잘되지 않는 날에도 공부와 완전히 멀어지지 않는 사람이라고 생각한다."
+            }
+          ]
         }
       ]
     },
@@ -508,152 +565,146 @@
     },
     {
       "id": "block-mti69mov-cp8hg2",
-      "type": "toggle",
+      "type": "heading",
       "richText": [
         {
           "text": "과거의 나의 생각"
         }
       ],
-      "children": [
+      "level": 2
+    },
+    {
+      "id": "block-mti69tk7-pnxl9x",
+      "type": "paragraph",
+      "richText": [
         {
-          "id": "block-mti69tk7-pnxl9x",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "예전에 GPT automation을 처음 접했을 때는 자동화의 거의 유일한 병목이 "
-            },
-            {
-              "text": "토큰량",
-              "annotations": {
-                "bold": true
-              }
-            },
-            {
-              "text": "이라고 생각했다. 모델이 충분히 싸지고 더 오래 일할 수 있게 되면, 사람이 해당 업무에 관심을 주지 않더라도 알아서 프로젝트가 발전할 것이라 봤다. 결국 핵심은 얼마나 많은 추론을 얼마나 낮은 비용으로 돌릴 수 있는가의 문제라고 생각했다."
-            }
-          ]
+          "text": "예전에 GPT automation을 처음 접했을 때는 자동화의 거의 유일한 병목이 "
         },
         {
-          "id": "block-mti69ntx-5g4tci",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "지금은 그 생각이 절반만 맞았다고 느낀다."
-            }
-          ]
+          "text": "토큰량",
+          "annotations": {
+            "bold": true
+          }
         },
         {
-          "id": "block-mti7bk3d-nn5snn",
-          "type": "numbered_list",
-          "richText": [
-            {
-              "text": "계산 비용이 낮아져도 사람이 매번 작업을 떠올리고, 맥락을 모으고, 실행을 지시하고, 결과를 다음 행동으로 옮겨야 한다면 자동화는 여전히 채팅창 안에 머문다."
-            }
-          ]
-        },
-        {
-          "id": "block-mti7bo2p-18cx9d",
-          "type": "numbered_list",
-          "richText": [
-            {
-              "text": "내가 진행했던 프로젝트의 Product Management 업무를 자동화해본 적이 있는데, GPT들은 정말 끔찍하게 PM을 못하며 최근 시니어 개발자/PM들의 업무 복귀를 보면 이건 나만의 생각은 아닌 것 같다. "
-            }
-          ]
-        },
-        {
-          "id": "block-mti7dfjf-c3fizb",
-          "type": "numbered_list",
-          "richText": [
-            {
-              "text": "이제 \"주어진 문제를 푸는 것\"은 병목이 아니다. \"문제를 찾는 것\"이 훨씬 중요하며 심지어 \"이 문제가 존재하는지\", \"이 문제의 해결책을 사람들이 원하는지\" 조차 모르는 문제를 풀어야 하고, 이건 인터넷 위에 존재하는게 아닌 암묵지(tacit knowledge)적 경험을 통해서만 추정할 수 있다. "
-            }
-          ]
-        },
-        {
-          "id": "block-mti7bhte-s0pek2",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "결국 진정한 병목은 "
-            },
-            {
-              "text": "사람이 그 일에 다시 관심을 돌려야 한다는 사실",
-              "annotations": {
-                "bold": true
-              }
-            },
-            {
-              "text": "이다."
-            }
-          ]
-        },
-        {
-          "id": "past-thought-attention-shift",
-          "type": "paragraph",
-          "richText": [
-            {
-              "text": "그래서 지금의 나는 좋은 자동화를 ‘사람 대신 많은 출력을 만드는 시스템’보다 ‘사람이 중요한 일과 다시 만나는 순간을 대신 준비하는 시스템’에 가깝게 본다. 이번 언어 학습 메일에서 가장 큰 가치는 단어 다섯 개를 생성한 것이 아니라, 내가 공부를 떠올리지 않은 아침에도 그 다섯 개가 먼저 도착했다는 데 있다."
-            }
-          ]
+          "text": "이라고 생각했다. 모델이 충분히 싸지고 더 오래 일할 수 있게 되면, 사람이 해당 업무에 관심을 주지 않더라도 알아서 프로젝트가 발전할 것이라 봤다. 결국 핵심은 얼마나 많은 추론을 얼마나 낮은 비용으로 돌릴 수 있는가의 문제라고 생각했다."
         }
       ]
     },
     {
-      "id": "block-mti6bla7-qet57u",
+      "id": "block-mti69ntx-5g4tci",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "지금은 그 생각이 절반만 맞았다고 느낀다."
+        }
+      ]
+    },
+    {
+      "id": "block-mti7bk3d-nn5snn",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "계산 비용이 낮아져도 사람이 매번 작업을 떠올리고, 맥락을 모으고, 실행을 지시하고, 결과를 다음 행동으로 옮겨야 한다면 자동화는 여전히 채팅창 안에 머문다."
+        }
+      ]
+    },
+    {
+      "id": "block-mti7bo2p-18cx9d",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "내가 진행했던 프로젝트의 Product Management 업무를 자동화해본 적이 있는데, GPT들은 정말 끔찍하게 PM을 못하며 최근 시니어 개발자/PM들의 업무 복귀를 보면 이건 나만의 생각은 아닌 것 같다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mti7dfjf-c3fizb",
+      "type": "numbered_list",
+      "richText": [
+        {
+          "text": "이제 \"주어진 문제를 푸는 것\"은 병목이 아니다. \"문제를 찾는 것\"이 훨씬 중요하며 심지어 \"이 문제가 존재하는지\", \"이 문제의 해결책을 사람들이 원하는지\" 조차 모르는 문제를 풀어야 하고, 이건 인터넷 위에 존재하는게 아닌 암묵지(tacit knowledge)적 경험을 통해서만 추정할 수 있다. "
+        }
+      ]
+    },
+    {
+      "id": "block-mti7bhte-s0pek2",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "결국 진정한 병목은 "
+        },
+        {
+          "text": "사람이 그 일에 다시 관심을 돌려야 한다는 사실",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "이다."
+        }
+      ]
+    },
+    {
+      "id": "past-thought-attention-shift",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "그래서 지금의 나는 좋은 자동화를 ‘사람 대신 많은 출력을 만드는 시스템’보다 ‘사람이 중요한 일과 다시 만나는 순간을 대신 준비하는 시스템’에 가깝게 본다. 이번 언어 학습 메일에서 가장 큰 가치는 단어 다섯 개를 생성한 것이 아니라, 내가 공부를 떠올리지 않은 아침에도 그 다섯 개가 먼저 도착했다는 데 있다."
+        }
+      ]
+    },
+    {
+      "id": "vibe-coding-title",
       "type": "heading",
       "richText": [
         {
-          "text": "\"시작이 반이다\"와 작동 흥분 이론 (Work Excitement Theory)"
+          "text": "\"관심\"만 있으면 \"실행\"할 수 있게 되었다"
         }
       ],
       "level": 2
     },
     {
-      "id": "block-mti6dhwk-0alfzl",
+      "id": "block-mtibuxpb-w5ykv0",
       "type": "paragraph",
       "richText": [
         {
-          "text": "‘시작이 반이다’라는 말은 보통 의지를 북돋는 격언처럼 들린다. 하지만 반복해야 하는 일에서는 꽤 문자 그대로의 설명이기도 하다. 책을 펼치기 전에는 공부 전체의 무게를 상상해 짓눌리지만, 첫 문제를 풀고 나면 생각할 것은 다음 한 문제뿐이다. 운동복을 입기 전에는 한 시간의 운동을 견뎌야 하지만, 일단 밖에 나가면 다음 행동은 몇 걸음만 걷는 것이다. "
-        }
-      ]
-    },
-    {
-      "id": "work-excitement-theory-disclaimer",
-      "type": "paragraph",
-      "richText": [
-        {
-          "text": "이는 에밀 크레펠린의 ‘작동 흥분 이론(Work Excitement Theory, 또는 원어로 "
+          "text": "여기서 내가 가장 크게 체감한 변화는 "
         },
         {
-          "text": "Anregung",
+          "text": "관심이 실행으로 바뀌는 데 필요한 노력이 극단적으로 짧아졌다는 것",
           "annotations": {
-            "italic": true
+            "bold": true
           }
         },
         {
-          "text": ")’이라는 이름으로도 널리 알려져 있다. (사실 한국인한테만 유명한 거 같다.) 의욕이 나지 않아도 어떤 일을 일단 시작하면 뇌가 자극을 받아 점점 더 몰두하게 된다는 정신의학 이론이다. "
+          "text": "이다. 예전에도 ‘매일 아침 언어 공부를 보내주는 서비스가 있으면 좋겠다’는 생각은 할 수 있었다. 하지만 그 관심을 실제 결과로 바꾸려면 사용할 기술을 정하고, 서버를 만들고, Gmail API와 인증을 붙이고, 배포와 예약 실행까지 해결해야 했다. 아이디어가 부족한 것이 아니라 구현을 준비하는 동안 처음의 관심이 식어버리는 경우가 많았다."
         }
       ]
     },
     {
-      "id": "block-mtibefh3-81tmgn",
+      "id": "interest-to-execution",
       "type": "paragraph",
       "richText": [
         {
-          "text": "그렇기 때문에 어떤 task에 나의 관심을 기울인 뒤, 즉 임무를 시작한 뒤에는 그 일을 유지하는 것이 더 편하다. '숏폼식 공부법'이 말로만 '숏폼'일 뿐이지, 그 일을 지속할 마중물이 될 확률 역시 무시할 수 없다."
+          "text": "이제는 내가 원하는 결과와 기준을 충분히 설명하고 필요한 도구 사용을 허용하면, ChatGPT Work가 그 사이의 실행 단계를 상당 부분 이어준다. ‘이런 게 있으면 좋겠다’에서 끝났을 생각이 그날 바로 작동하는 첫 번째 버전이 될 수 있다. 완성도를 보장한다는 뜻은 아니지만, "
+        },
+        {
+          "text": "관심이 사라지기 전에 실행을 시작할 수 있게 되었다.",
+          "annotations": {
+            "bold": true
+          }
         }
       ]
     },
     {
-      "id": "work-excitement-automation",
-      "type": "callout",
-      "backgroundColor": "yellow",
+      "id": "interest-as-resource",
+      "type": "paragraph",
       "richText": [
         {
-          "text": "좋은 자동화는 사람의 모든 노력을 없애는 것이 아니라, 행동이 스스로 다음 행동을 부르는 지점까지 사람을 데려다주는 장치일 수 있다."
+          "text": "그래서 앞으로 더 중요한 능력은 모든 구현 방법을 처음부터 알고 있는 것보다, 무엇이 불편한지 알아차리고, 어떤 결과를 원하는지 설명하고, 나온 결과가 맞는지 판단하는 능력일지도 모른다. 관심은 예전에도 아이디어의 출발점이었지만, 이제는 훨씬 직접적으로 실행을 움직이는 자원이 되었다."
         }
-      ],
-      "icon": "▶️"
+      ]
     },
     {
       "id": "automation-title",
@@ -696,171 +747,172 @@
     },
     {
       "id": "work-capabilities-title",
-      "type": "heading",
+      "type": "toggle",
       "richText": [
         {
           "text": "ChatGPT Work가 대신 맡은 다섯 가지 일"
         }
       ],
-      "level": 2
-    },
-    {
-      "id": "work-capabilities-table",
-      "type": "table",
-      "hasHeaderRow": true,
-      "rows": [
-        [
-          {
-            "richText": [
-              {
-                "text": "기능"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "ChatGPT Work가 할 수 있는 일"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "이번 자동화에서 사용한 방식"
-              }
-            ]
-          }
-        ],
-        [
-          {
-            "richText": [
-              {
-                "text": "예약 작업"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "정해진 시간에 작업을 반복하거나, 알림을 보내거나, 변화를 확인한다."
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "매일 오전 9시에 언어 학습 워크플로를 시작한다."
-              }
-            ]
-          }
-        ],
-        [
-          {
-            "richText": [
-              {
-                "text": "클라우드 실행"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "클라우드로 설정한 작업은 앱을 닫거나 컴퓨터를 끈 뒤에도 예약된 시점에 계속 실행할 수 있다."
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "개인 서버·크론탭·항상 켜 둔 노트북 없이 아침 작업을 실행한다."
-              }
-            ]
-          }
-        ],
-        [
-          {
-            "richText": [
-              {
-                "text": "플러그인과 승인된 도구"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "Gmail 같은 외부 도구에서 필요한 맥락을 찾고, 허용된 범위의 작업을 수행한다."
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "#언어공부 메일을 검색하고, 새 메일을 보낸 뒤 같은 라벨을 붙인다."
-              }
-            ]
-          }
-        ],
-        [
-          {
-            "richText": [
-              {
-                "text": "여러 단계의 워크플로"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "여러 소스와 도구, 판단 단계를 하나의 결과물까지 이어서 처리한다."
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "과거 기록 확인 → 중복 제거 → 항목 선정 → 메일 작성 → 발송 → 기록을 한 번에 이어간다."
-              }
-            ]
-          }
-        ],
-        [
-          {
-            "richText": [
-              {
-                "text": "자연어로 지정한 기준"
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "원하는 결과, 사용할 자료, 제한 조건과 품질 기준을 작업 규칙으로 삼는다."
-              }
-            ]
-          },
-          {
-            "richText": [
-              {
-                "text": "영어 단어 수, 난이도 비율, 스페인어 단어, 5분 복습 분량을 매일의 생성 기준으로 사용한다."
-              }
-            ]
-          }
-        ]
-      ]
-    },
-    {
-      "id": "automation-flow",
-      "type": "code",
-      "language": "text",
-      "code": "매일 오전 9시 예약 실행\n  → Gmail에서 #언어공부 기록 검색\n  → 이미 사용한 단어·표현 제외\n  → 난이도와 분량 기준에 맞춰 새 학습 항목 생성\n  → 개인화된 메일 발송\n  → 발송 메일에 #언어공부 라벨 적용\n  → 다음 실행에서 다시 기록으로 사용"
-    },
-    {
-      "id": "automation-process",
-      "type": "paragraph",
-      "richText": [
+      "children": [
         {
-          "text": "이번 작업에서 GPT의 역할은 단어를 잘 고르는 데서 끝나지 않는다. 예약 시간이 되면 먼저 Gmail이라는 외부 도구에서 과거 상태를 읽고, 그 상태를 바탕으로 오늘의 콘텐츠를 판단하고, 다시 Gmail에 결과를 남긴다. 입력을 기다렸다가 답하는 한 번의 대화가 아니라, 읽기·판단·생성·실행·기록이 연결된 작은 순환 구조다."
+          "id": "work-capabilities-table",
+          "type": "table",
+          "hasHeaderRow": true,
+          "rows": [
+            [
+              {
+                "richText": [
+                  {
+                    "text": "기능"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "ChatGPT Work가 할 수 있는 일"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "이번 자동화에서 사용한 방식"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "richText": [
+                  {
+                    "text": "예약 작업"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "정해진 시간에 작업을 반복하거나, 알림을 보내거나, 변화를 확인한다."
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "매일 오전 9시에 언어 학습 워크플로를 시작한다."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "richText": [
+                  {
+                    "text": "클라우드 실행"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "클라우드로 설정한 작업은 앱을 닫거나 컴퓨터를 끈 뒤에도 예약된 시점에 계속 실행할 수 있다."
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "개인 서버·크론탭·항상 켜 둔 노트북 없이 아침 작업을 실행한다."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "richText": [
+                  {
+                    "text": "플러그인과 승인된 도구"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "Gmail 같은 외부 도구에서 필요한 맥락을 찾고, 허용된 범위의 작업을 수행한다."
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "#언어공부 메일을 검색하고, 새 메일을 보낸 뒤 같은 라벨을 붙인다."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "richText": [
+                  {
+                    "text": "여러 단계의 워크플로"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "여러 소스와 도구, 판단 단계를 하나의 결과물까지 이어서 처리한다."
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "과거 기록 확인 → 중복 제거 → 항목 선정 → 메일 작성 → 발송 → 기록을 한 번에 이어간다."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "richText": [
+                  {
+                    "text": "자연어로 지정한 기준"
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "원하는 결과, 사용할 자료, 제한 조건과 품질 기준을 작업 규칙으로 삼는다."
+                  }
+                ]
+              },
+              {
+                "richText": [
+                  {
+                    "text": "영어 단어 수, 난이도 비율, 스페인어 단어, 5분 복습 분량을 매일의 생성 기준으로 사용한다."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "id": "automation-flow",
+          "type": "code",
+          "language": "text",
+          "code": "매일 오전 9시 예약 실행\n  → Gmail에서 #언어공부 기록 검색\n  → 이미 사용한 단어·표현 제외\n  → 난이도와 분량 기준에 맞춰 새 학습 항목 생성\n  → 개인화된 메일 발송\n  → 발송 메일에 #언어공부 라벨 적용\n  → 다음 실행에서 다시 기록으로 사용"
+        },
+        {
+          "id": "automation-process",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "이번 작업에서 GPT의 역할은 단어를 잘 고르는 데서 끝나지 않는다. 예약 시간이 되면 먼저 Gmail이라는 외부 도구에서 과거 상태를 읽고, 그 상태를 바탕으로 오늘의 콘텐츠를 판단하고, 다시 Gmail에 결과를 남긴다. 입력을 기다렸다가 답하는 한 번의 대화가 아니라, 읽기·판단·생성·실행·기록이 연결된 작은 순환 구조다."
+            }
+          ]
         }
       ]
     },
@@ -874,26 +926,18 @@
       ]
     },
     {
+      "id": "block-mtid2e9a-uxpbdd",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1OF3b6c1HIcZgUvwjSUW2-rmDE8kCzprU=w2000",
+      "alt": "",
+      "displayWidth": 517
+    },
+    {
       "id": "chatgpt-work-docs",
       "type": "bookmark",
       "url": "https://learn.chatgpt.com/docs/get-started-with-work",
       "title": "공식 문서: ChatGPT Work 시작하기",
       "description": "예약 작업, 클라우드 실행, 플러그인과 다단계 워크플로에 대한 OpenAI 공식 안내"
-    },
-    {
-      "id": "vibe-coding-title",
-      "type": "heading",
-      "richText": [
-        {
-          "text": "\"관심\"만 있으면 \"실행\"할 수 있게 되었다"
-        }
-      ],
-      "level": 2
-    },
-    {
-      "id": "block-mtibuxpb-w5ykv0",
-      "type": "paragraph",
-      "richText": []
     },
     {
       "id": "gpt-environment-title",
@@ -963,51 +1007,41 @@
     },
     {
       "id": "business-title",
-      "type": "heading",
+      "type": "toggle",
       "richText": [
         {
           "text": "개인 자동화가 서비스가 되려면"
         }
       ],
-      "level": 1
-    },
-    {
-      "id": "business-overview",
-      "type": "paragraph",
-      "richText": [
+      "children": [
         {
-          "text": "사업 이야기는 간단히 남겨두고 싶다. (학교에서 창업 과목을 듣고 있는데 이...걸 주제로 하면 뭔가 바로 빠꾸먹을 거 같다) 지금 만든 것은 나 한 사람에게 맞춘 자동화이므로 과거 메일을 다시 읽는 정도로도 충분하다. 하지만 사용자가 많아지면 각자의 목표와 수준, 이미 본 내용, 틀린 항목과 복습 시점을 DB에 구조화해 관리해야 한다. 발송 실패와 중복 실행, 권한과 개인정보 문제도 별도의 제품 기능이 된다. "
-        }
-      ]
-    },
-    {
-      "id": "business-generation-memory",
-      "type": "paragraph",
-      "richText": [
-        {
-          "text": "제품 얘기를 하기 보다는 GPT가 어디까지 발전했는지, 우리가 무엇을 할 수 있는지 얘기하는게 훨씬 중요할 것이다. 만약 이걸 실제 서비스화한다면 GPT가 오늘의 콘텐츠를 생성하는 동안 나는 "
+          "id": "business-overview",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "사업 이야기는 간단히 남겨두고 싶다. (학교에서 창업 과목을 듣고 있는데 이...걸 주제로 하면 뭔가 바로 빠꾸먹을 거 같다) 지금 만든 것은 나 한 사람에게 맞춘 자동화이므로 과거 메일을 다시 읽는 정도로도 충분하다. 하지만 사용자가 많아지면 각자의 목표와 수준, 이미 본 내용, 틀린 항목과 복습 시점을 DB에 구조화해 관리해야 한다. 발송 실패와 중복 실행, 권한과 개인정보 문제도 별도의 제품 기능이 된다. "
+            }
+          ]
         },
         {
-          "text": "사용자가 어디까지 왔고, 무엇에서 멈췄으며, 다음에는 무엇을 해야 하는지",
-          "annotations": {
-            "bold": true
-          }
-        },
-        {
-          "text": "를 파악해야 한다. 생성보다 기억과 전달의 설계가 성취를 돕는 제품을 만든다, 그리고 이것이 아마 GPT가 못하는 지점일 것이다."
+          "id": "business-generation-memory",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "제품 얘기를 하기 보다는 GPT가 어디까지 발전했는지, 우리가 무엇을 할 수 있는지 얘기하는게 훨씬 중요할 것이다. 만약 이걸 실제 서비스화한다면 GPT가 오늘의 콘텐츠를 생성하는 동안 나는 "
+            },
+            {
+              "text": "사용자가 어디까지 왔고, 무엇에서 멈췄으며, 다음에는 무엇을 해야 하는지",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": "를 파악해야 한다. 생성보다 기억과 전달의 설계가 성취를 돕는 제품을 만든다, 그리고 이것이 아마 GPT가 못하는 지점일 것이다."
+            }
+          ]
         }
       ]
-    },
-    {
-      "id": "business-competitive-edge",
-      "type": "callout",
-      "backgroundColor": "gray",
-      "richText": [
-        {
-          "text": "결국 팔아야 하는 것은 ‘매일 메일을 보내는 기능’이 아니라, 사용자의 시간을 존중하면서 다음 행동이 끊기지 않게 만드는 경험일 것이다."
-        }
-      ],
-      "icon": "🧩"
     },
     {
       "id": "conclusion-title",

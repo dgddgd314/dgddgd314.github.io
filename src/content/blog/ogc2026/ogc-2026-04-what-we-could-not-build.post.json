@@ -5,7 +5,7 @@
     "description": "bay assignment에 갇힌 ALNS neighborhood, 임시방편으로 남은 in-bay 탐색, 전체를 처음부터 배치하지 않고, 바뀐 block 주변만 다시 배치해 보는 방식과 instance별 proxy 가중치 예측까지. 대회에서 끝내 구현하지 못한 것들에 대한 마지막 회고.",
     "pubDate": "2026-08-11",
     "category": "프로젝트/OGC 2026",
-    "tags": "ogc2026, optimization, alns, machine-learning",
+    "tags": "ogc2026, optimization, alns, machine-learning, IE",
     "status": [
       "published"
     ],
