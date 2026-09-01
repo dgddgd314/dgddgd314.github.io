@@ -4,8 +4,8 @@
     "slug": "ogc-2026-02-rebuilding-the-decoder",
     "description": "NFP 경계 후보와 복잡한 점수식으로 만든 배치기를 버리고, raster full scan과 시간순 dispatcher로 다시 만든 과정과 그 뒤에 남은 설계의 교훈.",
     "pubDate": "2026-08-08",
-    "category": "ogc2026",
-    "tags": "ogc2026, optimization, geometry",
+    "category": "프로젝트/OGC 2026",
+    "tags": "ogc2026, optimization, geometry, IE",
     "status": [
       "published"
     ],

@@ -4,7 +4,7 @@
     "slug": "blog_dev_log_v1_1",
     "description": "에디터의 이미지 크기 조절, 인용구 표시, Markdown 단축키와 다중 상태 지정 기능을 다듬은 v1.1 개발 기록.",
     "pubDate": "2026-08-14",
-    "category": "blog_dev",
+    "category": "개발/블로그",
     "tags": "astro,blog,editor",
     "title": "[개발일지] 블로그 에디터 업데이트 (v1.1)",
     "status": [

@@ -4,7 +4,7 @@
     "slug": "google-search-console-indexing-guide",
     "description": "GitHub Pages로 만든 개인 블로그를 Google Search Console에 등록하고, 사이트맵과 URL 검사를 통해 첫 색인을 요청하는 과정 기록.",
     "pubDate": "2026-08-15",
-    "category": "blog_dev",
+    "category": "개발/블로그",
     "tags": "google,google-search-console,astro",
     "title": "Google에 색인시키기: Search Console 등록부터 첫 색인 요청까지",
     "status": [

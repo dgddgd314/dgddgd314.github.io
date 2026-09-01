@@ -4,7 +4,7 @@
     "slug": "blog_dev_log_v1_2",
     "description": "암호화된 글, 게시 상태·노출 위치 기반의 콘텐츠 관리, 모바일 페이지 전환을 도입한 블로그 v1.2 개발 기록.",
     "pubDate": "2026-08-23",
-    "category": "blog_dev",
+    "category": "개발/블로그",
     "tags": "astro,blog,editor,ui-ux",
     "title": "[개발일지] 블로그 업데이트 (v1.2)",
     "status": [

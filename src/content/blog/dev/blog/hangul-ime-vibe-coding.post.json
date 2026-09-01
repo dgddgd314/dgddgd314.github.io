@@ -4,7 +4,7 @@
     "slug": "hangul-ime-vibe-coding",
     "description": "Unicode 자모 표현, 초성·형태소 검색과 조사 처리까지 vibe coding이 놓치기 쉬운 한글의 개발 문제를 정리했다.",
     "pubDate": "2026-08-18",
-    "category": "blog_dev",
+    "category": "개발/블로그",
     "tags": "vibe-coding,unicode,frontend,editor,",
     "title": "ㅇㅗㅏㅇㄱㅗㅏㄴ: Vibe Coding은 왜 한글 입력을 깨뜨릴까",
     "status": [
