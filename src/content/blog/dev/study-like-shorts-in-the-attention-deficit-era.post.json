@@ -54,7 +54,12 @@
       "id": "block-mti4x9mz-hfp8c4",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1vo8QgcR5RVusxTHse_o0QDvjnLws2kgo=w2000",
-      "alt": "",
+      "alt": "이메일을 통해 영어 단어 배우기",
+      "caption": [
+        {
+          "text": "참고로 친구들에게도 같은 이메일을 전송하고 있다."
+        }
+      ],
       "displayWidth": 717
     },
     {
@@ -292,7 +297,7 @@
       "id": "block-mti72mpm-csvra7",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1rM__W4sQ_dD3IzmLh5YgLehvKbhsLcJz=w2000",
-      "alt": "",
+      "alt": "듀오링고(DUOL) 회사의 전략",
       "displayWidth": 210
     },
     {
@@ -496,7 +501,7 @@
       "id": "block-mti65wa6-x001yg",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1MQ0fJim2RTyAw5aF-O9U9InEf0yKq6eZ=w2000",
-      "alt": "",
+      "alt": "이 달의 우수사원 - 모든 것을 숏폼화하기",
       "isHeroImage": true,
       "displayWidth": 477
     },
@@ -929,7 +934,7 @@
       "id": "block-mtid2e9a-uxpbdd",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1OF3b6c1HIcZgUvwjSUW2-rmDE8kCzprU=w2000",
-      "alt": "",
+      "alt": "ChatGPT Work 클라우드 서비스, DB 서비스 설명",
       "displayWidth": 517
     },
     {
