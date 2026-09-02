@@ -633,8 +633,7 @@
 
 .network-map {
   position: relative;
-  height: clamp(480px, 62vh, 620px);
-  min-height: 480px;
+  min-height: 440px;
   overflow: hidden;
   border: 1px solid var(--archive-border);
   border-radius: 8px;
@@ -782,68 +781,6 @@
 
 .network-legend span:last-child::before {
   background: rgba(41, 115, 178, 0.78);
-}
-
-.network-canvas {
-  position: absolute;
-  inset: 0;
-  cursor: grab;
-  touch-action: none;
-}
-
-.network-canvas:active {
-  cursor: grabbing;
-}
-
-.network-canvas canvas {
-  display: block;
-}
-
-.network-preview[hidden] {
-  display: none;
-}
-
-.network-preview[data-side="left"] {
-  transform: translate(calc(-100% - 18px), -50%);
-}
-
-.network-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.network-meta p {
-  margin: 0;
-  color: var(--archive-faint);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 0.7rem;
-}
-
-.network-meta button {
-  min-height: 32px;
-  border: 1px solid var(--archive-border);
-  border-radius: 999px;
-  padding: 0 12px;
-  color: var(--archive-muted);
-  background: var(--archive-panel);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 760;
-  cursor: pointer;
-}
-
-.network-meta button:hover,
-.network-meta button:focus-visible {
-  border-color: var(--archive-accent);
-  color: var(--archive-accent);
-  background: var(--archive-hover);
-  outline: none;
-}
-
-.network-meta button:focus-visible {
-  box-shadow: 0 0 0 3px rgba(154, 203, 208, 0.28);
 }
 
 .blog-pagination {

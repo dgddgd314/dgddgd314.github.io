@@ -3,12 +3,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import type { CollectionEntry } from "astro:content";
 import createSlug from "../../lib/createSlug";
 import { getBlogCategory } from "../../lib/blog-category";
-import { buildPostNetwork } from "../../lib/post-network";
 import postNetwork from "../../data/post-network.json";
 import { toEmbeddableImageUrl } from "../../lib/image-url";
 import "../../styles/blog-index.css";
 
 type BlogPost = CollectionEntry<"blog">;
+type NetworkLink = {
+  source: string;
+  target: string;
+  type?: string;
+  label?: string;
+  weight?: number;
+  sharedTags?: string[];
+};
+
 type Counts = Record<string, number>;
 
 type Props = {
@@ -116,32 +124,55 @@ const postsForPage = page.data.map((post: BlogPost, index: number) => {
   };
 });
 
-const networkLinks = buildPostNetwork(
-  postsForPage.map(({ key, tags }) => ({ key, tags })),
-  postNetwork.manualLinks,
-  postNetwork.autoLinks,
-);
-const networkDegree = new Map<string, { degree: number; weightedDegree: number }>();
-for (const { source, target, weight } of networkLinks) {
-  for (const key of [source, target]) {
-    const current = networkDegree.get(key) ?? { degree: 0, weightedDegree: 0 };
-    current.degree += 1;
-    current.weightedDegree += weight;
-    networkDegree.set(key, current);
+const postIndex = new Map(postsForPage.map((item) => [item.key, item]));
+const edgeMap = new Map<string, NetworkLink>();
+const normalizeEdgeKey = (source: string, target: string) => [source, target].sort().join("__");
+const upsertEdge = (link: NetworkLink) => {
+  if (!postIndex.has(link.source) || !postIndex.has(link.target) || link.source === link.target) return;
+  const key = normalizeEdgeKey(link.source, link.target);
+  const current = edgeMap.get(key);
+  if (!current) {
+    edgeMap.set(key, {
+      ...link,
+      type: link.type ?? "related",
+      label: link.label ?? link.type ?? "related",
+      weight: link.weight ?? 1,
+      sharedTags: link.sharedTags ?? [],
+    });
+    return;
+  }
+  current.weight = Math.max(current.weight ?? 1, link.weight ?? 1);
+  current.type = current.type === "reference" || link.type === "reference" ? "reference" : current.type;
+  current.label = current.type === "reference" ? "reference" : current.label;
+  current.sharedTags = Array.from(new Set([...(current.sharedTags ?? []), ...(link.sharedTags ?? [])]));
+};
+
+for (const link of (postNetwork.manualLinks ?? []) as NetworkLink[]) {
+  upsertEdge(link);
+}
+
+const autoLinks = postNetwork.autoLinks ?? {};
+if (autoLinks.sharedTags) {
+  for (let i = 0; i < postsForPage.length; i += 1) {
+    for (let j = i + 1; j < postsForPage.length; j += 1) {
+      const source = postsForPage[i];
+      const target = postsForPage[j];
+      const sharedTags = source.tags.filter((tag) => target.tags.includes(tag));
+      if (sharedTags.length >= (autoLinks.minimumSharedTags ?? 1)) {
+        upsertEdge({
+          source: source.key,
+          target: target.key,
+          type: "shared-tags",
+          label: sharedTags.map((tag) => "#" + tag).join(", "),
+          weight: autoLinks.weight ?? 1,
+          sharedTags,
+        });
+      }
+    }
   }
 }
-const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }) => ({
-  id: key,
-  number: String(index + 1).padStart(2, "0"),
-  title: post.data.title,
-  description: post.data.description,
-  date: formatDate(post.data.pubDate),
-  tags,
-  category,
-  url,
-  degree: networkDegree.get(key)?.degree ?? 0,
-  weightedDegree: networkDegree.get(key)?.weightedDegree ?? 0,
-}));
+
+const networkLinks = Array.from(edgeMap.values());
 ---
 
 <BaseLayout
@@ -250,18 +281,14 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
           <button type="button" class="list-load-more" data-list-load-more hidden>Load more posts</button>
 
           <section class="network-view" data-layout-view="network" hidden aria-label="Post network">
-            <div class="network-map" data-network data-network-nodes={JSON.stringify(networkNodes)} data-network-links={JSON.stringify(networkLinks)}>
-              <div class="network-canvas" data-network-canvas aria-hidden="true"></div>
-              <article class="network-preview" data-network-preview hidden>
-                <strong data-network-preview-title></strong>
-                <span data-network-preview-meta></span>
-                <p data-network-preview-description></p>
-                <em data-network-preview-tags></em>
-              </article>
-            </div>
-            <div class="network-meta">
-              <p>drag nodes · scroll to zoom</p>
-              <button type="button" data-network-reset>Reset layout</button>
+            <div class="network-map" data-network data-network-links={JSON.stringify(networkLinks)}>
+              <svg class="network-lines" data-network-lines aria-hidden="true"></svg>
+              <div class="network-preview" data-network-preview hidden></div>
+              {postsForPage.map(({ post, index, tags, tagList, categoryValue, key, url }) => (
+                <a href={url} class="network-node network-node--post" data-network-post data-post-key={key} data-post-title={post.data.title.toLowerCase()} data-post-desc={post.data.description.toLowerCase()} data-post-tags={tagList.join("|")} data-post-category={categoryValue} data-title={post.data.title} data-desc={post.data.description} data-date={formatDate(post.data.pubDate)} data-tags={tags.join(", ")}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                </a>
+              ))}
             </div>
             <div class="network-legend">
               <span>shared tag</span>
@@ -347,6 +374,7 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
       const input = root?.querySelector("[data-post-search]");
       const cards = Array.from(root?.querySelectorAll("[data-post-card]") ?? []);
       const listItems = Array.from(root?.querySelectorAll("[data-post-list-item]") ?? []);
+      const networkPostNodes = Array.from(root?.querySelectorAll("[data-network-post]") ?? []);
       const empty = root?.querySelector("[data-search-empty]");
       const count = root?.querySelector("[data-search-count]");
       const postView = root?.querySelector("[data-post-view]");
@@ -358,23 +386,14 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
       const tagButtons = Array.from(root?.querySelectorAll("[data-tag-filter]") ?? []);
       const categoryButtons = Array.from(root?.querySelectorAll("[data-category-filter]") ?? []);
       const network = root?.querySelector("[data-network]");
-      const networkCanvas = root?.querySelector("[data-network-canvas]");
+      const networkLines = root?.querySelector("[data-network-lines]");
       const networkPreview = root?.querySelector("[data-network-preview]");
-      const networkPreviewTitle = root?.querySelector("[data-network-preview-title]");
-      const networkPreviewMeta = root?.querySelector("[data-network-preview-meta]");
-      const networkPreviewDescription = root?.querySelector("[data-network-preview-description]");
-      const networkPreviewTags = root?.querySelector("[data-network-preview-tags]");
-      const networkReset = root?.querySelector("[data-network-reset]");
-      const networkNodes = JSON.parse(network?.dataset.networkNodes ?? "[]");
       const networkLinks = JSON.parse(network?.dataset.networkLinks ?? "[]");
       const postGrid = root?.querySelector("[data-post-grid]");
       const tagCloud = root?.querySelector("[data-tag-cloud]");
       const tagCloudMore = root?.querySelector("[data-tag-cloud-more]");
       const listLoadMore = root?.querySelector("[data-list-load-more]");
       const LIST_BATCH_SIZE = 12;
-      let networkController;
-      let networkInitPromise;
-      let visibleNetworkKeys = new Set(networkNodes.map((node) => node.id));
       let listLimit = LIST_BATCH_SIZE;
       let activeTag = root?.dataset.initialTag ?? "";
       let activeCategory = "";
@@ -387,34 +406,6 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
 
       function getCategoryHeading(category) {
         return category === "uncategorized" ? "&#xBBF8;&#xBD84;&#xB958;" : category;
-      }
-
-      async function ensureNetwork() {
-        if (networkController) {
-          networkController.resize();
-          return networkController;
-        }
-        if (!network || !networkCanvas || !networkPreview || !networkPreviewTitle || !networkPreviewMeta || !networkPreviewDescription || !networkPreviewTags) return;
-
-        if (!networkInitPromise) {
-          networkInitPromise = import("../../scripts/blog-network").then(({ createBlogNetwork }) => {
-            networkController = createBlogNetwork({
-              surface: network,
-              canvas: networkCanvas,
-              preview: networkPreview,
-              previewTitle: networkPreviewTitle,
-              previewMeta: networkPreviewMeta,
-              previewDescription: networkPreviewDescription,
-              previewTags: networkPreviewTags,
-              nodes: networkNodes,
-              links: networkLinks,
-            });
-            networkController.setVisibleKeys(visibleNetworkKeys);
-            networkReset?.addEventListener("click", () => networkController?.reset());
-            return networkController;
-          });
-        }
-        return networkInitPromise;
       }
 
       function syncTagModeLayout() {
@@ -444,14 +435,16 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
           button.classList.toggle("view-switcher__button--active", button.dataset.layoutButton === layout);
         });
         applyFilters(false);
-        if (layout === "network") {
-          requestAnimationFrame(() => {
-            void ensureNetwork().then((controller) => {
-              controller?.setVisibleKeys(visibleNetworkKeys);
-              controller?.resize();
-            });
-          });
-        }
+        if (layout === "network") requestAnimationFrame(layoutNetwork);
+      }
+
+      function syncPostReplica(key, matched) {
+        listItems.forEach((item) => {
+          if (item.dataset.postKey === key) item.hidden = !matched;
+        });
+        networkPostNodes.forEach((node) => {
+          if (node.dataset.postKey === key) node.hidden = !matched;
+        });
       }
 
       function applyFilters(resetList = true) {
@@ -484,8 +477,9 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
           card.classList.toggle("post-card--feature", useFeaturedCard && slot === 0);
         });
 
-        visibleNetworkKeys = new Set(Array.from(matchedKeys).filter((key) => key));
-        networkController?.setVisibleKeys(visibleNetworkKeys);
+        networkPostNodes.forEach((node) => {
+          node.hidden = !matchedKeys.has(node.dataset.postKey);
+        });
 
         let renderedList = 0;
         listItems.forEach((item) => {
@@ -516,7 +510,67 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
           count.textContent = `${matchedCards.length} matched`;
         }
         if (listLoadMore) listLoadMore.hidden = activeLayout !== "list" || renderedList >= matchedCards.length;
-        if (activeLayout === "network") networkController?.resize();
+        if (activeLayout === "network") requestAnimationFrame(layoutNetwork);
+      }
+
+      function layoutNetwork() {
+        if (!network || !networkLines) return;
+        const nodes = networkPostNodes.filter((node) => !node.hidden);
+        const width = network.clientWidth;
+        const height = network.clientHeight;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const radiusX = Math.max(120, width * 0.36);
+        const radiusY = Math.max(112, height * 0.32);
+        const nodeByKey = new Map(nodes.map((node) => [node.dataset.postKey, node]));
+
+        nodes.forEach((node, index) => {
+          const angle = nodes.length === 1 ? -Math.PI / 2 : -Math.PI / 2 + (index * Math.PI * 2) / nodes.length;
+          const left = centerX + Math.cos(angle) * radiusX;
+          const top = centerY + Math.sin(angle) * radiusY;
+          node.style.left = `${left}px`;
+          node.style.top = `${top}px`;
+        });
+
+        const lines = [];
+        networkLinks.forEach((link) => {
+          const source = nodeByKey.get(link.source);
+          const target = nodeByKey.get(link.target);
+          if (!source || !target) return;
+          const sourceX = parseFloat(source.style.left);
+          const sourceY = parseFloat(source.style.top);
+          const targetX = parseFloat(target.style.left);
+          const targetY = parseFloat(target.style.top);
+          const kind = link.type === "reference" ? "reference" : "shared";
+          lines.push(`<line data-source="${link.source}" data-target="${link.target}" data-kind="${kind}" x1="${sourceX}" y1="${sourceY}" x2="${targetX}" y2="${targetY}" />`);
+        });
+        networkLines.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        networkLines.innerHTML = lines.join("");
+      }
+
+      function showPreview(node) {
+        if (!networkPreview || !network) return;
+        const key = node.dataset.postKey;
+        const related = networkLinks.filter((link) => link.source === key || link.target === key).length;
+        networkPreview.innerHTML = `<strong>${node.dataset.title ?? ""}</strong><span>${node.dataset.date ?? ""} - ${related} links</span><p>${node.dataset.desc ?? ""}</p><em>${node.dataset.tags ?? "untagged"}</em>`;
+        networkPreview.hidden = false;
+        networkPreview.style.left = node.style.left;
+        networkPreview.style.top = node.style.top;
+        network.querySelectorAll("[data-network-post]").forEach((item) => item.classList.toggle("network-node--dimmed", item.dataset.postKey !== key));
+        network.querySelectorAll("line").forEach((line) => {
+          const connected = line.dataset.source === key || line.dataset.target === key;
+          line.classList.toggle("network-line--active", connected);
+          if (connected) {
+            network.querySelector(`[data-post-key="${line.dataset.source}"]`)?.classList.remove("network-node--dimmed");
+            network.querySelector(`[data-post-key="${line.dataset.target}"]`)?.classList.remove("network-node--dimmed");
+          }
+        });
+      }
+
+      function hidePreview() {
+        if (networkPreview) networkPreview.hidden = true;
+        network?.querySelectorAll("[data-network-post]").forEach((item) => item.classList.remove("network-node--dimmed"));
+        network?.querySelectorAll("line").forEach((line) => line.classList.remove("network-line--active"));
       }
 
       input?.addEventListener("input", applyFilters);
@@ -554,6 +608,18 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
           applyFilters();
         });
       });
+
+      networkPostNodes.forEach((node) => {
+        node.addEventListener("pointerenter", () => showPreview(node));
+        node.addEventListener("pointerleave", hidePreview);
+        node.addEventListener("focus", () => showPreview(node));
+        node.addEventListener("blur", hidePreview);
+      });
+
+      const handleResize = () => {
+        if (activeLayout === "network") layoutNetwork();
+      };
+      window.addEventListener("resize", handleResize);
 
       setView(activeView);
       setLayout("bento");
