@@ -4,6 +4,7 @@ import type { CollectionEntry } from "astro:content";
 import createSlug from "../../lib/createSlug";
 import { getBlogCategory } from "../../lib/blog-category";
 import { buildPostNetwork } from "../../lib/post-network";
+import { extractInternalPostReferences } from "../../lib/post-references";
 import postNetwork from "../../data/post-network.json";
 import { toEmbeddableImageUrl } from "../../lib/image-url";
 import "../../styles/blog-index.css";
@@ -20,6 +21,7 @@ type Props = {
     };
   };
   allPosts: BlogPost[];
+  networkPosts?: BlogPost[];
   noticePosts: BlogPost[];
   tagCounts: Counts;
   categoryCounts: Counts;
@@ -30,6 +32,7 @@ type Props = {
 const {
   page,
   allPosts,
+  networkPosts = allPosts,
   noticePosts = [],
   tagCounts = {},
   categoryCounts = {},
@@ -116,8 +119,44 @@ const postsForPage = page.data.map((post: BlogPost, index: number) => {
   };
 });
 
+const archiveNumberByKey = new Map(postsForPage.map(({ key, index }) => [
+  key,
+  String(index + 1).padStart(2, "0"),
+]));
+const networkPostRecords = networkPosts.map((post) => {
+  const key = toPostKey(post);
+  return {
+    post,
+    key,
+    tags: post.data.tags ?? [],
+    category: getPostCategory(post),
+    url: "/blog/" + key,
+    references: extractInternalPostReferences(post.data.blocks, Astro.site?.origin),
+  };
+});
+const candidateReferenceLinks = buildPostNetwork(
+  networkPostRecords.map(({ key, tags, references }) => ({ key, tags, references })),
+  postNetwork.manualLinks,
+  { ...postNetwork.autoLinks, sharedTags: false },
+).filter((link) => link.type === "reference");
+const includedNetworkKeys = new Set(postsForPage.map(({ key }) => key));
+let foundReferencedPost = true;
+while (foundReferencedPost) {
+  foundReferencedPost = false;
+  for (const { source, target } of candidateReferenceLinks) {
+    if (includedNetworkKeys.has(source) && !includedNetworkKeys.has(target)) {
+      includedNetworkKeys.add(target);
+      foundReferencedPost = true;
+    }
+    if (includedNetworkKeys.has(target) && !includedNetworkKeys.has(source)) {
+      includedNetworkKeys.add(source);
+      foundReferencedPost = true;
+    }
+  }
+}
+const includedNetworkPosts = networkPostRecords.filter(({ key }) => includedNetworkKeys.has(key));
 const networkLinks = buildPostNetwork(
-  postsForPage.map(({ key, tags }) => ({ key, tags })),
+  includedNetworkPosts.map(({ key, tags, references }) => ({ key, tags, references })),
   postNetwork.manualLinks,
   postNetwork.autoLinks,
 );
@@ -130,15 +169,16 @@ for (const { source, target, weight } of networkLinks) {
     networkDegree.set(key, current);
   }
 }
-const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }) => ({
+const networkNodes = includedNetworkPosts.map(({ post, tags, category, key, url }) => ({
   id: key,
-  number: String(index + 1).padStart(2, "0"),
+  number: archiveNumberByKey.get(key) ?? "",
   title: post.data.title,
   description: post.data.description,
   date: formatDate(post.data.pubDate),
   tags,
   category,
   url,
+  encrypted: post.data.status.includes("encrypted"),
   degree: networkDegree.get(key)?.degree ?? 0,
   weightedDegree: networkDegree.get(key)?.weightedDegree ?? 0,
 }));
@@ -367,6 +407,9 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
       const networkReset = root?.querySelector("[data-network-reset]");
       const networkNodes = JSON.parse(network?.dataset.networkNodes ?? "[]");
       const networkLinks = JSON.parse(network?.dataset.networkLinks ?? "[]");
+      const archiveNetworkKeys = new Set(cards
+        .map((card) => card.dataset.postKey)
+        .filter((key) => key));
       const postGrid = root?.querySelector("[data-post-grid]");
       const tagCloud = root?.querySelector("[data-tag-cloud]");
       const tagCloudMore = root?.querySelector("[data-tag-cloud-more]");
@@ -387,6 +430,34 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
 
       function getCategoryHeading(category) {
         return category === "uncategorized" ? "&#xBBF8;&#xBD84;&#xB958;" : category;
+      }
+
+      function getNetworkEndpointKey(endpoint) {
+        return typeof endpoint === "object" ? endpoint?.id : endpoint;
+      }
+
+      function includeReferencedPosts(keys) {
+        const expanded = new Set(keys);
+        let changed = true;
+        while (changed) {
+          changed = false;
+          networkLinks.forEach((link) => {
+            if (link.type !== "reference") return;
+            const source = getNetworkEndpointKey(link.source);
+            const target = getNetworkEndpointKey(link.target);
+            if (!source || !target) return;
+
+            if (expanded.has(source) && !archiveNetworkKeys.has(target) && !expanded.has(target)) {
+              expanded.add(target);
+              changed = true;
+            }
+            if (expanded.has(target) && !archiveNetworkKeys.has(source) && !expanded.has(source)) {
+              expanded.add(source);
+              changed = true;
+            }
+          });
+        }
+        return expanded;
       }
 
       async function ensureNetwork() {
@@ -484,7 +555,7 @@ const networkNodes = postsForPage.map(({ post, index, tags, category, key, url }
           card.classList.toggle("post-card--feature", useFeaturedCard && slot === 0);
         });
 
-        visibleNetworkKeys = new Set(Array.from(matchedKeys).filter((key) => key));
+        visibleNetworkKeys = includeReferencedPosts(new Set(Array.from(matchedKeys).filter((key) => key)));
         networkController?.setVisibleKeys(visibleNetworkKeys);
 
         let renderedList = 0;

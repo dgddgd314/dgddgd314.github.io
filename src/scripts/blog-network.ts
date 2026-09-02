@@ -14,6 +14,7 @@ export type BlogNetworkNode = NodeObject & {
   tags: string[];
   category: string;
   url: string;
+  encrypted: boolean;
   degree: number;
   weightedDegree: number;
 };
@@ -63,6 +64,7 @@ export type BlogNetworkController = {
 
 const getEndpointId = (endpoint: string | BlogNetworkNode) => typeof endpoint === "object" ? endpoint.id : endpoint;
 const clamp = (value: number, minimum: number, maximum: number) => Math.min(maximum, Math.max(minimum, value));
+const LOCK_MARK = "\u{1F512}";
 
 export function createBlogNetwork({
   surface,
@@ -155,11 +157,16 @@ export function createBlogNetwork({
     context.fillStyle = palette.signal;
     context.fill();
 
-    context.fillStyle = palette.ink;
-    context.font = "800 6.5px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(node.number, node.x ?? 0, (node.y ?? 0) + 0.35);
+    const token = node.encrypted ? LOCK_MARK : node.number;
+    if (token) {
+      context.fillStyle = palette.ink;
+      context.font = node.encrypted
+        ? "9px 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif"
+        : "800 6.5px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(token, node.x ?? 0, (node.y ?? 0) + 0.35);
+    }
     context.restore();
   };
 
