@@ -1,6 +1,7 @@
 export type NetworkPostInput = {
   key: string;
   tags: string[];
+  references?: string[];
 };
 
 export type NetworkLink = {
@@ -20,12 +21,15 @@ export type ManualNetworkLink = {
   label?: string;
   weight?: number;
   sharedTags?: string[];
+  exclude?: boolean;
 };
 
 export type AutoNetworkOptions = {
   sharedTags?: boolean;
   minimumSharedTags?: number;
   weight?: number;
+  internalReferences?: boolean;
+  referenceWeight?: number;
 };
 
 const normalizeTag = (tag: string) => tag.trim().toLowerCase();
@@ -79,53 +83,91 @@ export function buildPostNetwork(
     current.sharedTags = Array.from(new Set([...current.sharedTags, ...link.sharedTags]));
   };
 
+  if (autoOptions.internalReferences !== false) {
+    const referenceWeight = Math.max(0.1, autoOptions.referenceWeight ?? 2.2);
+    for (const post of posts) {
+      for (const target of new Set(post.references ?? [])) {
+        upsertEdge({
+          source: post.key,
+          target,
+          type: "reference",
+          label: "reference",
+          weight: referenceWeight,
+          score: 1,
+          sharedTags: [],
+        });
+      }
+    }
+  }
+
+  if (autoOptions.sharedTags !== false) {
+    const minimumSharedTags = Math.max(1, autoOptions.minimumSharedTags ?? 1);
+    const baseWeight = Math.max(0.1, autoOptions.weight ?? 1);
+
+    for (let sourceIndex = 0; sourceIndex < posts.length; sourceIndex += 1) {
+      for (let targetIndex = sourceIndex + 1; targetIndex < posts.length; targetIndex += 1) {
+        const source = posts[sourceIndex];
+        const target = posts[targetIndex];
+        const sourceTags = normalizedTags.get(source.key) ?? [];
+        const targetTags = normalizedTags.get(target.key) ?? [];
+        const targetTagSet = new Set(targetTags);
+        const sharedTags = sourceTags.filter((tag) => targetTagSet.has(tag));
+        if (sharedTags.length < minimumSharedTags) continue;
+
+        const sharedMass = tagMass(sharedTags);
+        const sourceMass = tagMass(sourceTags);
+        const targetMass = tagMass(targetTags);
+        const unionMass = Math.max(sharedMass, sourceMass + targetMass - sharedMass);
+        const smallerMass = Math.max(sharedMass, Math.min(sourceMass, targetMass));
+        const weightedJaccard = sharedMass / unionMass;
+        const weightedOverlap = sharedMass / smallerMass;
+        const score = (weightedJaccard * 0.65) + (weightedOverlap * 0.35);
+
+        upsertEdge({
+          source: source.key,
+          target: target.key,
+          type: "shared-tags",
+          label: sharedTags.map((tag) => `#${tag}`).join(", "),
+          weight: roundWeight(baseWeight * (0.35 + (score * 1.65))),
+          score: roundWeight(score),
+          sharedTags,
+        });
+      }
+    }
+  }
+
+  // Explicit configuration is applied last so it can override or remove an
+  // automatically discovered relationship.
   for (const link of manualLinks) {
-    const type = link.type === "reference" ? "reference" : "related";
-    upsertEdge({
+    if (!postKeys.has(link.source) || !postKeys.has(link.target) || link.source === link.target) continue;
+    const key = normalizeEdgeKey(link.source, link.target);
+    if (link.exclude) {
+      edgeMap.delete(key);
+      continue;
+    }
+
+    const current = edgeMap.get(key);
+    const explicitType = link.type === "reference"
+      ? "reference"
+      : link.type === "shared-tags"
+        ? "shared-tags"
+        : link.type
+          ? "related"
+          : undefined;
+    const type = explicitType ?? current?.type ?? "related";
+    const sharedTags = link.sharedTags
+      ? link.sharedTags.map(normalizeTag).filter(Boolean)
+      : current?.sharedTags ?? [];
+
+    edgeMap.set(key, {
       source: link.source,
       target: link.target,
       type,
-      label: link.label ?? type,
-      weight: link.weight ?? (type === "reference" ? 2 : 1),
-      score: 1,
-      sharedTags: (link.sharedTags ?? []).map(normalizeTag).filter(Boolean),
+      label: link.label ?? (explicitType ? type : current?.label ?? type),
+      weight: roundWeight(Math.max(0.1, link.weight ?? current?.weight ?? (type === "reference" ? 2 : 1))),
+      score: current?.score ?? 1,
+      sharedTags,
     });
-  }
-
-  if (autoOptions.sharedTags === false) return Array.from(edgeMap.values());
-
-  const minimumSharedTags = Math.max(1, autoOptions.minimumSharedTags ?? 1);
-  const baseWeight = Math.max(0.1, autoOptions.weight ?? 1);
-
-  for (let sourceIndex = 0; sourceIndex < posts.length; sourceIndex += 1) {
-    for (let targetIndex = sourceIndex + 1; targetIndex < posts.length; targetIndex += 1) {
-      const source = posts[sourceIndex];
-      const target = posts[targetIndex];
-      const sourceTags = normalizedTags.get(source.key) ?? [];
-      const targetTags = normalizedTags.get(target.key) ?? [];
-      const targetTagSet = new Set(targetTags);
-      const sharedTags = sourceTags.filter((tag) => targetTagSet.has(tag));
-      if (sharedTags.length < minimumSharedTags) continue;
-
-      const sharedMass = tagMass(sharedTags);
-      const sourceMass = tagMass(sourceTags);
-      const targetMass = tagMass(targetTags);
-      const unionMass = Math.max(sharedMass, sourceMass + targetMass - sharedMass);
-      const smallerMass = Math.max(sharedMass, Math.min(sourceMass, targetMass));
-      const weightedJaccard = sharedMass / unionMass;
-      const weightedOverlap = sharedMass / smallerMass;
-      const score = (weightedJaccard * 0.65) + (weightedOverlap * 0.35);
-
-      upsertEdge({
-        source: source.key,
-        target: target.key,
-        type: "shared-tags",
-        label: sharedTags.map((tag) => `#${tag}`).join(", "),
-        weight: roundWeight(baseWeight * (0.35 + (score * 1.65))),
-        score: roundWeight(score),
-        sharedTags,
-      });
-    }
   }
 
   return Array.from(edgeMap.values());

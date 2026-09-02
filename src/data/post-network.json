@@ -1,16 +1,10 @@
 {
-  "manualLinks": [
-    {
-      "source": "demo-post-3",
-      "target": "demo-post-1",
-      "type": "reference",
-      "label": "reference",
-      "weight": 2
-    }
-  ],
+  "manualLinks": [],
   "autoLinks": {
     "sharedTags": true,
     "minimumSharedTags": 1,
-    "weight": 1
+    "weight": 1,
+    "internalReferences": true,
+    "referenceWeight": 2.2
   }
 }

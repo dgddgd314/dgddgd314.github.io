@@ -2,12 +2,13 @@
 import { getCollection } from "astro:content";
 import BlogArchive from "../../components/blog/BlogArchive.astro";
 import { getBlogCategory } from "../../lib/blog-category";
-import { isMainPost, isNoticePost, sortPostsByDate } from "../../lib/blog-publication";
+import { isMainPost, isNoticePost, isPublished, sortPostsByDate } from "../../lib/blog-publication";
 
 export async function getStaticPaths({ paginate }) {
   const posts = sortPostsByDate(await getCollection("blog"));
-  const mainPosts = posts.filter(isMainPost);
-  const noticePosts = posts.filter(isNoticePost);
+  const publishedPosts = posts.filter(isPublished);
+  const mainPosts = publishedPosts.filter(isMainPost);
+  const noticePosts = publishedPosts.filter(isNoticePost);
 
   const tagCounts = mainPosts.reduce<Record<string, number>>((counts, post) => {
     for (const tag of post.data.tags ?? []) {
@@ -26,6 +27,7 @@ export async function getStaticPaths({ paginate }) {
     pageSize: Math.max(mainPosts.length, 1),
     props: {
       allPosts: mainPosts,
+      networkPosts: publishedPosts,
       noticePosts,
       tagCounts,
       categoryCounts,
@@ -33,7 +35,7 @@ export async function getStaticPaths({ paginate }) {
   });
 }
 
-const { page, allPosts = page.data, noticePosts = [], tagCounts = {}, categoryCounts = {} } = Astro.props;
+const { page, allPosts = page.data, networkPosts = allPosts, noticePosts = [], tagCounts = {}, categoryCounts = {} } = Astro.props;
 ---
 
-<BlogArchive page={page} allPosts={allPosts} noticePosts={noticePosts} tagCounts={tagCounts} categoryCounts={categoryCounts} initialView="posts" />
+<BlogArchive page={page} allPosts={allPosts} networkPosts={networkPosts} noticePosts={noticePosts} tagCounts={tagCounts} categoryCounts={categoryCounts} initialView="posts" />
