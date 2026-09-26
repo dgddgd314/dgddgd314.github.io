@@ -1,7 +1,7 @@
 {
   "version": 2,
   "meta": {
-    "slug": "ㅂ",
+    "slug": "blog_dev_log_v1_3",
     "description": "행·열을 추가할 때 표 내용이 사라지던 버그 수정 및 네트워크 뷰 개선 업데이트",
     "pubDate": "2026-09-26",
     "category": "개발/블로그",
@@ -116,7 +116,6 @@
           "text": "구현 방법"
         }
       ],
-      "isOpen": true,
       "children": [
         {
           "id": "block-muihcszv-ucgv07",
