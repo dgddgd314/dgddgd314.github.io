@@ -1,5 +1,7 @@
 import katex from "katex";
-import type { RichText, TextAnnotation } from "../lib/blocks";
+import type { RichText } from "../lib/blocks";
+import { parseEditable } from "../lib/editor-rich-text";
+import { createTableEditor, renderEditorTable } from "./editor-table";
 import { BLOCK_COLOR_PALETTE, type BlockColorOption } from "../lib/color-palette";
 import {
   decryptBlocks,
@@ -156,10 +158,6 @@ function normalizeImageDisplayWidth(value: unknown): number | undefined {
   return Math.round(Math.max(IMAGE_MIN_DISPLAY_WIDTH, Math.min(IMAGE_MAX_DISPLAY_WIDTH, width)));
 }
 
-function normalizeText(value = ""): string {
-  return value.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n");
-}
-
 function canonicalCssColor(value: string): string {
   if (!value) return "";
   const probe = document.createElement("span");
@@ -254,6 +252,31 @@ export function initPostEditor(): void {
     mode: "",
     blockIds: [],
   };
+
+  const tableEditor = createTableEditor({
+    root: blocksRoot,
+    getBlock,
+    parseCell: (element) => parseEditable(element, paletteColorName),
+    captureSelection: (blockId) => {
+      const selection = captureSelection(true);
+      return selection?.field === "table-cell" && selection.blockId === blockId
+        ? { row: selection.row!, col: selection.col!, start: selection.start, end: selection.end }
+        : null;
+    },
+    restoreSelection: (blockId, selection) => restoreSelection({ blockId, field: "table-cell", ...selection }),
+    onChange: () => { syncOutput(); scheduleSave(); },
+    onSelect: (blockId) => {
+      selectedId = blockId;
+      selectedBlockIds.clear();
+      syncBlockSelectionUI();
+      hideSlashMenu();
+    },
+    onBeforeRender: () => {
+      savedSelection = null;
+      hideInlineToolbar();
+      hideColorMenu();
+    },
+  });
 
   function sampleDocument(): EditorDocument {
     return {
@@ -500,33 +523,6 @@ export function initPostEditor(): void {
       </button>
     </div>`;
   }
-  function renderTable(block: EditorBlock): string {
-    const rows = normalizeTableRows(block.rows);
-    return `<div class="editor-table-wrap">
-      <table class="editor-table">
-        <tbody>
-          ${rows.map((row, rowIndex) => `<tr>${row.map((cell, colIndex) => `
-            <td>
-              <div
-                contenteditable="true"
-                spellcheck="true"
-                data-rich-root
-                data-field="table-cell"
-                data-row="${rowIndex}"
-                data-col="${colIndex}"
-              >${richTextToHtml(cell.richText)}</div>
-            </td>`).join("")}</tr>`).join("")}
-        </tbody>
-      </table>
-      <div class="editor-table-actions">
-        <button type="button" data-table-action="add-row">행 추가</button>
-        <button type="button" data-table-action="add-col">열 추가</button>
-        <button type="button" data-table-action="remove-row">행 삭제</button>
-        <button type="button" data-table-action="remove-col">열 삭제</button>
-      </div>
-    </div>`;
-  }
-
   function renderEquationHtml(expression: string): string {
     return katex.renderToString(expression || "\\square", {
       displayMode: true,
@@ -599,7 +595,7 @@ export function initPostEditor(): void {
 
     if (block.type === "table") {
       return `<section class="editor-block editor-block--table${shellClass}" data-id="${block.id}" data-depth="${depth}">
-        ${renderControls()}${renderTable(block)}
+        ${renderControls()}${renderEditorTable(block)}
       </section>`;
     }
 
@@ -668,60 +664,8 @@ export function initPostEditor(): void {
     renderPageAppearance();
     blocksRoot.innerHTML = blocks.map((block) => renderBlockTree(block)).join("");
     bindBlocks();
+    tableEditor.refresh();
     syncOutput();
-  }
-
-  function parseEditable(editable: HTMLElement): RichText[] {
-    const parts: RichText[] = [];
-
-    function append(text: string, template: Omit<RichText, "text">): void {
-      if (!text) return;
-      parts.push({ text: normalizeText(text), ...template });
-    }
-
-    function walk(node: Node, inherited: Omit<RichText, "text"> = {}): void {
-      if (node.nodeType === Node.TEXT_NODE) {
-        append(node.nodeValue ?? "", inherited);
-        return;
-      }
-      if (!(node instanceof HTMLElement)) return;
-      if (node.tagName === "BR") {
-        append("\n", inherited);
-        return;
-      }
-
-      const annotations: TextAnnotation = { ...(inherited.annotations ?? {}) };
-      const tag = node.tagName;
-      if (tag === "B" || tag === "STRONG" || node.classList.contains("is-bold")) annotations.bold = true;
-      if (tag === "I" || tag === "EM" || node.classList.contains("is-italic")) annotations.italic = true;
-      if (tag === "U" || node.classList.contains("is-underline")) annotations.underline = true;
-      if (tag === "S" || tag === "STRIKE" || node.classList.contains("is-strike")) annotations.strike = true;
-      if (tag === "CODE" || node.classList.contains("is-code")) annotations.code = true;
-      const next: Omit<RichText, "text"> = {
-        ...inherited,
-        annotations: Object.keys(annotations).length ? annotations : undefined,
-      };
-      const sourceTextColor = node.dataset.textColor || node.style.color || node.getAttribute("color") || "";
-      const sourceBackground = node.dataset.backgroundColor || node.style.backgroundColor || "";
-      const sourceHref = node.dataset.href || (node instanceof HTMLAnchorElement ? node.href : "");
-      if (sourceTextColor) next.textColor = paletteColorName(sourceTextColor, "text");
-      if (sourceBackground) next.backgroundColor = paletteColorName(sourceBackground, "background");
-      if (sourceHref) next.href = sourceHref;
-
-      const before = parts.length;
-      Array.from(node.childNodes).forEach((child) => walk(child, next));
-      if (
-        (tag === "DIV" || tag === "P") &&
-        node.nextSibling &&
-        parts.length > before &&
-        !parts.at(-1)?.text.endsWith("\n")
-      ) {
-        append("\n", next);
-      }
-    }
-
-    Array.from(editable.childNodes).forEach((child) => walk(child));
-    return mergeRichText(parts);
   }
 
 
@@ -887,10 +831,7 @@ export function initPostEditor(): void {
     const block = getBlock(snapshot.blockId);
     if (!block) return;
     if (snapshot.field === "table-cell") {
-      const rows = normalizeTableRows(block.rows);
-      const cell = rows[snapshot.row ?? -1]?.[snapshot.col ?? -1];
-      if (cell) cell.richText = mergeRichText(value);
-      block.rows = rows;
+      tableEditor.setCell(block.id, { row: snapshot.row!, col: snapshot.col!, start: snapshot.start, end: snapshot.end }, value);
       return;
     }
     block.richText = mergeRichText(value);
@@ -958,6 +899,7 @@ export function initPostEditor(): void {
   function restoreSelection(snapshot: SelectionSnapshot): boolean {
     const editable = findSnapshotRoot(snapshot);
     if (!editable) return false;
+    editable.focus();
     const start = textPoint(editable, snapshot.start);
     const end = textPoint(editable, snapshot.end);
     const range = document.createRange();
@@ -966,7 +908,6 @@ export function initPostEditor(): void {
     const selection = window.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
-    editable.focus();
     return true;
   }
 
@@ -1454,15 +1395,7 @@ export function initPostEditor(): void {
   function updateRichTextFromEditable(blockId: string, editable: HTMLElement): void {
     const block = getBlock(blockId);
     if (!block) return;
-    const value = parseEditable(editable);
-    if (editable.dataset.field === "table-cell") {
-      const rows = normalizeTableRows(block.rows);
-      const cell = rows[Number(editable.dataset.row)]?.[Number(editable.dataset.col)];
-      if (cell) cell.richText = value;
-      block.rows = rows;
-    } else {
-      block.richText = value;
-    }
+    block.richText = parseEditable(editable, paletteColorName);
     syncOutput();
     scheduleSave();
   }
@@ -1960,31 +1893,6 @@ export function initPostEditor(): void {
     }
     return false;
   }
-  function focusTableCell(blockId: string, row: number, col: number): void {
-    const cell = blocksRoot.querySelector<HTMLElement>(
-      `[data-id="${blockId}"] [data-rich-root][data-row="${row}"][data-col="${col}"]`,
-    );
-    cell?.focus();
-  }
-
-  function handleTableTab(event: KeyboardEvent, blockId: string, editable: HTMLElement): void {
-    const block = getBlock(blockId);
-    if (!block || block.type !== "table") return;
-    event.preventDefault();
-    const rows = normalizeTableRows(block.rows);
-    const row = Number(editable.dataset.row);
-    const col = Number(editable.dataset.col);
-    const width = rows[0]?.length ?? 1;
-    let flatIndex = row * width + col + (event.shiftKey ? -1 : 1);
-    if (flatIndex >= rows.length * width) {
-      rows.push(Array.from({ length: width }, () => ({ richText: [] })));
-      block.rows = rows;
-      render();
-    }
-    flatIndex = Math.max(0, flatIndex);
-    window.requestAnimationFrame(() => focusTableCell(blockId, Math.floor(flatIndex / width), flatIndex % width));
-  }
-
   function handleRichKeydown(event: KeyboardEvent, blockId: string, editable: HTMLElement): void {
     if (event.isComposing || event.keyCode === 229) return;
 
@@ -2006,11 +1914,6 @@ export function initPostEditor(): void {
         hideSlashMenu();
         return;
       }
-    }
-
-    if (editable.dataset.field === "table-cell") {
-      if (event.key === "Tab") handleTableTab(event, blockId, editable);
-      return;
     }
 
     const block = getBlock(blockId);
@@ -2102,20 +2005,6 @@ export function initPostEditor(): void {
     scheduleSave();
   }
 
-  function handleTableAction(blockId: string, action: string): void {
-    const block = getBlock(blockId);
-    if (!block || block.type !== "table") return;
-    const rows = normalizeTableRows(block.rows);
-    const width = rows[0]?.length ?? 1;
-    if (action === "add-row") rows.push(Array.from({ length: width }, () => ({ richText: [] })));
-    if (action === "add-col") rows.forEach((row) => row.push({ richText: [] }));
-    if (action === "remove-row" && rows.length > 1) rows.pop();
-    if (action === "remove-col" && width > 1) rows.forEach((row) => row.pop());
-    block.rows = rows;
-    render();
-    scheduleSave();
-  }
-
   function updateImageWidthUI(element: HTMLElement, displayWidth?: number): void {
     const preview = element.querySelector<HTMLElement>("[data-image-preview]");
     const label = element.querySelector<HTMLOutputElement>("[data-image-size-label]");
@@ -2196,6 +2085,7 @@ export function initPostEditor(): void {
       if (!blockId) return;
       element.addEventListener("pointerdown", (event) => {
         const target = event.target;
+        if (!(target instanceof Element) || target.closest("[data-id]") !== element) return;
         const action = target instanceof Element ? target.closest<HTMLElement>("[data-block-action]")?.dataset.blockAction : "";
         if (action === "drag") return;
         selectedBlockIds.clear();
@@ -2221,9 +2111,6 @@ export function initPostEditor(): void {
           }
           handleBlockAction(blockId, action);
         });
-      });
-      element.querySelectorAll<HTMLButtonElement>("[data-table-action]").forEach((button) => {
-        button.addEventListener("click", () => { if (button.closest<HTMLElement>("[data-id]") === element) handleTableAction(blockId, button.dataset.tableAction ?? ""); });
       });
       element.querySelectorAll<HTMLButtonElement>("[data-image-resize]").forEach((handle) => {
         handle.addEventListener("pointerdown", (event) => beginImageResize(event, blockId, handle));
@@ -2254,8 +2141,8 @@ export function initPostEditor(): void {
         field.addEventListener(eventName, () => { if (field.closest<HTMLElement>("[data-id]") === element) updatePlainField(blockId, field); });
       });
       element.querySelectorAll<HTMLElement>("[data-rich-root]").forEach((editable) => {
+        if (editable.dataset.field === "table-cell" || editable.dataset.ownerId !== blockId) return;
         editable.addEventListener("input", () => {
-          if (editable.dataset.ownerId !== blockId) return;
           updateRichTextFromEditable(blockId, editable);
           updateSlashMenu(blockId, editable);
         });
@@ -2339,6 +2226,7 @@ export function initPostEditor(): void {
   }
 
   function getDocument(): EditorDocument {
+    tableEditor.flush();
     return {
       version: 2,
       meta: getMeta(),
@@ -2398,6 +2286,8 @@ export function initPostEditor(): void {
   }
 
   function applyMaterializedDocument(document: EditorDocument, passphrase: string | null): void {
+    tableEditor.reset();
+    savedSelection = null;
     encryptionPassphrase = passphrase;
     setMeta(document.meta);
     pageAppearance = structuredClone(document.page);
@@ -2719,6 +2609,8 @@ export function initPostEditor(): void {
         return;
       }
       if (action === "reset-sample") {
+        tableEditor.reset();
+        savedSelection = null;
         const sample = sampleDocument();
         encryptionPassphrase = null;
         setMeta(sample.meta);
@@ -2729,6 +2621,8 @@ export function initPostEditor(): void {
         scheduleSave();
       }
       if (action === "clear-document") {
+        tableEditor.reset();
+        savedSelection = null;
         encryptionPassphrase = null;
         setMeta({
           title: "",
