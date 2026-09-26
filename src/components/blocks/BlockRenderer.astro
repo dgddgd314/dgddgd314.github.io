@@ -190,7 +190,7 @@ const imageDisplayWidth = Number.isFinite(rawImageDisplayWidth) && rawImageDispl
               {block.rows.map((row, rowIndex) => (
                 <tr>
                   {row.map((cell) => {
-                    const CellTag = block.hasHeaderRow && rowIndex === 0 ? "th" : "td";
+                    const CellTag = block.hasHeaderRow !== false && rowIndex === 0 ? "th" : "td";
                     return (
                       <CellTag style={cell.align ? `text-align: ${cell.align}` : undefined}>
                         <RichText value={cell.richText} />

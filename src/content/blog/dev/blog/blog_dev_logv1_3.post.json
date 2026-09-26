@@ -1,0 +1,890 @@
+{
+  "version": 2,
+  "meta": {
+    "slug": "ㅂ",
+    "description": "행·열을 추가할 때 표 내용이 사라지던 버그 수정 및 네트워크 뷰 개선 업데이트",
+    "pubDate": "2026-09-26",
+    "category": "개발/블로그",
+    "tags": "astro,blog,editor,ui-ux",
+    "title": "[개발일지] 블로그 업데이트 (v1.3)",
+    "status": [
+      "published"
+    ],
+    "placement": [
+      "main",
+      "notice"
+    ]
+  },
+  "page": {
+    "icon": "🤪",
+    "cover": {
+      "type": "color",
+      "value": "#eef4ff",
+      "position": 50
+    }
+  },
+  "blocks": [
+    {
+      "id": "toc",
+      "type": "table_of_contents"
+    },
+    {
+      "id": "intro",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "v1.2에서 "
+        },
+        {
+          "text": "다음에 할 일",
+          "href": "https://dgddgd314.github.io/blog/blog_dev_log_v1_2#block-mt5pj82s-zdwpsy"
+        },
+        {
+          "text": "들로 적어두었던 것들을 이번에 구현했다."
+        }
+      ]
+    },
+    {
+      "id": "block-muih3s53-em7mld",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "홈에서 네트워크 뷰 UI/UX 개선"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "block-muih72qg-zsvu4j",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "홈",
+          "href": "https://dgddgd314.github.io/blog/"
+        },
+        {
+          "text": "에서 저 버튼을 누르면 내가 "
+        },
+        {
+          "text": "\"네트워크 뷰\"",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": " 라고 부르는 UI가 나온다."
+        }
+      ]
+    },
+    {
+      "id": "block-muih8q7p-ofdhl6",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1vadlxrbCLSX_cau0WfkIz7JuWqEeh4C4=w2000",
+      "alt": "기존 네트워크 뷰",
+      "displayWidth": 601
+    },
+    {
+      "id": "block-muih8my7-fxd94h",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존 네트워크 뷰는 단순하게 정n각형 형태의 뷰로, 올라온 글의 순서대로 정렬되어서 글 사이의 연관성 및 공통된 주제인지를 파악하기 어려웠다. 이번에는 각 글이 공유하고 있는 태그 및 link가 연결되어있는지 여부를 바탕으로 글 사이의 거리를 조정했다."
+        }
+      ]
+    },
+    {
+      "id": "block-muihb1i1-9f32y1",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1WR46Y0xiy3JyxxzkBYtlyarR0t1wJ99I=w2000",
+      "alt": "새로운 네트워크 뷰: force-graph 및 d3-force-3d 이용 예시",
+      "isHeroImage": true
+    },
+    {
+      "id": "block-muihbzrz-fwpnlv",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "참고로 각 글을 잡고 드래그하면 글을 이동시킬 수 있다. 재미있는 기능이 많으니 꼭 가지고 놀아보도록 하자."
+        }
+      ]
+    },
+    {
+      "id": "block-muihcncq-k4urvn",
+      "type": "toggle",
+      "richText": [
+        {
+          "text": "구현 방법"
+        }
+      ],
+      "isOpen": true,
+      "children": [
+        {
+          "id": "block-muihcszv-ucgv07",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "처음에는 "
+            },
+            {
+              "text": "NetworkX + Pyvis",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "나 "
+            },
+            {
+              "text": "Plotly",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "처럼 그래프를 빠르게 그릴 수 있는 도구도 고려했는데, 내가 원했던 UI reference는 "
+            },
+            {
+              "text": "obsidian의 graph view",
+              "href": "https://www.google.com/search?q=obsidian+graph+view"
+            },
+            {
+              "text": "였다. 그래서 정적인 그래프 이미지를 만드는 것이 아니라 브라우저 안에서 확대·이동·hover·drag 등의 UX를 고려해야 했다. 결과적으로 Canvas 렌더링과 force simulation을 함께 제공하는 "
+            },
+            {
+              "text": "force-graph",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "를 사용하고, 노드 충돌 처리는 "
+            },
+            {
+              "text": "d3-force-3d",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "의 "
+            },
+            {
+              "text": "forceCollide",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "를 연결했다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-data-heading",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "1. 빌드 시점에 그래프 데이터 만들기",
+              "annotations": {
+                "bold": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-data-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "Astro가 사이트를 빌드할 때 "
+            },
+            {
+              "text": "published",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": " 상태인 글을 읽어 노드와 엣지를 만든다. 글의 링크나 태그를 수정하면 개발 서버의 재빌드 또는 다음 배포 빌드부터 네트워크에 자동 반영된다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-reference",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "reference: "
+            },
+            {
+              "text": "richText.href",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "로 작성한 일반 링크와 bookmark 블록의 url을 재귀적으로 훑는다. 같은 도메인의 "
+            },
+            {
+              "text": "/blog/<slug>",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": " 형식과 정확히 일치하는 링크만 연결하도록 했다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-node-scope",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "node 범위: 메인 /blog에 노출되는 글은 항상 포함하고, 메인에 없는 "
+            },
+            {
+              "text": "published",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": " 글은 메인 글에서 reference를 따라 도달할 수 있을 때만 포함시켰다. draft 글은 그래프에 넣지 않는다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-node-token",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "node 표기: 숫자를 그래프에서 새로 매기지 않고 목록 뷰의 순번을 그대로 매핑한다. 메인 목록에 없는 글은 숫자를 비워 두고, encrypted 글은 숫자 대신 잠금 아이콘으로 표시하도록 했다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-weight-heading",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "2. 태그와 reference에 서로 다른 연결 강도 주기",
+              "annotations": {
+                "bold": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-weight-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "모든 공통 태그를 같은 무게로 처리하면 astro처럼 자주 쓰이는 태그가 전체 배치를 지배하는 결과가 생겼다. 이를 피하기 위해 태그별 등장 빈도로 희소도를 계산하고, 두 글의 weighted Jaccard와 weighted overlap을 섞어 유사도 점수를 만들었다. 즉 드문 태그를 여러 개 공유하는 글일수록 더 강하게 당겨지도록 했다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-weight-formula",
+          "type": "code",
+          "language": "text",
+          "code": "rarity(tag) = log1p(postCount / tagFrequency)\nscore = weightedJaccard * 0.65 + weightedOverlap * 0.35"
+        },
+        {
+          "id": "network-implementation-reference-weight",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "본문 reference는 단순한 태그 일치보다 명시적인 관계이므로 기본 가중치를 2.2로 두고 더 짧고 강한 링크로 처리했다. "
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-force-heading",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "3. force layout과 drag 동작",
+              "annotations": {
+                "bold": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-force-link",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "link force(즉 태그 및 reference 링크)는 가중치가 클수록 인력 강도를 높게 부여했다. reference는 거리 62, 강도 0.78을 기본값으로 사용한다. 따라서 서로 촘촘히 연결된 글들은 자연스럽게 같은 덩어리로 모이게 된다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-force-charge",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "charge force(기본적으로 노드 간 부여된 힘)는 노드끼리 밀어내고, 연결 수가 많은 노드는 조금 더 강하게 밀어내도록 했다. 여기에 노드 반지름보다 약간 큰 collision force를 추가해 원이 서로 겹치는 현상을 줄였다."
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-force-drag",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "드래그하는 동안에는 해당 노드의 힘을 고정하고 손을 놓는 순간 고정을 해제한다. 남은 속도를 0으로 만들어, 노드가 튕겨 나가지 않고 놓은 위치 주변의 자연스러운 평형점을 다시 찾도록 했다. "
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-drag-code",
+          "type": "code",
+          "language": "ts",
+          "code": "node.fx = undefined;\nnode.fy = undefined;\nnode.vx = 0;\nnode.vy = 0;"
+        },
+        {
+          "id": "network-implementation-ui-heading",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "4. Canvas 렌더링과 기존 목록 기능 연결",
+              "annotations": {
+                "bold": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-implementation-ui-copy",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "노드와 선은 Canvas에 직접 그려진다. 마우스를 노드 위에 올리면 직접 연결된 노드와 링크만 강조하면서 제목·날짜·설명·태그를 미리보기로 보여 준다. 검색이나 카테고리 필터가 적용되면 일치한 메인 글을 기준으로 그래프를 줄이되, 그 글이 reference한 비공개 목록 글은 함께 남기도록 했다. Reset layout은 좌표와 속도, 임시 고정값을 모두 지우고 simulation을 다시 시작한다."
+            }
+          ]
+        },
+        {
+          "id": "block-muihw5o5-ef4960",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "editor-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "표 관련 기능 수정"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "table-input-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[bug fix] 행·열 추가 시 표 내용이 사라지던 문제 수정"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-input-symptom",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "다음 작업으로 적어 두었던 표 입력 버그",
+          "annotations": {
+            "bold": true
+          },
+          "href": "https://dgddgd314.github.io/blog/blog_dev_log_v1_2#block-mt5pkcu4-bb6txt"
+        },
+        {
+          "text": "를 미루다미루다 이번에 수정했다. 이게 꽤 치명적인 문제인게 행이나 열을 하나 추가 / 삭제 등 전체적인 틀이 변하면 기존에 작성했던 내용이 사라지는 상황이어서 매우 불쾌한 경험이 많았다. 그런데 그냥 코드 자체가 문제가 많아서, 이번에 표 관련된 로직과 코드를 싹 정리했다. "
+        }
+      ]
+    },
+    {
+      "id": "block-muig3b4s-21vo1q",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "일단 이전 글에서는 3x3이 아닌 표에서 내용이 초기화되는 문제라고만 적었었는데, 표 기능을 많이 안 써봤고 QA를 제대로 진행하지 않아서 완전히 문제를 잘못 파악했었다. 문제의 진상은 "
+        },
+        {
+          "text": "셀에 입력한 내용이 화면에만 보이고, 실제 문서 데이터에는 반영되지 않고 있었다. (??)",
+          "annotations": {
+            "bold": true
+          }
+        }
+      ],
+      "children": [
+        {
+          "id": "table-input-cause",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": "조금 더 자세하게, 입력 처리기는 각 편집 영역이 어느 블록에 속하는지 확인한 뒤 내용을 저장하는데, 표 셀에는 "
+            },
+            {
+              "text": "data-owner-id",
+              "annotations": {
+                "code": true
+              }
+            },
+            {
+              "text": "가 정의가 안 되어 있어서(....) 열심히 셀 안에 무언가를 적더라도 전혀 저장이 되지 않는다. 그래서 셀의 입력 이벤트가 무시됐고, 행·열 추가로 화면을 다시 그리는 순간 그냥 백지화 되었던 것이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table-input-fix",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "이제는 각 셀 별로 "
+        },
+        {
+          "text": "id",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "를 정의하는 방식으로 로직을 수정해서 표 셀의 입력이 문서 데이터에 바로 반영되고, 저장 시에도 현재 편집 중인 셀의 내용을 한 번 더 읽고 이걸 자연스럽게 새로운 표에 연결하도록 했다. 행·열을 바꾸거나 서식을 적용해도 기존 셀의 텍스트와 서식, 링크가 유지된다."
+        }
+      ]
+    },
+    {
+      "id": "table-structure-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 선택한 셀을 기준으로 행·열 편집"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-structure-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존의 행·열 추가와 삭제는 표의 맨 끝에만 적용됐다. 중간에 내용을 끼워 넣거나 특정 행을 지우려면 불편했기 때문에, 이제는 선택한 셀을 기준으로 동작하도록 UX를 바꿨다. 현재 몇 행 몇 열을 선택했는지도 표 아래에 표시했다."
+        }
+      ]
+    },
+    {
+      "id": "block-muignnnh-rz5wa3",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1tej-s0sgRIWiY2IoHBNCYBkW1RfEKoxJ=w2000",
+      "alt": "표 기능 업데이트"
+    },
+    {
+      "id": "table-structure-actions",
+      "type": "table",
+      "hasHeaderRow": true,
+      "rows": [
+        [
+          {
+            "richText": [
+              {
+                "text": "버튼"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "동작"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "아래에 행 추가"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "선택한 셀이 있는 행 바로 아래에 빈 행을 추가한다."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "오른쪽에 열 추가"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "선택한 셀이 있는 열 바로 오른쪽에 빈 열을 추가한다."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "선택 행 삭제"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "선택한 셀이 속한 행을 삭제한다."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "richText": [
+              {
+                "text": "선택 열 삭제"
+              }
+            ]
+          },
+          {
+            "richText": [
+              {
+                "text": "선택한 셀이 속한 열을 삭제한다."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "table-history-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 표 편집 실행 취소·다시 실행"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-history-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "잘못 지운 행을 되살릴 수 있도록 표마다 편집 기록을 저장하고, 버튼으로 이를 되살릴 수 있도록 했다. 셀의 텍스트 입력과 서식 변경뿐 아니라 행·열 추가·삭제, 첫 행 제목 설정, 셀 정렬 변경도 실행 취소와 다시 실행에 포함된다. "
+        }
+      ]
+    },
+    {
+      "id": "table-history-shortcuts",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "표 아래의 버튼을 눌러도 되고, 셀 안에서 "
+        },
+        {
+          "text": "Ctrl / Cmd + Z",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "로 실행을 취소하거나 "
+        },
+        {
+          "text": "Ctrl / Cmd + Shift + Z",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "로 다시 실행할 수 있다. 이 기록은 현재 편집 세션에서 사용하는 것으로, 새로고침하거나 다른 문서를 불러오면 초기화된다."
+        }
+      ]
+    },
+    {
+      "id": "table-keyboard-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[bug fix] Tab 이동과 마지막 행 자동 추가"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-keyboard-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "원래 이전 codex가 구현해 두었지만 입력이 무시되던 문제와 동일한 문제 때문에 표 전용 키보드 처리도 실행되지 않고 있었다. "
+        }
+      ]
+    },
+    {
+      "id": "table-keyboard-tab",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "Tab",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": ": 다음 셀로 이동한다. 마지막 셀에서는 새 행을 추가하고 그 행의 첫 셀로 이동한다."
+        }
+      ]
+    },
+    {
+      "id": "table-keyboard-shift-tab",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "Shift + Tab",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": ": 이전 셀로 이동한다. 첫 셀에서는 표 앞의 포커스 가능한 요소로 나갈 수 있다."
+        }
+      ]
+    },
+    {
+      "id": "table-keyboard-enter",
+      "type": "bulleted_list",
+      "richText": [
+        {
+          "text": "Enter",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": ": 현재 셀 안에서 줄을 바꾼다."
+        }
+      ]
+    },
+    {
+      "id": "table-text-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[bug fix] 셀 줄바꿈·붙여넣기·한글 조합 처리"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-linebreak-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "셀 안에서 두 줄로 적었는데 저장할 때 한 줄로 붙는 이상한 문제가 있었다고 한다...! (내가 발견한 게 아니라 이번에 GPT-6 Astra가 발견한 문제점이다... 내가 QA를 더 열심히 했으면 발견했을 수도 있겠지만 ㅎㅎ)\n"
+        }
+      ],
+      "children": [
+        {
+          "id": "block-muiguskm-lusd8h",
+          "type": "paragraph",
+          "richText": [
+            {
+              "text": " 편집 영역의 HTML을 문서 데이터로 바꾸는 과정에서 줄의 경계를 놓치고 있었기 때문이라고 한다. 줄바꿈과 빈 줄을 보존하도록 이 처리를 고쳤고, 편집 화면과 실제 포스팅의 표에서도 줄바꿈이 보이도록 스타일을 맞췄다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table-ime-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "한글 조합 중에는 셀의 편집 영역을 유지하고, 행·열 같은 구조 변경은 조합이 끝난 뒤 처리하도록 순서를 변경했다. 조합 중간의 자모마다 실행 취소 기록이 쌓이지 않도록 한 번의 조합을 묶어서 기록하는 처리도 넣었다. "
+        },
+        {
+          "text": "이모지 검색창에서 겪었던 한글 입력 문제",
+          "annotations": {
+            "underline": true
+          },
+          "href": "https://dgddgd314.github.io/blog/hangul-ime-vibe-coding/"
+        },
+        {
+          "text": "와 같은 이유인데, 이제 버그를 스스로 발견할 정도까지 왔으니... 이런 글의 존재 이유가... ㅜㅠ"
+        }
+      ]
+    },
+    {
+      "id": "table-appearance-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[UI/UX] 첫 행 제목과 셀 정렬 표시"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-appearance-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존 editor에서는 첫 행을 제목으로 쓰지 않는 표도 첫 줄을 무조건 헤더처럼 보여 주고 있어서, UI 및 구글 SEO에 까지 악영향을 미치고 있는 것으로 확인되었다. 이에 더해 셀의 가운데·오른쪽 정렬 기능을 추가했다. "
+        }
+      ]
+    },
+    {
+      "id": "table-appearance-overflow",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "열을 많이 추가했을 때 셀이 계속 좁아지는 문제도 있었는데, 열 수에 따라 표의 최소 너비를 확보하고, 넓어진 표는 가로로 스크롤할 수 있도록 UI를 변경했다."
+        }
+      ]
+    },
+    {
+      "id": "table-refactor-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "표 편집 로직 정리"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "table-refactor-detail-heading",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[refactor] 입력·구조 변경·화면 갱신 분리"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "table-refactor-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "기존에는 표에서 행 하나를 추가해도 문서 전체의 편집 화면을 다시 만들었다. 이번에는 표의 입력 처리, 행·열 구조 변경, 실행 취소 기록을 별도 로직으로 분리하고, 구조가 바뀐 표의 화면만 갱신하도록 바꿨다. 갱신 후에는 선택한 셀과 커서 위치도 복원한다. (아이디어는 최근에 안드로이드 세미나를 만들면서 얻은 "
+        },
+        {
+          "text": "@Composable",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "의 로직이다! 관련해서 안드로이드 세미나 포스팅도 적을 계획이다.)\n"
+        }
+      ]
+    },
+    {
+      "id": "table-format-copy",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "참고로 저장 형식은 기존 "
+        },
+        {
+          "text": "Post JSON v2",
+          "annotations": {
+            "code": true
+          }
+        },
+        {
+          "text": "가 그대로 유지된다 . 블로그의 업데이트 버전은 v1.3이지만, 기존 글의 JSON을 새 형식으로 바꿀 필요는 없다. "
+        }
+      ]
+    },
+    {
+      "id": "block-muihy0oe-6pfi8l",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "v1.4에서 해볼 것"
+        }
+      ],
+      "level": 1
+    },
+    {
+      "id": "block-muihyehi-gqz8ug",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] 노션 UI/UX 반영 및 import 기능"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-muihysr8-wghne9",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "노션을 굉장히 많이 쓰고 일정 관리를 노션으로 하는 편이다. 기존 완료된 프로젝트나 기록들을 블로그에 올리기 위해 notion 링크나 페이지를 다운로드 하면 이걸 블로그 글로 자동 변환해주는 기능을 추가할 예정이다. 상당히 어려운 기능이기 때문에 다음 업데이트까지 미뤄질 수도 있을 것이다."
+        }
+      ]
+    },
+    {
+      "id": "block-muii090g-qirq9m",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "별도로 노션에서 샵을 누르면 자동으로 제목 셀로 변환되는 기능 등 노션의 UI/UX를 조금 더 조사한 뒤 반영해볼 예정이다."
+        }
+      ]
+    },
+    {
+      "id": "block-muii05vc-j92c4n",
+      "type": "heading",
+      "richText": [
+        {
+          "text": "[feature] gif 이미지 / mp4 동영상, 유튜브 동영상 지원"
+        }
+      ],
+      "level": 2
+    },
+    {
+      "id": "block-muii1d40-intz1t",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "현재는 단순한 이미지 파일만 지원되는데, tistory 블로그 처럼 gif를 올리면 자동으로 재생되는 기능을 추가할 예정이다. 이외에도 유튜브 링크를 올리면 블로그 내부에서도 재생이 가능하도록 하는 기능 및 tistory에서는 지원을 종료한 mp4 기능 역시 구현 대상이다."
+        }
+      ]
+    },
+    {
+      "id": "block-muii2tso-ha7hwr",
+      "type": "paragraph",
+      "richText": [
+        {
+          "text": "최근 바빠서 블로그를 많이 못 올렸는데, 아마도 중간고사 끝나고 다시 천천히 올려볼 것 같다."
+        }
+      ]
+    }
+  ]
+}
