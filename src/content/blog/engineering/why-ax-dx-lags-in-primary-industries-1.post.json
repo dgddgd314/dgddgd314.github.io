@@ -118,6 +118,28 @@
       ],
       "children": [
         {
+          "id": "block-mw6nc2v4-wmw5go",
+          "type": "image",
+          "src": "https://lh3.googleusercontent.com/d/1fLEtJtGOhOi3U9E64MnpqnEuVZPrS-YV=w2000",
+          "alt": "한국 농어업의 스마트 기술 보급 수준",
+          "displayWidth": 480
+        },
+        {
+          "id": "block-mw6fniyb-fgo53d",
+          "type": "bulleted_list",
+          "richText": [
+            {
+              "text": "수산, 어업의 스마트 양식 시스템 도입률은 3.7%",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": " (2026, 해양수산부)"
+            }
+          ]
+        },
+        {
           "id": "block-mw6fg8o3-35ozl0",
           "type": "bulleted_list",
           "richText": [
@@ -128,7 +150,7 @@
               }
             },
             {
-              "text": ", 농가 수 기준 약 7% (2024.11, 농립어업조사), 그리고 딸기, 참외, 토마토, 파프리카 등 4개 고부가가치 품목에 대부분이 집중"
+              "text": ", 농가 수 기준 약 7%, 그리고 딸기, 참외, 토마토, 파프리카 등 4개 고부가가치 품목에 대부분이 집중"
             }
           ],
           "children": [
@@ -160,21 +182,6 @@
               "text": "농어업인의 디지털 역량 수치는 일반 국민 대비 79.5%, 농가 경영인의 평균 나이는 67.7세 (2025, 과학기술정보통신부)"
             }
           ]
-        },
-        {
-          "id": "block-mw6fniyb-fgo53d",
-          "type": "bulleted_list",
-          "richText": [
-            {
-              "text": "수산, 어업의 스마트 양식 시스템 도입률은 3.7%",
-              "annotations": {
-                "bold": true
-              }
-            },
-            {
-              "text": " (2026, 해양수산부)"
-            }
-          ]
         }
       ]
     },
@@ -197,86 +204,11 @@
           ]
         },
         {
-          "id": "block-mw6fpdf0-n093qg",
-          "type": "table",
-          "backgroundColor": "gray",
-          "hasHeaderRow": true,
-          "rows": [
-            [
-              {
-                "richText": [
-                  {
-                    "text": "분류"
-                  }
-                ]
-              },
-              {
-                "richText": [
-                  {
-                    "text": "200 에이커 미만",
-                    "textColor": "rgb(37, 39, 43)",
-                    "backgroundColor": "rgb(245, 247, 248)"
-                  },
-                  {
-                    "text": "\n"
-                  }
-                ]
-              },
-              {
-                "richText": [
-                  {
-                    "text": "1,725 에이커 초과"
-                  }
-                ]
-              }
-            ],
-            [
-              {
-                "richText": [
-                  {
-                    "text": "수확량 지도 사용률"
-                  }
-                ]
-              },
-              {
-                "richText": [
-                  {
-                    "text": "7%"
-                  }
-                ]
-              },
-              {
-                "richText": [
-                  {
-                    "text": "50%"
-                  }
-                ]
-              }
-            ],
-            [
-              {
-                "richText": [
-                  {
-                    "text": "자동 조향 및 유도 시스템 사용률"
-                  }
-                ]
-              },
-              {
-                "richText": [
-                  {
-                    "text": "10%"
-                  }
-                ]
-              },
-              {
-                "richText": [
-                  {
-                    "text": "73%"
-                  }
-                ]
-              }
-            ]
-          ]
+          "id": "block-mw6n2omn-8jbihs",
+          "type": "image",
+          "src": "https://lh3.googleusercontent.com/d/1OP9RKv9o-1N_vfua9Agv_FgD9zgk91ia=w2000",
+          "alt": "미국 옥수수 농가 경지 규모에 따른 디지털화 비중",
+          "displayWidth": 480
         },
         {
           "id": "block-mw6frx1s-g4ls11",
@@ -285,42 +217,14 @@
             {
               "text": "EU 기준 (2023, EU)"
             }
-          ],
-          "children": [
-            {
-              "id": "block-mw6g3l0l-1tbib0",
-              "type": "bulleted_list",
-              "richText": [
-                {
-                  "text": "정밀농업을 사용하는 농장은 면적 기준 44%",
-                  "annotations": {
-                    "bold": true
-                  }
-                },
-                {
-                  "text": ", 농가 수 기준 18%"
-                }
-              ]
-            },
-            {
-              "id": "block-mw6g3awc-z0zeol",
-              "type": "bulleted_list",
-              "richText": [
-                {
-                  "text": "농장 관리 프로그램 사용률은 경제 규모가 큰 농장은 44%, 작은 농장 2%"
-                }
-              ]
-            },
-            {
-              "id": "block-mw6g3wk4-gbzvtf",
-              "type": "bulleted_list",
-              "richText": [
-                {
-                  "text": "로봇 사용률은 각각 31%, 1%"
-                }
-              ]
-            }
           ]
+        },
+        {
+          "id": "block-mw6g3l0l-1tbib0",
+          "type": "image",
+          "src": "https://lh3.googleusercontent.com/d/1vl58S0S3Osy2cQVMKV8zm0On9FvrZJNN=w2000",
+          "alt": "EU 농업 규모에 따른 자동화 비중",
+          "displayWidth": 480
         },
         {
           "id": "block-mw6g46i3-9somj8",
@@ -401,7 +305,8 @@
           "text": "AX/DX는 대규모 사업체일수록 빠르다. ",
           "annotations": {
             "bold": true
-          }
+          },
+          "textColor": "orange"
         }
       ]
     },
@@ -486,7 +391,8 @@
           "text": "AI같은 기술이 있는지도, 그 기술이 무엇을 할 수 있는지도 모르는 경우",
           "annotations": {
             "bold": true
-          }
+          },
+          "textColor": "orange"
         },
         {
           "text": "가 훨씬 더 많다. "
@@ -498,7 +404,7 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "그럴 필요가 없다고 말하는 것이 정확할 것이다. 나는 아무래도 개발도 자주 하고, 취미도 바이브 코딩이다 보니 AI를 매우 적극적으로 활용하고 있다. 그리고 친구나 같은 수업을 듣고 있는 학생 한 명이라도 AI를 쓰는 순간, 성적이나 산출물 부분에서 압도적인 차이가 난다. 로보틱스 인턴도 하고 있어서 일반인적인 사람 보다도 AI를 많이 알고 있다고 생각한다. 이제는 AI 없이 생활하는 삶으로 돌아갈 수 없을 정도이다. "
+          "text": "그럴 지식을 알 필요가 없다고 말하는 것이 정확할 것이다. 나는 아무래도 개발도 자주 하고, 취미도 바이브 코딩이다 보니 AI를 매우 적극적으로 활용하고 있다. 그리고 친구나 같은 수업을 듣고 있는 학생 한 명이라도 AI를 쓰는 순간, 성적이나 산출물 부분에서 압도적인 차이가 난다. 로보틱스 인턴도 하고 있어서 일반인적인 사람 보다도 AI를 많이 알고 있다고 생각한다. 이제는 AI 없이 생활하는 삶으로 돌아갈 수 없을 정도이다. "
         }
       ]
     },
@@ -596,6 +502,17 @@
     },
     {
       "id": "block-mw6inwml-9o5hv1",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1XyRg7GvBWLSMkLFhpybBw4mNg4Z_zgvb=w2000",
+      "alt": "비트겐슈타인의 언어 게임",
+      "caption": [
+        {
+          "text": "Codex도 그림을 잘 만드는 군요..."
+        }
+      ]
+    },
+    {
+      "id": "block-mw6nj8gs-qof40e",
       "type": "paragraph",
       "richText": [
         {
@@ -753,7 +670,16 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "과거에 암묵지가 형식지가 되지 못한 가장 큰 이유는 내재된 정보를 말이나 문서, 매뉴얼 등으로 표현하지 못하기 때문이었다. 암묵지는 단지 행동으로만 표현된다. 그렇지만 숙련자가 자신의 판단 규칙을 말로 설명하지 못한다고 해서 AI가 반드시 배우지 못하는 것은 아니다. 현대에 와서는 숙련자의 행동을 측정하고 기록할 수 있다면, AI가 이를 학습하고 사람을 모방할 수 있다. 그리고 이를 넘어 형식지로 바꿀 수도 있다. "
+          "text": "과거에 암묵지가 형식지가 되지 못한 가장 큰 이유는 내재된 정보를 말이나 문서, 매뉴얼 등으로 표현하지 못하기 때문이었다. 암묵지는 단지 행동으로만 표현된다. 그렇지만 숙련자가 자신의 판단 규칙을 말로 설명하지 못한다고 해서 AI가 반드시 배우지 못하는 것은 아니다. "
+        },
+        {
+          "text": "현대에 와서는 숙련자의 행동을 측정하고 기록할 수 있다면, AI가 이를 학습하고 사람을 모방할 수 있다. ",
+          "annotations": {
+            "bold": true
+          }
+        },
+        {
+          "text": "그리고 이를 넘어 형식지로 바꿀 수도 있다. "
         }
       ],
       "children": [
@@ -780,7 +706,17 @@
       "type": "paragraph",
       "richText": [
         {
-          "text": "그렇기 때문에 병목은 사람의 표현력에서, 이제는 데이터의 수, 그리고 관측 및 기록의 여부로 이동하게 되었다. "
+          "text": "그렇기 때문에 병목은 사람의 표현력에서, 이제는 데이터의 수, 그리고 "
+        },
+        {
+          "text": "관측 및 기록의 여부",
+          "annotations": {
+            "bold": true
+          },
+          "textColor": "orange"
+        },
+        {
+          "text": "로 이동하게 되었다. "
         }
       ]
     },
@@ -826,7 +762,7 @@
       "id": "block-mw6klr2c-nm4zn5",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1ukFfLAh_Vqy4lbYym2Kjk5e0a_B33k_2=w2000",
-      "alt": "",
+      "alt": "경험 중심 현장 업무, 디지털 중심 업무의 기록 상황 비교",
       "isHeroImage": true
     },
     {
@@ -945,7 +881,16 @@
           "type": "bulleted_list",
           "richText": [
             {
-              "text": "현장 직원에게는 기록 업무가 늘어나는 것을 넘어, 기록이 작업 개선보다 개인 평가와 책임 추궁에 사용될 수도 있고 더 나아가 기계가 자신을 완전히 대체한다는 불안감을 조정할 수도 있다."
+              "text": "현장 직원에게는 기록 업무가 늘어나는 것을 넘어, 기록이 작업 개선보다 개인 평가와 책임 추궁에 사용될 수도 있고 더 나아가 "
+            },
+            {
+              "text": "기계가 자신을 완전히 대체한다는 불안감",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": "을 조정할 수도 있다."
             }
           ]
         }
@@ -996,11 +941,32 @@
       ]
     },
     {
+      "id": "block-mw6nlylf-oigdf3",
+      "type": "image",
+      "src": "https://lh3.googleusercontent.com/d/1lcR_SlbO6W7YD_y4hUxgAstHMrQIfOqd=w2000",
+      "alt": "기술 이외에 다양한 요인들이 생산량에 영향을 미친다.",
+      "caption": [
+        {
+          "text": "생산량의 변화만으로는 기술의 효용성을 증명할 수 없다."
+        }
+      ]
+    },
+    {
       "id": "block-mw6luvft-874i9c",
       "type": "paragraph",
       "richText": [
         {
-          "text": "이와 같은 일이 한 제품 주기가 긴 1차, 2차 산업에서는 빈번하게 나타난다. 변인을 충분히 통제하기 어려운 산업환경에서, 디지털화의 효용성을 검증하기 위해서는 지나치게 긴 시간이 든다. (그리고 사실 여러분들도 디지털화가 진짜로 효과가 있는지 in vivo 에서 검증한 거는 아닐 것이다.)"
+          "text": "이와 같은 일이 한 제품 주기가 긴 1차, 2차 산업에서는 빈번하게 나타난다. 변인을 충분히 통제하기 어려운 산업환경에서, "
+        },
+        {
+          "text": "디지털화의 효용성을 검증하기 위해서는 지나치게 긴 시간",
+          "annotations": {
+            "bold": true
+          },
+          "textColor": "orange"
+        },
+        {
+          "text": "이 든다. (그리고 사실 여러분들도 디지털화가 진짜로 효과가 있는지 in vivo 에서 검증한 거는 아닐 것이다.)"
         }
       ]
     },
@@ -1018,7 +984,13 @@
           "type": "bulleted_list",
           "richText": [
             {
-              "text": "검증을 기다리는데 에도 비용이 발생한다: 장비 비용 및 디지털 전환에 따른 비용이 발생하지만, 그 효과는 나중에 알 수 있다. 생산자는 효과가 불확실한 상태에서 먼저 비용을 부담하게 된다. "
+              "text": "검증을 기다리는데 에도 비용이 발생한다",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": ": 장비 비용 및 디지털 전환에 따른 비용이 발생하지만, 그 효과는 나중에 알 수 있다. 생산자는 효과가 불확실한 상태에서 먼저 비용을 부담하게 된다. "
             }
           ]
         },
@@ -1027,7 +999,13 @@
           "type": "bulleted_list",
           "richText": [
             {
-              "text": "다른 환경에서 성공했다고 내 농장에서도 성공하는 것은 아니다: 1차, 2차 산업은 환경이 다양해서 특정 기업에서 성공했다고 이를 그대로 도입하기에는 불확실성이 높다."
+              "text": "다른 환경에서 성공했다고 내 농장에서도 성공하는 것은 아니다",
+              "annotations": {
+                "bold": true
+              }
+            },
+            {
+              "text": ": 1차, 2차 산업은 환경이 다양해서 특정 기업에서 성공했다고 이를 그대로 도입하기에는 불확실성이 높다."
             }
           ]
         }
