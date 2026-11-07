@@ -854,7 +854,8 @@
       "id": "block-mt38wpd5-313rv6",
       "type": "image",
       "src": "https://lh3.googleusercontent.com/d/1AsvIsryxaGoj-S5Xrv6yP3ljmMPdiZOU=w2000",
-      "alt": "블록의 암호화 바이트 선정"
+      "alt": "블록의 암호화 바이트 선정",
+      "isHeroImage": true
     },
     {
       "id": "encrypted-image-caveat",
