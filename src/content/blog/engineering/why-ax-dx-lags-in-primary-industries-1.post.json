@@ -10,7 +10,9 @@
     "status": [
       "published"
     ],
-    "placement": []
+    "placement": [
+      "main"
+    ]
   },
   "page": {
     "icon": "🌊"
